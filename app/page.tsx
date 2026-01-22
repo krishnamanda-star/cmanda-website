@@ -26,7 +26,7 @@ export default function HomePage() {
     },
     {
       id: 'coffee',
-      title: 'Espresso',
+      title: 'Coffee',
       subtitle: 'The Art of Coffee',
       description: 'Crafting the perfect shot. Exploring beans, techniques, and the ritual of espresso making.',
       href: '/coffee',
