@@ -1,158 +1,96 @@
-export default function MeditationPage() {
-  const posts = [
-    {
-      id: 1,
-      title: 'Beginning My Meditation Journey',
-      date: '2024-01-15',
-      content: `
-        Today marks the beginning of a new chapter in my life. I've decided to commit to a daily meditation practice,
-        something I've been curious about for years but never fully embraced. The stillness of the morning,
-        the quiet moments before the world wakes up — these are the times I'm dedicating to understanding myself better.
+import Link from 'next/link';
 
-        Starting with just 10 minutes each morning, I'm learning to observe my thoughts without judgment.
-        It's harder than I imagined, but also more rewarding. Each breath is a reminder to come back to the present moment.
-      `,
+export default function HomePage() {
+  const sections = [
+    {
+      id: 'meditation',
+      title: 'Meditation',
+      subtitle: 'Just Watching',
+      description: 'Reflections from practice. Exploring mindfulness, presence, and the path of self-discovery through Vipassana meditation.',
+      href: '/meditation',
+      icon: '🧘',
+      color: 'from-amber-50 to-orange-100',
+      borderColor: 'border-amber-200',
+      hoverColor: 'hover:border-amber-400',
     },
     {
-      id: 2,
-      title: 'The Power of Breath Awareness',
-      date: '2024-02-03',
-      content: `
-        Three weeks into my practice, and I'm noticing subtle but profound changes. The simple act of focusing on my breath
-        has become an anchor in turbulent times. When work gets stressful or life feels overwhelming, I can return to this
-        fundamental practice — just breathing, just being.
-
-        I've learned that meditation isn't about achieving a blank mind or reaching some mystical state. It's about
-        being present with whatever arises. The anxiety, the joy, the boredom — all of it is welcome. This acceptance
-        is transforming how I relate to my experiences throughout the day.
-      `,
+      id: 'cycling',
+      title: 'Cycling',
+      subtitle: 'Meditation in Motion',
+      description: 'Road cycling through scenic routes, challenging climbs, and long-distance adventures. Finding freedom on two wheels.',
+      href: '/cycling',
+      icon: '🚴',
+      color: 'from-green-50 to-emerald-100',
+      borderColor: 'border-green-200',
+      hoverColor: 'hover:border-green-400',
     },
     {
-      id: 3,
-      title: 'Insights on Impermanence',
-      date: '2024-03-12',
-      content: `
-        Two months in, and meditation has revealed something profound: everything changes. Thoughts come and go like clouds
-        across the sky. Emotions rise and fall like waves on the ocean. Even the sense of "I" is fluid and changing.
-
-        This understanding of impermanence has brought both peace and a slight discomfort. Peace, because I know difficult
-        moments will pass. Discomfort, because pleasant moments will too. But there's a deeper freedom here — in not clinging
-        to either, I'm learning to fully experience each moment as it is.
-
-        My practice has expanded beyond formal sitting. I'm finding meditation in the rhythmic motion of cycling,
-        in the focused attention while making espresso, in the flow state while snowboarding. Mindfulness is becoming
-        a way of life, not just a morning ritual.
-      `,
-    },
-    {
-      id: 4,
-      title: 'Reflections on Progress and Patience',
-      date: '2024-04-20',
-      content: `
-        Today I sat for 30 minutes, and it felt both effortless and challenging. Some days, meditation flows naturally.
-        Other days, every second feels like an eternity. I'm learning that both experiences are valuable teachers.
-
-        The restless days teach patience. The peaceful days remind me why I practice. But the real growth happens in
-        the space between — in the moment when I notice my mind has wandered and gently bring it back. That moment of
-        recognition, that kindness toward myself, that's where the transformation lives.
-
-        I'm grateful for this practice and curious about where it will lead. Each day on the cushion is an adventure,
-        an exploration of consciousness, a deepening relationship with the present moment.
-      `,
+      id: 'coffee',
+      title: 'Espresso',
+      subtitle: 'The Art of Coffee',
+      description: 'Crafting the perfect shot. Exploring beans, techniques, and the ritual of espresso making.',
+      href: '/coffee',
+      icon: '☕',
+      color: 'from-amber-50 to-brown-100',
+      borderColor: 'border-amber-200',
+      hoverColor: 'hover:border-amber-400',
     },
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50">
-      {/* Header */}
-      <div className="bg-white border-b border-gray-200">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-          <h1 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-4">Meditation Journey</h1>
-          <p className="text-xl text-gray-600">
-            Reflections on mindfulness, presence, and the path of self-discovery
-          </p>
-          {/* Medium Publication Link */}
-          <div className="mt-6">
-            <a 
-              href="https://medium.com/mymeditation" 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-4 py-2 bg-black text-white rounded-full text-sm font-medium hover:bg-gray-800 transition-colors"
-            >
-              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M13.54 12a6.8 6.8 0 01-6.77 6.82A6.8 6.8 0 010 12a6.8 6.8 0 016.77-6.82A6.8 6.8 0 0113.54 12zM20.96 12c0 3.54-1.51 6.42-3.38 6.42-1.87 0-3.39-2.88-3.39-6.42s1.52-6.42 3.39-6.42 3.38 2.88 3.38 6.42M24 12c0 3.17-.53 5.75-1.19 5.75-.66 0-1.19-2.58-1.19-5.75s.53-5.75 1.19-5.75C23.47 6.25 24 8.83 24 12z"/>
-              </svg>
-              Read more on Medium
-            </a>
-          </div>
-        </div>
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100">
+      {/* Hero Section */}
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-12 text-center">
+        <h1 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-4">
+          Krishna Manda
+        </h1>
+        <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+          Exploring mindfulness, pursuing passions, and building innovative AI solutions.
+        </p>
       </div>
 
-      {/* Blog Posts */}
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="space-y-12">
-          {posts.map((post, index) => (
-            <article
-              key={post.id}
-              className="bg-white rounded-2xl shadow-lg border border-gray-200 p-8 sm:p-10 hover:shadow-xl transition-shadow"
+      {/* Cards Grid */}
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {sections.map((section) => (
+            <Link
+              key={section.id}
+              href={section.href}
+              className={`group block bg-gradient-to-br ${section.color} rounded-2xl border-2 ${section.borderColor} ${section.hoverColor} p-6 transition-all duration-300 hover:shadow-lg hover:-translate-y-1`}
             >
-              {/* Post Header */}
-              <div className="mb-6">
-                <time className="text-sm font-medium text-blue-600">
-                  {new Date(post.date).toLocaleDateString('en-US', {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric',
-                  })}
-                </time>
-                <h2 className="text-3xl font-bold text-gray-900 mt-2 mb-4">{post.title}</h2>
+              <div className="text-4xl mb-4">{section.icon}</div>
+              <h2 className="text-xl font-bold text-gray-900 mb-1">
+                {section.title}
+              </h2>
+              <p className="text-sm font-medium text-gray-500 mb-3">
+                {section.subtitle}
+              </p>
+              <p className="text-sm text-gray-600 leading-relaxed">
+                {section.description}
+              </p>
+              <div className="mt-4 flex items-center text-sm font-medium text-gray-700 group-hover:text-gray-900">
+                Explore
+                <svg className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
               </div>
-
-              {/* Post Content */}
-              <div className="prose prose-lg max-w-none text-gray-700">
-                {post.content.split('\n\n').map((paragraph, idx) => (
-                  <p key={idx} className="mb-4 leading-relaxed">
-                    {paragraph.trim()}
-                  </p>
-                ))}
-              </div>
-
-              {/* Divider (except for last post) */}
-              {index < posts.length - 1 && (
-                <div className="mt-8 pt-6 border-t border-gray-200">
-                  <div className="flex items-center text-sm text-gray-500">
-                    <span>Continue reading below</span>
-                    <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </div>
-                </div>
-              )}
-            </article>
+            </Link>
           ))}
         </div>
 
-        {/* Footer CTA */}
-        <div className="mt-16 text-center bg-gradient-to-r from-purple-50 to-blue-50 rounded-2xl p-8 border border-gray-200">
-          <p className="text-gray-600 mb-4">
-            This meditation journal is a work in progress, just like the practice itself.
-          </p>
-          <p className="text-sm text-gray-500 mb-6">More reflections coming soon...</p>
-          {/* Medium Link in Footer */}
-          <a 
-            href="https://medium.com/mymeditation" 
-            target="_blank" 
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 px-6 py-3 bg-black text-white rounded-full font-medium hover:bg-gray-800 transition-colors"
+        {/* AI Solutions Link */}
+        <div className="mt-12 text-center">
+          <Link
+            href="/ai-solutions"
+            className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-full font-medium hover:bg-blue-700 transition-colors"
           >
-            <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M13.54 12a6.8 6.8 0 01-6.77 6.82A6.8 6.8 0 010 12a6.8 6.8 0 016.77-6.82A6.8 6.8 0 0113.54 12zM20.96 12c0 3.54-1.51 6.42-3.38 6.42-1.87 0-3.39-2.88-3.39-6.42s1.52-6.42 3.39-6.42 3.38 2.88 3.38 6.42M24 12c0 3.17-.53 5.75-1.19 5.75-.66 0-1.19-2.58-1.19-5.75s.53-5.75 1.19-5.75C23.47 6.25 24 8.83 24 12z"/>
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
             </svg>
-            Follow My Meditation on Medium
-          </a>
+            View AI Solutions
+          </Link>
         </div>
       </div>
     </div>
   );
 }
-
