@@ -21,7 +21,7 @@ export default function MeditationPage() {
       try {
         // Using rss2json API to convert Medium RSS to JSON
         const response = await fetch(
-          'https://api.rss2json.com/v1/api.json?rss_url=https://medium.com/feed/mymeditation'
+          'https://api.rss2json.com/v1/api.json?rss_url=https://medium.com/feed/mymeditation&api_key=YOUR_KEY&t=${Date.now()}'
         );
         const data = await response.json();
         
