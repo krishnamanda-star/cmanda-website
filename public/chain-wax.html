@@ -8,155 +8,53 @@
   <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Sora:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #0a0a0b;
-      --bg2: #111113;
-      --card: #16161a;
-      --card-hover: #1c1c21;
-      --border: #252530;
-      --border-light: #32323e;
-      --accent: #f0a030;
-      --accent-dim: #c88020;
-      --accent-glow: rgba(240,160,48,0.12);
-      --danger: #f04848;
-      --danger-glow: rgba(240,72,72,0.12);
-      --success: #30d870;
-      --success-glow: rgba(48,216,112,0.12);
-      --text: #eaeaef;
-      --text-dim: #7a7a8a;
-      --text-muted: #4a4a58;
+      --bg: #0a0a0b; --bg2: #111113; --card: #16161a;
+      --border: #252530; --border-light: #32323e;
+      --accent: #f0a030; --accent-dim: #c88020; --accent-glow: rgba(240,160,48,0.12);
+      --danger: #f04848; --danger-glow: rgba(240,72,72,0.12);
+      --success: #30d870; --success-glow: rgba(48,216,112,0.12);
+      --text: #eaeaef; --text-dim: #7a7a8a; --text-muted: #4a4a58;
       --strava: #fc4c02;
-      --font-display: 'Sora', sans-serif;
-      --font-mono: 'DM Mono', monospace;
+      --font-display: 'Sora', sans-serif; --font-mono: 'DM Mono', monospace;
     }
-
     * { margin: 0; padding: 0; box-sizing: border-box; }
-
-    body {
-      min-height: 100vh;
-      background: var(--bg);
-      color: var(--text);
-      font-family: var(--font-display);
-      -webkit-font-smoothing: antialiased;
-    }
-
-    /* ─── Noise texture overlay ─── */
+    body { min-height: 100vh; background: var(--bg); color: var(--text); font-family: var(--font-display); -webkit-font-smoothing: antialiased; }
     body::before {
-      content: '';
-      position: fixed;
-      inset: 0;
-      opacity: 0.025;
-      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
-      pointer-events: none;
-      z-index: 0;
+      content: ''; position: fixed; inset: 0; opacity: 0.025; pointer-events: none; z-index: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
     }
-
     .app { position: relative; z-index: 1; max-width: 640px; margin: 0 auto; padding: 0 20px 60px; }
-
-    /* ─── Header ─── */
-    .header {
-      padding: 28px 0 24px;
-      display: flex;
-      align-items: flex-end;
-      justify-content: space-between;
-      border-bottom: 1px solid var(--border);
-      margin-bottom: 32px;
-    }
+    .header { padding: 28px 0 24px; display: flex; align-items: flex-end; justify-content: space-between; border-bottom: 1px solid var(--border); margin-bottom: 32px; }
     .header-left { display: flex; align-items: center; gap: 14px; }
-    .logo {
-      width: 44px; height: 44px;
-      background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dim) 100%);
-      border-radius: 12px;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 22px;
-      box-shadow: 0 4px 20px var(--accent-glow);
-    }
-    .header h1 {
-      font-size: 20px; font-weight: 700; letter-spacing: -0.5px;
-      background: linear-gradient(135deg, var(--text) 0%, var(--text-dim) 100%);
-      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-    }
-    .header .subtitle {
-      font-family: var(--font-mono); font-size: 11px; color: var(--text-muted);
-      margin-top: 2px; letter-spacing: 0.5px;
-    }
-    .strava-badge {
-      font-family: var(--font-mono); font-size: 11px; padding: 4px 10px;
-      border-radius: 20px; letter-spacing: 0.3px;
-    }
-    .strava-badge.connected { background: var(--success-glow); color: var(--success); border: 1px solid rgba(48,216,112,0.2); }
-    .strava-badge.disconnected { background: rgba(122,122,138,0.1); color: var(--text-muted); border: 1px solid var(--border); }
-
-    /* ─── Navigation ─── */
-    .nav {
-      display: flex; gap: 4px; margin-bottom: 28px;
-      background: var(--bg2); border-radius: 10px; padding: 4px;
-      border: 1px solid var(--border);
-    }
-    .nav button {
-      flex: 1; padding: 9px 14px; border: none; border-radius: 8px;
-      font-family: var(--font-mono); font-size: 12px; font-weight: 500;
-      cursor: pointer; transition: all 0.25s ease;
-      background: transparent; color: var(--text-muted);
-      letter-spacing: 0.3px;
-    }
+    .logo { width: 44px; height: 44px; background: linear-gradient(135deg, var(--accent), var(--accent-dim)); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 22px; box-shadow: 0 4px 20px var(--accent-glow); }
+    .header h1 { font-size: 20px; font-weight: 700; letter-spacing: -0.5px; background: linear-gradient(135deg, var(--text), var(--text-dim)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .header .subtitle { font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+    .badge { font-family: var(--font-mono); font-size: 11px; padding: 4px 10px; border-radius: 20px; letter-spacing: 0.3px; white-space: nowrap; }
+    .badge-on { background: var(--success-glow); color: var(--success); border: 1px solid rgba(48,216,112,0.2); }
+    .badge-off { background: rgba(122,122,138,0.1); color: var(--text-muted); border: 1px solid var(--border); }
+    .nav { display: flex; gap: 4px; margin-bottom: 28px; background: var(--bg2); border-radius: 10px; padding: 4px; border: 1px solid var(--border); }
+    .nav button { flex: 1; padding: 9px 10px; border: none; border-radius: 8px; font-family: var(--font-mono); font-size: 11px; font-weight: 500; cursor: pointer; transition: all 0.25s; background: transparent; color: var(--text-muted); }
     .nav button.active { background: var(--card); color: var(--accent); box-shadow: 0 2px 8px rgba(0,0,0,0.3); }
     .nav button:hover:not(.active) { color: var(--text-dim); }
-
-    /* ─── Cards ─── */
-    .card {
-      background: var(--card); border: 1px solid var(--border);
-      border-radius: 16px; padding: 28px; margin-bottom: 20px;
-      transition: border-color 0.3s;
-    }
-    .card:hover { border-color: var(--border-light); }
-    .card-title {
-      font-family: var(--font-mono); font-size: 11px; font-weight: 500;
-      text-transform: uppercase; letter-spacing: 1.5px; color: var(--text-muted);
-      margin-bottom: 20px;
-    }
-
-    /* ─── Gauge ─── */
-    .gauge-container { display: flex; flex-direction: column; align-items: center; padding: 12px 0 20px; }
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 28px; margin-bottom: 20px; }
+    .card-title { font-family: var(--font-mono); font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: 1.5px; color: var(--text-muted); margin-bottom: 20px; }
+    .gauge-wrap { display: flex; flex-direction: column; align-items: center; padding: 12px 0 20px; position: relative; }
     .gauge-svg { transform: rotate(-90deg); }
-    .gauge-circle-bg { fill: none; stroke: var(--border); }
-    .gauge-circle-fg { fill: none; stroke-linecap: round; transition: stroke-dashoffset 1.2s cubic-bezier(0.4,0,0.2,1), stroke 0.5s ease; }
-    .gauge-center {
-      position: absolute; text-align: center;
-      font-family: var(--font-mono);
-    }
-    .gauge-value { font-size: 36px; font-weight: 500; line-height: 1; }
-    .gauge-label { font-size: 11px; color: var(--text-muted); margin-top: 6px; letter-spacing: 1px; text-transform: uppercase; }
-
-    /* ─── Stats grid ─── */
-    .stats {
-      display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1px;
-      background: var(--border); border-radius: 10px; overflow: hidden;
-      margin-top: 24px;
-    }
-    .stat {
-      background: var(--card); padding: 16px; text-align: center;
-    }
-    .stat-label { font-family: var(--font-mono); font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
-    .stat-value { font-family: var(--font-mono); font-size: 15px; font-weight: 500; color: var(--text); }
-
-    /* ─── Alert banner ─── */
-    .alert {
-      margin-top: 20px; padding: 14px 20px; border-radius: 10px;
-      font-family: var(--font-mono); font-size: 13px; font-weight: 500;
-      text-align: center; animation: alertPulse 2s infinite;
-    }
-    .alert-danger { background: var(--danger-glow); border: 1px solid rgba(240,72,72,0.25); color: var(--danger); }
-    .alert-info { background: var(--accent-glow); border: 1px solid rgba(240,160,48,0.2); color: var(--accent); }
-    @keyframes alertPulse { 0%,100% { opacity:1 } 50% { opacity:0.8 } }
-
-    /* ─── Buttons ─── */
+    .gauge-bg { fill: none; stroke: var(--border); }
+    .gauge-fg { fill: none; stroke-linecap: round; transition: stroke-dashoffset 1.2s cubic-bezier(0.4,0,0.2,1), stroke 0.5s ease; }
+    .gauge-center { position: absolute; text-align: center; top: 50%; left: 50%; transform: translate(-50%,-50%); font-family: var(--font-mono); }
+    .gauge-val { font-size: 36px; font-weight: 500; line-height: 1; }
+    .gauge-lbl { font-size: 11px; color: var(--text-muted); margin-top: 6px; letter-spacing: 1px; text-transform: uppercase; }
+    .stats { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1px; background: var(--border); border-radius: 10px; overflow: hidden; margin-top: 24px; }
+    .stat { background: var(--card); padding: 16px; text-align: center; }
+    .stat-l { font-family: var(--font-mono); font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+    .stat-v { font-family: var(--font-mono); font-size: 15px; font-weight: 500; }
+    .alert { margin-top: 20px; padding: 14px 20px; border-radius: 10px; font-family: var(--font-mono); font-size: 13px; font-weight: 500; text-align: center; }
+    .alert-danger { background: var(--danger-glow); border: 1px solid rgba(240,72,72,0.25); color: var(--danger); animation: pulse 2s infinite; }
+    .alert-success { background: var(--success-glow); border: 1px solid rgba(48,216,112,0.2); color: var(--success); }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.8} }
     .btn-row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px; }
-    .btn {
-      padding: 10px 20px; border-radius: 8px; border: none;
-      font-family: var(--font-mono); font-size: 12px; font-weight: 500;
-      cursor: pointer; transition: all 0.2s ease;
-      letter-spacing: 0.3px; display: inline-flex; align-items: center; gap: 6px;
-    }
+    .btn { padding: 10px 20px; border-radius: 8px; border: none; font-family: var(--font-mono); font-size: 12px; font-weight: 500; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 6px; }
     .btn:disabled { opacity: 0.4; cursor: not-allowed; }
     .btn-strava { background: var(--strava); color: #fff; }
     .btn-strava:hover:not(:disabled) { background: #e04400; }
@@ -166,631 +64,431 @@
     .btn-secondary:hover:not(:disabled) { border-color: var(--border-light); color: var(--text); }
     .btn-danger { background: transparent; color: var(--danger); border: 1px solid rgba(240,72,72,0.3); }
     .btn-danger:hover:not(:disabled) { background: var(--danger-glow); }
-    .btn-sm { padding: 6px 14px; font-size: 11px; }
-
-    /* ─── Ride log ─── */
-    .ride-log { border-radius: 12px; overflow: hidden; border: 1px solid var(--border); background: var(--card); }
-    .ride-log-header {
-      padding: 14px 20px; border-bottom: 1px solid var(--border);
-      display: flex; justify-content: space-between; align-items: center;
-    }
-    .ride-log-header span { font-family: var(--font-mono); font-size: 11px; text-transform: uppercase; letter-spacing: 1px; }
-    .ride-log-header .count { color: var(--text-muted); }
-    .ride-row {
-      display: grid; grid-template-columns: 1fr 80px 70px 32px;
-      align-items: center; padding: 11px 16px; gap: 8px;
-      font-family: var(--font-mono); font-size: 12px;
-      border-bottom: 1px solid rgba(37,37,48,0.5);
-      transition: background 0.15s;
-    }
-    .ride-row:hover { background: var(--bg2); }
-    .ride-row:last-child { border-bottom: none; }
-    .ride-name { color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .ride-date { color: var(--text-muted); font-size: 10px; margin-top: 2px; }
-    .ride-dist { color: var(--accent); text-align: right; font-weight: 500; }
-    .ride-source { color: var(--text-muted); text-align: right; font-size: 10px; }
-    .ride-del {
-      background: none; border: none; color: var(--text-muted); cursor: pointer;
-      font-size: 16px; padding: 2px 4px; border-radius: 4px; transition: all 0.15s;
-      text-align: center;
-    }
-    .ride-del:hover { color: var(--danger); background: var(--danger-glow); }
-    .ride-empty { padding: 40px 20px; text-align: center; color: var(--text-muted); font-family: var(--font-mono); font-size: 12px; }
-    .ride-list { max-height: 400px; overflow-y: auto; }
-
-    /* ─── Form ─── */
-    .form-group { margin-bottom: 18px; }
-    .form-label {
-      display: block; font-family: var(--font-mono); font-size: 10px;
-      text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted);
-      margin-bottom: 8px;
-    }
-    .form-input {
-      width: 100%; padding: 10px 14px; background: var(--bg);
-      border: 1px solid var(--border); border-radius: 8px;
-      color: var(--text); font-family: var(--font-mono); font-size: 13px;
-      outline: none; transition: border-color 0.2s;
-    }
-    .form-input:focus { border-color: var(--accent); }
-    .form-row { display: flex; gap: 12px; }
-    .form-row > .form-group { flex: 1; }
-    .form-suffix {
-      display: flex; align-items: center; gap: 8px;
-    }
-    .form-suffix .form-input { flex: 1; }
-    .form-suffix span { color: var(--text-muted); font-family: var(--font-mono); font-size: 12px; }
-    .form-hint {
-      margin-top: 20px; padding: 14px 18px; border-radius: 10px;
-      background: var(--accent-glow); border: 1px solid rgba(240,160,48,0.15);
-      font-size: 12px; color: var(--text-dim); line-height: 1.6;
-    }
-    .form-hint strong { color: var(--accent); }
-
-    /* ─── Strava connect section ─── */
-    .strava-hero {
-      text-align: center; padding: 48px 20px;
-    }
-    .strava-hero .icon { font-size: 48px; margin-bottom: 16px; }
-    .strava-hero h2 { font-size: 18px; font-weight: 600; margin-bottom: 8px; }
-    .strava-hero p { color: var(--text-dim); font-size: 13px; margin-bottom: 28px; line-height: 1.6; }
-
-    /* ─── Toast notification ─── */
-    .toast {
-      position: fixed; top: 20px; right: 20px; z-index: 1000;
-      padding: 12px 20px; border-radius: 8px;
-      font-family: var(--font-mono); font-size: 12px;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.5);
-      animation: toastIn 0.3s ease;
-    }
-    .toast-success { background: var(--success); color: #fff; }
-    .toast-error { background: var(--danger); color: #fff; }
+    .rlog { border-radius: 12px; overflow: hidden; border: 1px solid var(--border); background: var(--card); }
+    .rlog-hdr { padding: 14px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+    .rlog-hdr span { font-family: var(--font-mono); font-size: 11px; text-transform: uppercase; letter-spacing: 1px; }
+    .rlog-hdr .cnt { color: var(--text-muted); }
+    .rrow { display: grid; grid-template-columns: 1fr 80px 70px 32px; align-items: center; padding: 11px 16px; gap: 8px; font-family: var(--font-mono); font-size: 12px; border-bottom: 1px solid rgba(37,37,48,0.5); transition: background 0.15s; }
+    .rrow:hover { background: var(--bg2); }
+    .rrow:last-child { border-bottom: none; }
+    .rname { color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .rdate { color: var(--text-muted); font-size: 10px; margin-top: 2px; }
+    .rdist { color: var(--accent); text-align: right; font-weight: 500; }
+    .rsrc { color: var(--text-muted); text-align: right; font-size: 10px; }
+    .rdel { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 16px; padding: 2px 4px; border-radius: 4px; transition: all 0.15s; text-align: center; }
+    .rdel:hover { color: var(--danger); background: var(--danger-glow); }
+    .rempty { padding: 40px 20px; text-align: center; color: var(--text-muted); font-family: var(--font-mono); font-size: 12px; }
+    .rlist { max-height: 400px; overflow-y: auto; }
+    .fg { margin-bottom: 18px; }
+    .fl { display: block; font-family: var(--font-mono); font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); margin-bottom: 8px; }
+    .fi { width: 100%; padding: 10px 14px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: var(--font-mono); font-size: 13px; outline: none; transition: border-color 0.2s; }
+    .fi:focus { border-color: var(--accent); }
+    .frow { display: flex; gap: 12px; }
+    .frow > .fg { flex: 1; }
+    .fsuf { display: flex; align-items: center; gap: 8px; }
+    .fsuf .fi { flex: 1; }
+    .fsuf span { color: var(--text-muted); font-family: var(--font-mono); font-size: 12px; }
+    .fhint { margin-top: 20px; padding: 14px 18px; border-radius: 10px; background: var(--accent-glow); border: 1px solid rgba(240,160,48,0.15); font-size: 12px; color: var(--text-dim); line-height: 1.6; }
+    .fhint strong { color: var(--accent); }
+    .hero { text-align: center; padding: 40px 20px; }
+    .hero .icon { font-size: 48px; margin-bottom: 16px; }
+    .hero h2 { font-size: 18px; font-weight: 600; margin-bottom: 8px; }
+    .hero p { color: var(--text-dim); font-size: 13px; margin-bottom: 24px; line-height: 1.6; }
+    .estimate { margin-top: 16px; font-family: var(--font-mono); font-size: 12px; color: var(--text-muted); text-align: center; }
+    .toast { position: fixed; top: 20px; right: 20px; z-index: 1000; padding: 12px 20px; border-radius: 8px; font-family: var(--font-mono); font-size: 12px; box-shadow: 0 8px 32px rgba(0,0,0,0.5); animation: slideIn 0.3s ease; }
+    .toast-ok { background: var(--success); color: #fff; }
+    .toast-err { background: var(--danger); color: #fff; }
     .toast-info { background: var(--accent); color: var(--bg); }
-    @keyframes toastIn { from { transform: translateY(-20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-
-    /* ─── Estimate pill ─── */
-    .estimate {
-      margin-top: 16px; font-family: var(--font-mono); font-size: 12px;
-      color: var(--text-muted); text-align: center;
-    }
-
-    /* ─── Responsive ─── */
+    @keyframes slideIn { from { transform: translateY(-20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    .hidden { display: none !important; }
+    @keyframes fadeIn { from { opacity:0; transform:translateY(8px) } to { opacity:1; transform:translateY(0) } }
+    .view { animation: fadeIn 0.35s ease; }
     @media (max-width: 480px) {
       .header { flex-direction: column; align-items: flex-start; gap: 12px; }
-      .nav button { font-size: 11px; padding: 8px 8px; }
-      .gauge-value { font-size: 28px; }
       .stats { grid-template-columns: 1fr; }
       .btn-row { flex-direction: column; }
       .btn { width: 100%; justify-content: center; }
-      .form-row { flex-direction: column; gap: 0; }
+      .frow { flex-direction: column; gap: 0; }
     }
-
-    /* ─── Scrollbar ─── */
     ::-webkit-scrollbar { width: 5px; }
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
-
-    /* ─── Fade in ─── */
-    .fade-in { animation: fadeIn 0.4s ease; }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
-
-    .hidden { display: none !important; }
   </style>
 </head>
 <body>
-  <div class="app">
-    <!-- Header -->
-    <div class="header">
-      <div class="header-left">
-        <div class="logo">⛓</div>
-        <div>
-          <h1>Chain Wax Tracker</h1>
-          <div class="subtitle" id="headerSubtitle">Track your chain wax life</div>
-        </div>
-      </div>
-      <div class="strava-badge disconnected" id="stravaBadge">○ not connected</div>
-    </div>
+<div class="app">
 
-    <!-- Navigation -->
-    <div class="nav">
-      <button class="active" data-view="dashboard" onclick="switchView('dashboard')">Dashboard</button>
-      <button data-view="rides" onclick="switchView('rides')">Rides</button>
-      <button data-view="strava" onclick="switchView('strava')">Strava</button>
-      <button data-view="settings" onclick="switchView('settings')">Settings</button>
-    </div>
-
-    <!-- Toast container -->
-    <div id="toastContainer"></div>
-
-    <!-- ═══════════════ DASHBOARD VIEW ═══════════════ -->
-    <div id="view-dashboard" class="fade-in">
-      <!-- Empty state -->
-      <div id="emptyState" class="card hidden">
-        <div class="strava-hero">
-          <div class="icon">🔧</div>
-          <h2>Set Up Your Chain Wax Cycle</h2>
-          <p>Configure your last wax date and target distance in Settings, then connect Strava to automatically track your rides.</p>
-          <button class="btn btn-accent" onclick="switchView('settings')">Go to Settings</button>
-        </div>
-      </div>
-
-      <!-- Main dashboard -->
-      <div id="mainDashboard" class="hidden">
-        <!-- Gauge card -->
-        <div class="card">
-          <div class="gauge-container" style="position:relative;">
-            <svg class="gauge-svg" width="200" height="200" id="gaugeSvg">
-              <circle class="gauge-circle-bg" cx="100" cy="100" r="88" stroke-width="9"/>
-              <circle class="gauge-circle-fg" id="gaugeFg" cx="100" cy="100" r="88" stroke-width="9"
-                stroke-dasharray="553" stroke-dashoffset="553"/>
-            </svg>
-            <div class="gauge-center" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);">
-              <div class="gauge-value" id="gaugeValue">—</div>
-              <div class="gauge-label">km remaining</div>
-            </div>
-          </div>
-
-          <div id="alertBanner" class="alert alert-danger hidden">
-            ⚠ TIME TO RE-WAX YOUR CHAIN
-          </div>
-
-          <div class="stats">
-            <div class="stat">
-              <div class="stat-label">Waxed</div>
-              <div class="stat-value" id="statWaxDate">—</div>
-            </div>
-            <div class="stat">
-              <div class="stat-label">Ridden</div>
-              <div class="stat-value" id="statRidden">—</div>
-            </div>
-            <div class="stat">
-              <div class="stat-label">Target</div>
-              <div class="stat-value" id="statTarget">—</div>
-            </div>
-          </div>
-
-          <div class="estimate hidden" id="estimatePill"></div>
-        </div>
-
-        <!-- Action buttons -->
-        <div class="btn-row">
-          <button class="btn btn-strava hidden" id="btnSync" onclick="syncStrava()" disabled>
-            <span id="syncLabel">↻ Sync Strava</span>
-          </button>
-          <button class="btn btn-secondary" onclick="switchView('rides')">+ Add Ride</button>
-          <button class="btn btn-danger" onclick="reWaxChain()">🔗 Re-Wax Chain</button>
-        </div>
+  <div class="header">
+    <div class="header-left">
+      <div class="logo">⛓</div>
+      <div>
+        <h1>Chain Wax Tracker</h1>
+        <div class="subtitle">Track your chain wax life</div>
       </div>
     </div>
+    <div class="badge badge-off" id="badge">○ not connected</div>
+  </div>
 
-    <!-- ═══════════════ RIDES VIEW ═══════════════ -->
-    <div id="view-rides" class="fade-in hidden">
-      <!-- Add ride form -->
+  <div class="nav">
+    <button class="active" onclick="go('dashboard')">Dashboard</button>
+    <button onclick="go('rides')">Rides</button>
+    <button onclick="go('strava')">Strava</button>
+    <button onclick="go('settings')">Settings</button>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div id="v-dashboard" class="view">
+    <div id="emptyState" class="card hidden">
+      <div class="hero">
+        <div class="icon">🔧</div>
+        <h2>Set Up Your Chain Wax Cycle</h2>
+        <p>Go to Settings to set your wax date and target distance, then connect Strava.</p>
+        <button class="btn btn-accent" onclick="go('settings')">Go to Settings</button>
+      </div>
+    </div>
+    <div id="mainDash" class="hidden">
       <div class="card">
-        <div class="card-title">Add Manual Ride</div>
-        <div class="form-group">
-          <label class="form-label">Ride Name</label>
-          <input class="form-input" type="text" id="rideName" placeholder="Morning ride">
-        </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label class="form-label">Distance</label>
-            <div class="form-suffix">
-              <input class="form-input" type="number" id="rideDist" placeholder="0" min="0" step="0.1">
-              <span>km</span>
-            </div>
-          </div>
-          <div class="form-group">
-            <label class="form-label">Date</label>
-            <input class="form-input" type="date" id="rideDate">
+        <div class="gauge-wrap">
+          <svg class="gauge-svg" width="200" height="200">
+            <circle class="gauge-bg" cx="100" cy="100" r="88" stroke-width="9"/>
+            <circle class="gauge-fg" id="gFg" cx="100" cy="100" r="88" stroke-width="9" stroke-dasharray="553" stroke-dashoffset="553"/>
+          </svg>
+          <div class="gauge-center">
+            <div class="gauge-val" id="gVal">—</div>
+            <div class="gauge-lbl">km remaining</div>
           </div>
         </div>
-        <button class="btn btn-accent" onclick="addManualRide()">Save Ride</button>
+        <div id="alertWax" class="alert alert-danger hidden">⚠ TIME TO RE-WAX YOUR CHAIN</div>
+        <div class="stats">
+          <div class="stat"><div class="stat-l">Waxed</div><div class="stat-v" id="sWax">—</div></div>
+          <div class="stat"><div class="stat-l">Ridden</div><div class="stat-v" id="sRid">—</div></div>
+          <div class="stat"><div class="stat-l">Target</div><div class="stat-v" id="sTgt">—</div></div>
+        </div>
+        <div class="estimate hidden" id="estPill"></div>
       </div>
-
-      <!-- Ride log -->
-      <div class="ride-log" id="rideLog">
-        <div class="ride-log-header">
-          <span>Ride Log</span>
-          <span class="count" id="rideCount">0 rides</span>
-        </div>
-        <div class="ride-list" id="rideList">
-          <div class="ride-empty">No rides yet</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- ═══════════════ STRAVA VIEW ═══════════════ -->
-    <div id="view-strava" class="fade-in hidden">
-      <div class="card" id="stravaNotConnected">
-        <div class="strava-hero">
-          <div class="icon">🚴</div>
-          <h2>Connect Strava</h2>
-          <p>Link your Strava account to automatically pull cycling activities. One click and you're set — all your rides since the last wax will be synced.</p>
-          <button class="btn btn-strava" onclick="connectStrava()" id="btnConnect">
-            Connect with Strava
-          </button>
-        </div>
-      </div>
-
-      <div class="card hidden" id="stravaConnected">
-        <div class="card-title">Strava Connection</div>
-        <div class="alert alert-info" style="margin-top:0;margin-bottom:20px;">
-          ✓ Connected as <strong id="stravaAthlete">—</strong>
-        </div>
-        <div class="btn-row">
-          <button class="btn btn-strava" onclick="syncStrava()">↻ Sync Rides Now</button>
-          <button class="btn btn-danger" onclick="disconnectStrava()">Disconnect</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- ═══════════════ SETTINGS VIEW ═══════════════ -->
-    <div id="view-settings" class="fade-in hidden">
-      <div class="card">
-        <div class="card-title">Wax Settings</div>
-        <div class="form-group">
-          <label class="form-label">Last Wax Date</label>
-          <input class="form-input" type="date" id="cfgWaxDate" onchange="saveSettings()">
-        </div>
-        <div class="form-group">
-          <label class="form-label">Target Distance Per Wax</label>
-          <div class="form-suffix">
-            <input class="form-input" type="number" id="cfgTargetKm" min="50" step="50" onchange="saveSettings()">
-            <span>km</span>
-          </div>
-        </div>
-        <div class="form-hint">
-          <strong>Tip:</strong> Most chain wax treatments last 200–500 km depending on conditions. Dry = longer life. Wet/muddy = re-wax sooner.
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="card-title">Data Management</div>
-        <button class="btn btn-danger" onclick="resetAllData()">Reset All Data</button>
+      <div class="btn-row">
+        <button class="btn btn-strava hidden" id="bSync" onclick="syncStrava()">↻ Sync Strava</button>
+        <button class="btn btn-secondary" onclick="go('rides')">+ Add Ride</button>
+        <button class="btn btn-danger" onclick="reWax()">🔗 Re-Wax Chain</button>
       </div>
     </div>
   </div>
 
-  <script>
-    // ╔══════════════════════════════════════════════╗
-    // ║              STATE & STORAGE                 ║
-    // ╚══════════════════════════════════════════════╝
+  <!-- RIDES -->
+  <div id="v-rides" class="view hidden">
+    <div class="card">
+      <div class="card-title">Add Manual Ride</div>
+      <div class="fg">
+        <label class="fl">Ride Name</label>
+        <input class="fi" type="text" id="rName" placeholder="Morning ride">
+      </div>
+      <div class="frow">
+        <div class="fg">
+          <label class="fl">Distance</label>
+          <div class="fsuf"><input class="fi" type="number" id="rDist" placeholder="0" min="0" step="0.1"><span>km</span></div>
+        </div>
+        <div class="fg">
+          <label class="fl">Date</label>
+          <input class="fi" type="date" id="rDateIn">
+        </div>
+      </div>
+      <button class="btn btn-accent" onclick="addRide()">Save Ride</button>
+    </div>
+    <div class="rlog">
+      <div class="rlog-hdr"><span>Ride Log</span><span class="cnt" id="rCnt">0 rides</span></div>
+      <div class="rlist" id="rList"><div class="rempty">No rides yet</div></div>
+    </div>
+  </div>
 
-    const LS = {
-      config: "chainwax_config",
-      rides: "chainwax_rides",
-      strava: "chainwax_strava",
-    };
+  <!-- STRAVA -->
+  <div id="v-strava" class="view hidden">
+    <div id="strOff" class="card">
+      <div class="hero">
+        <div class="icon">🚴</div>
+        <h2>Connect Strava</h2>
+        <p>Link your Strava account to automatically pull cycling activities. Click below to authorize — your rides since the last wax will be synced.</p>
+        <button class="btn btn-strava" onclick="connectStrava()">Connect with Strava</button>
+      </div>
+    </div>
+    <div id="strOn" class="card hidden">
+      <div class="card-title">Strava Connection</div>
+      <div class="alert alert-success" style="margin-top:0;margin-bottom:20px;">
+        ✓ Connected as <strong id="strName">—</strong>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-strava" onclick="syncStrava()">↻ Sync Rides Now</button>
+        <button class="btn btn-danger" onclick="disconnectStrava()">Disconnect</button>
+      </div>
+    </div>
+  </div>
 
-    // ── YOUR STRAVA APP CONFIG ──
-    // Replace with your actual Strava Client ID.
-    // The Client Secret is stored in your Vercel environment variables (secure).
-    const STRAVA_CLIENT_ID = "202550";
+  <!-- SETTINGS -->
+  <div id="v-settings" class="view hidden">
+    <div class="card">
+      <div class="card-title">Wax Settings</div>
+      <div class="fg">
+        <label class="fl">Last Wax Date</label>
+        <input class="fi" type="date" id="cfgDate" onchange="saveCfg()">
+      </div>
+      <div class="fg">
+        <label class="fl">Target Distance Per Wax</label>
+        <div class="fsuf"><input class="fi" type="number" id="cfgKm" min="50" step="50" onchange="saveCfg()"><span>km</span></div>
+      </div>
+      <div class="fhint">
+        <strong>Tip:</strong> Most chain wax treatments last 200–500 km depending on conditions. Dry = longer. Wet/muddy = re-wax sooner.
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Data</div>
+      <button class="btn btn-danger" onclick="resetAll()">Reset All Data</button>
+    </div>
+  </div>
 
-    // Detect base URL for callbacks
-    const BASE_URL = window.location.origin;
-    const CALLBACK_URL = BASE_URL + "/strava-callback.html";
+</div>
 
-    let state = {
-      config: { waxDate: "", targetKm: 300 },
-      rides: [],
-      strava: null, // { accessToken, refreshToken, expiresAt, athlete }
-    };
+<script>
+// ══════════════════════════════════════════════════════════
+//  *** ENTER YOUR STRAVA CREDENTIALS HERE ***
+//
+//  Get these from: https://www.strava.com/settings/api
+//  Set "Authorization Callback Domain" to: cmanda-website.vercel.app
+// ══════════════════════════════════════════════════════════
 
-    function loadState() {
-      try {
-        const c = localStorage.getItem(LS.config);
-        if (c) state.config = JSON.parse(c);
-        const r = localStorage.getItem(LS.rides);
-        if (r) state.rides = JSON.parse(r);
-        const s = localStorage.getItem(LS.strava);
-        if (s) state.strava = JSON.parse(s);
-      } catch (e) { console.error("Load error:", e); }
+const STRAVA_CLIENT_ID     = "202550";
+const STRAVA_CLIENT_SECRET = "28a52c20e5aa595af90ed7477e8cd1443f00de5a";
+
+// ══════════════════════════════════════════════════════════
+
+const BASE = window.location.origin;
+const CALLBACK = BASE + "/strava-callback.html";
+
+let cfg = { waxDate: "", targetKm: 300 };
+let rides = [];
+let strava = null;
+
+function load() {
+  try {
+    const c = localStorage.getItem("chainwax_config"); if (c) cfg = JSON.parse(c);
+    const r = localStorage.getItem("chainwax_rides"); if (r) rides = JSON.parse(r);
+    const s = localStorage.getItem("chainwax_strava"); if (s) strava = JSON.parse(s);
+  } catch(e) { console.error(e); }
+}
+
+function saveCfg() {
+  cfg.waxDate = document.getElementById("cfgDate").value;
+  cfg.targetKm = parseInt(document.getElementById("cfgKm").value) || 300;
+  localStorage.setItem("chainwax_config", JSON.stringify(cfg));
+  render();
+}
+function saveRides() { localStorage.setItem("chainwax_rides", JSON.stringify(rides)); }
+function saveStrava() {
+  if (strava) localStorage.setItem("chainwax_strava", JSON.stringify(strava));
+  else localStorage.removeItem("chainwax_strava");
+}
+
+const fmt = n => Math.round(n * 10) / 10;
+const dateStr = d => new Date(d).toLocaleDateString("en-GB", { day:"numeric", month:"short", year:"numeric" });
+const shortDate = d => new Date(d).toLocaleDateString("en-GB", { day:"2-digit", month:"2-digit" });
+const esc = s => { const d = document.createElement("div"); d.textContent = s; return d.innerHTML; };
+
+function toast(msg, type) {
+  const el = document.createElement("div");
+  el.className = "toast toast-" + (type || "info");
+  el.textContent = msg;
+  document.body.appendChild(el);
+  setTimeout(() => { el.style.opacity = "0"; el.style.transition = "opacity 0.3s"; setTimeout(() => el.remove(), 300); }, 3000);
+}
+
+let currentView = "dashboard";
+function go(name) {
+  currentView = name;
+  ["dashboard","rides","strava","settings"].forEach(v => {
+    document.getElementById("v-" + v).classList.toggle("hidden", v !== name);
+  });
+  document.querySelectorAll(".nav button").forEach((btn, i) => {
+    btn.classList.toggle("active", ["dashboard","rides","strava","settings"][i] === name);
+  });
+  if (name === "rides") document.getElementById("rDateIn").value = new Date().toISOString().split("T")[0];
+}
+
+// ── STRAVA ──
+
+function connectStrava() {
+  // Store credentials so callback page can use them
+  localStorage.setItem("chainwax_client_id", STRAVA_CLIENT_ID);
+  localStorage.setItem("chainwax_client_secret", STRAVA_CLIENT_SECRET);
+
+  const url = "https://www.strava.com/oauth/authorize?client_id=" + STRAVA_CLIENT_ID +
+    "&response_type=code&redirect_uri=" + encodeURIComponent(CALLBACK) +
+    "&approval_prompt=auto&scope=activity:read_all";
+  window.location.href = url;
+}
+
+function disconnectStrava() {
+  strava = null; saveStrava();
+  toast("Strava disconnected", "info");
+  render();
+}
+
+async function getToken() {
+  if (!strava) return null;
+  const now = Math.floor(Date.now() / 1000);
+  if (now < strava.expiresAt - 60) return strava.accessToken;
+  try {
+    const resp = await fetch("https://www.strava.com/api/v3/oauth/token", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        client_id: STRAVA_CLIENT_ID,
+        client_secret: STRAVA_CLIENT_SECRET,
+        refresh_token: strava.refreshToken,
+        grant_type: "refresh_token",
+      }),
+    });
+    const d = await resp.json();
+    if (d.access_token) {
+      strava.accessToken = d.access_token;
+      strava.refreshToken = d.refresh_token;
+      strava.expiresAt = d.expires_at;
+      saveStrava();
+      return d.access_token;
     }
+  } catch(e) { console.error(e); }
+  return null;
+}
 
-    function saveConfig() { localStorage.setItem(LS.config, JSON.stringify(state.config)); }
-    function saveRides() { localStorage.setItem(LS.rides, JSON.stringify(state.rides)); }
-    function saveStravaTokens() {
-      if (state.strava) localStorage.setItem(LS.strava, JSON.stringify(state.strava));
-      else localStorage.removeItem(LS.strava);
-    }
-
-    // ╔══════════════════════════════════════════════╗
-    // ║              HELPERS                         ║
-    // ╚══════════════════════════════════════════════╝
-
-    const fmt = (n) => Math.round(n * 10) / 10;
-    const dateStr = (d) => new Date(d).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
-    const shortDate = (d) => new Date(d).toLocaleDateString("en-GB", { day: "2-digit", month: "2-digit" });
-
-    function toast(msg, type = "info") {
-      const el = document.createElement("div");
-      el.className = `toast toast-${type}`;
-      el.textContent = msg;
-      document.body.appendChild(el);
-      setTimeout(() => { el.style.opacity = "0"; setTimeout(() => el.remove(), 300); }, 3000);
-    }
-
-    // ╔══════════════════════════════════════════════╗
-    // ║              VIEW SWITCHING                  ║
-    // ╚══════════════════════════════════════════════╝
-
-    function switchView(name) {
-      ["dashboard", "rides", "strava", "settings"].forEach((v) => {
-        document.getElementById(`view-${v}`).classList.toggle("hidden", v !== name);
+async function syncStrava() {
+  if (!strava) { toast("Connect Strava first", "err"); return; }
+  if (!cfg.waxDate) { toast("Set a wax date first", "err"); return; }
+  const btn = document.getElementById("bSync");
+  btn.disabled = true; btn.textContent = "⏳ Syncing...";
+  try {
+    const token = await getToken();
+    if (!token) throw new Error("Token expired. Reconnect Strava.");
+    const after = Math.floor(new Date(cfg.waxDate).getTime() / 1000);
+    let page = 1, all = [];
+    while (true) {
+      const r = await fetch("https://www.strava.com/api/v3/athlete/activities?after=" + after + "&per_page=100&page=" + page, {
+        headers: { Authorization: "Bearer " + token }
       });
-      document.querySelectorAll(".nav button").forEach((btn) => {
-        btn.classList.toggle("active", btn.dataset.view === name);
-      });
-      if (name === "rides") {
-        document.getElementById("rideDate").value = new Date().toISOString().split("T")[0];
-      }
+      if (!r.ok) throw new Error("HTTP " + r.status);
+      const acts = await r.json();
+      if (acts.length === 0) break;
+      all = all.concat(acts); page++;
     }
+    const bikeRides = all
+      .filter(a => a.type === "Ride" || a.type === "VirtualRide" || a.type === "EBikeRide")
+      .map(a => ({ id: "strava_" + a.id, name: a.name, distance: a.distance / 1000, date: a.start_date_local || a.start_date, source: "strava" }));
+    const manual = rides.filter(r => r.source !== "strava");
+    rides = [...manual, ...bikeRides].sort((a, b) => new Date(a.date) - new Date(b.date));
+    saveRides();
+    toast("Synced " + bikeRides.length + " ride" + (bikeRides.length !== 1 ? "s" : ""), "ok");
+  } catch(e) { toast("Sync failed: " + e.message, "err"); }
+  btn.disabled = false; btn.textContent = "↻ Sync Strava";
+  render();
+}
 
-    // ╔══════════════════════════════════════════════╗
-    // ║              STRAVA OAUTH                    ║
-    // ╚══════════════════════════════════════════════╝
+// ── RIDES ──
 
-    function connectStrava() {
-      const url = `https://www.strava.com/oauth/authorize?client_id=${STRAVA_CLIENT_ID}&response_type=code&redirect_uri=${encodeURIComponent(CALLBACK_URL)}&approval_prompt=auto&scope=activity:read_all`;
-      window.location.href = url;
-    }
+function addRide() {
+  const name = document.getElementById("rName").value.trim();
+  const dist = parseFloat(document.getElementById("rDist").value);
+  const date = document.getElementById("rDateIn").value;
+  if (!name || !dist || !date) { toast("Fill all fields", "err"); return; }
+  rides.push({ id: "m_" + Date.now(), name, distance: dist, date, source: "manual" });
+  rides.sort((a, b) => new Date(a.date) - new Date(b.date));
+  saveRides();
+  document.getElementById("rName").value = "";
+  document.getElementById("rDist").value = "";
+  toast("Ride added", "ok");
+  render();
+}
 
-    function disconnectStrava() {
-      state.strava = null;
-      saveStravaTokens();
-      toast("Strava disconnected", "info");
-      renderAll();
-    }
+function delRide(id) { rides = rides.filter(r => r.id !== id); saveRides(); render(); }
 
-    async function getValidToken() {
-      if (!state.strava) return null;
-      const now = Math.floor(Date.now() / 1000);
-      if (now < state.strava.expiresAt - 60) return state.strava.accessToken;
+function reWax() {
+  if (!confirm("Start a fresh wax cycle? This clears all tracked rides.")) return;
+  cfg.waxDate = new Date().toISOString().split("T")[0];
+  rides = [];
+  localStorage.setItem("chainwax_config", JSON.stringify(cfg));
+  saveRides();
+  toast("Chain waxed! Fresh cycle started.", "ok");
+  render();
+}
 
-      // Refresh token
-      try {
-        const resp = await fetch("/api/strava/auth", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ grant_type: "refresh_token", refresh_token: state.strava.refreshToken }),
-        });
-        const data = await resp.json();
-        if (data.access_token) {
-          state.strava.accessToken = data.access_token;
-          state.strava.refreshToken = data.refresh_token;
-          state.strava.expiresAt = data.expires_at;
-          saveStravaTokens();
-          return data.access_token;
-        }
-      } catch (e) { console.error("Token refresh failed:", e); }
-      return null;
-    }
+function resetAll() {
+  if (!confirm("Delete ALL data including Strava connection?")) return;
+  ["chainwax_config","chainwax_rides","chainwax_strava","chainwax_client_id","chainwax_client_secret"].forEach(k => localStorage.removeItem(k));
+  cfg = { waxDate: "", targetKm: 300 }; rides = []; strava = null;
+  toast("All data cleared", "info");
+  render();
+}
 
-    async function syncStrava() {
-      if (!state.strava) { toast("Connect Strava first", "error"); return; }
-      if (!state.config.waxDate) { toast("Set a wax date first", "error"); return; }
+// ── RENDER ──
 
-      const syncBtn = document.getElementById("btnSync");
-      const syncLabel = document.getElementById("syncLabel");
-      syncBtn.disabled = true;
-      syncLabel.textContent = "⏳ Syncing...";
+function render() {
+  const conn = !!strava;
+  const hasWax = !!cfg.waxDate;
+  const badge = document.getElementById("badge");
+  badge.className = "badge " + (conn ? "badge-on" : "badge-off");
+  badge.textContent = conn ? "● Strava" : "○ not connected";
+  document.getElementById("emptyState").classList.toggle("hidden", hasWax);
+  document.getElementById("mainDash").classList.toggle("hidden", !hasWax);
+  document.getElementById("bSync").classList.toggle("hidden", !conn);
+  document.getElementById("strOff").classList.toggle("hidden", conn);
+  document.getElementById("strOn").classList.toggle("hidden", !conn);
+  if (conn && strava.athlete) {
+    const a = strava.athlete;
+    document.getElementById("strName").textContent = ((a.firstname || "") + " " + (a.lastname || "")).trim() || "Athlete";
+  }
+  document.getElementById("cfgDate").value = cfg.waxDate;
+  document.getElementById("cfgKm").value = cfg.targetKm;
 
-      try {
-        const token = await getValidToken();
-        if (!token) { toast("Token expired. Reconnect Strava.", "error"); return; }
+  const totalKm = rides.reduce((s, r) => s + r.distance, 0);
+  const remaining = Math.max(0, cfg.targetKm - totalKm);
+  const pct = cfg.targetKm > 0 ? Math.min((totalKm / cfg.targetKm) * 100, 100) : 0;
+  const overdue = totalKm >= cfg.targetKm;
+  const circ = 2 * Math.PI * 88;
+  const off = circ - (pct / 100) * circ;
+  const gFg = document.getElementById("gFg");
+  const col = pct > 85 ? "var(--danger)" : pct > 60 ? "var(--accent)" : "var(--success)";
+  gFg.style.strokeDashoffset = off;
+  gFg.style.stroke = col;
+  gFg.style.filter = "drop-shadow(0 0 8px " + col + ")";
+  const gVal = document.getElementById("gVal");
+  gVal.textContent = fmt(remaining);
+  gVal.style.color = overdue ? "var(--danger)" : "var(--text)";
+  document.getElementById("sWax").textContent = hasWax ? dateStr(cfg.waxDate) : "—";
+  document.getElementById("sRid").textContent = fmt(totalKm) + " km";
+  document.getElementById("sTgt").textContent = cfg.targetKm + " km";
+  document.getElementById("alertWax").classList.toggle("hidden", !overdue);
 
-        const after = Math.floor(new Date(state.config.waxDate).getTime() / 1000);
-        let page = 1, all = [], hasMore = true;
+  const est = document.getElementById("estPill");
+  if (hasWax && rides.length > 0 && remaining > 0) {
+    const days = Math.max(1, (Date.now() - new Date(cfg.waxDate).getTime()) / 86400000);
+    const avg = totalKm / days;
+    if (avg > 0) {
+      const left = Math.ceil(remaining / avg);
+      est.textContent = "≈ " + left + " day" + (left !== 1 ? "s" : "") + " until re-wax at current pace";
+      est.classList.remove("hidden");
+    } else est.classList.add("hidden");
+  } else est.classList.add("hidden");
 
-        while (hasMore) {
-          const resp = await fetch(
-            `https://www.strava.com/api/v3/athlete/activities?after=${after}&per_page=100&page=${page}`,
-            { headers: { Authorization: `Bearer ${token}` } }
-          );
-          if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-          const activities = await resp.json();
-          if (activities.length === 0) hasMore = false;
-          else { all = all.concat(activities); page++; }
-        }
+  document.getElementById("rCnt").textContent = rides.length + " ride" + (rides.length !== 1 ? "s" : "");
+  const rl = document.getElementById("rList");
+  if (rides.length === 0) {
+    rl.innerHTML = '<div class="rempty">No rides yet. Sync Strava or add manually.</div>';
+  } else {
+    rl.innerHTML = [...rides].reverse().map(r =>
+      '<div class="rrow"><div><div class="rname">' + esc(r.name) + '</div><div class="rdate">' + shortDate(r.date) + '</div></div>' +
+      '<div class="rdist">' + fmt(r.distance) + ' km</div><div class="rsrc">' + (r.source === "strava" ? "Strava" : "Manual") + '</div>' +
+      '<button class="rdel" onclick="delRide(\'' + r.id + '\')" title="Delete">×</button></div>'
+    ).join("");
+  }
+}
 
-        const bikeRides = all
-          .filter((a) => a.type === "Ride" || a.type === "VirtualRide" || a.type === "EBikeRide")
-          .map((a) => ({
-            id: `strava_${a.id}`,
-            name: a.name,
-            distance: a.distance / 1000,
-            date: a.start_date_local || a.start_date,
-            source: "strava",
-          }));
-
-        // Merge: keep manual, replace strava
-        const manual = state.rides.filter((r) => r.source !== "strava");
-        state.rides = [...manual, ...bikeRides].sort((a, b) => new Date(a.date) - new Date(b.date));
-        saveRides();
-        toast(`Synced ${bikeRides.length} ride${bikeRides.length !== 1 ? "s" : ""} from Strava`, "success");
-      } catch (e) {
-        toast("Sync failed: " + e.message, "error");
-      }
-
-      syncBtn.disabled = false;
-      syncLabel.textContent = "↻ Sync Strava";
-      renderAll();
-    }
-
-    // ╔══════════════════════════════════════════════╗
-    // ║              RIDE MANAGEMENT                 ║
-    // ╚══════════════════════════════════════════════╝
-
-    function addManualRide() {
-      const name = document.getElementById("rideName").value.trim();
-      const dist = parseFloat(document.getElementById("rideDist").value);
-      const date = document.getElementById("rideDate").value;
-
-      if (!name || !dist || !date) { toast("Fill in all fields", "error"); return; }
-
-      state.rides.push({
-        id: `manual_${Date.now()}`,
-        name, distance: dist, date, source: "manual",
-      });
-      state.rides.sort((a, b) => new Date(a.date) - new Date(b.date));
-      saveRides();
-
-      document.getElementById("rideName").value = "";
-      document.getElementById("rideDist").value = "";
-      toast("Ride added", "success");
-      renderAll();
-    }
-
-    function deleteRide(id) {
-      state.rides = state.rides.filter((r) => r.id !== id);
-      saveRides();
-      toast("Ride removed", "info");
-      renderAll();
-    }
-
-    // ╔══════════════════════════════════════════════╗
-    // ║              SETTINGS                        ║
-    // ╚══════════════════════════════════════════════╝
-
-    function saveSettings() {
-      state.config.waxDate = document.getElementById("cfgWaxDate").value;
-      state.config.targetKm = parseInt(document.getElementById("cfgTargetKm").value) || 300;
-      saveConfig();
-      renderAll();
-    }
-
-    function reWaxChain() {
-      if (!confirm("Start a fresh wax cycle? This clears all tracked rides.")) return;
-      state.config.waxDate = new Date().toISOString().split("T")[0];
-      state.rides = [];
-      saveConfig(); saveRides();
-      toast("Chain waxed! Fresh cycle started.", "success");
-      renderAll();
-    }
-
-    function resetAllData() {
-      if (!confirm("Delete ALL data including Strava connection?")) return;
-      localStorage.removeItem(LS.config);
-      localStorage.removeItem(LS.rides);
-      localStorage.removeItem(LS.strava);
-      state = { config: { waxDate: "", targetKm: 300 }, rides: [], strava: null };
-      toast("All data cleared", "info");
-      renderAll();
-    }
-
-    // ╔══════════════════════════════════════════════╗
-    // ║              RENDERING                       ║
-    // ╚══════════════════════════════════════════════╝
-
-    function renderAll() {
-      const connected = !!state.strava;
-      const hasWaxDate = !!state.config.waxDate;
-
-      // Strava badge
-      const badge = document.getElementById("stravaBadge");
-      if (connected) {
-        badge.className = "strava-badge connected";
-        badge.textContent = "● Strava";
-      } else {
-        badge.className = "strava-badge disconnected";
-        badge.textContent = "○ not connected";
-      }
-
-      // Empty vs main dashboard
-      document.getElementById("emptyState").classList.toggle("hidden", hasWaxDate);
-      document.getElementById("mainDashboard").classList.toggle("hidden", !hasWaxDate);
-
-      // Sync button visibility
-      const btnSync = document.getElementById("btnSync");
-      btnSync.classList.toggle("hidden", !connected);
-      btnSync.disabled = false;
-
-      // Strava view states
-      document.getElementById("stravaNotConnected").classList.toggle("hidden", connected);
-      document.getElementById("stravaConnected").classList.toggle("hidden", !connected);
-      if (connected && state.strava.athlete) {
-        const a = state.strava.athlete;
-        document.getElementById("stravaAthlete").textContent =
-          `${a.firstname || ""} ${a.lastname || ""}`.trim() || "Athlete";
-      }
-
-      // Settings
-      document.getElementById("cfgWaxDate").value = state.config.waxDate;
-      document.getElementById("cfgTargetKm").value = state.config.targetKm;
-
-      // Calculations
-      const totalKm = state.rides.reduce((sum, r) => sum + r.distance, 0);
-      const remaining = Math.max(0, state.config.targetKm - totalKm);
-      const usedPct = state.config.targetKm > 0 ? Math.min((totalKm / state.config.targetKm) * 100, 100) : 0;
-      const isOverdue = totalKm >= state.config.targetKm;
-
-      // Gauge
-      const circumference = 2 * Math.PI * 88; // radius=88
-      const offset = circumference - (usedPct / 100) * circumference;
-      const gaugeFg = document.getElementById("gaugeFg");
-      const gaugeColor = usedPct > 85 ? "var(--danger)" : usedPct > 60 ? "var(--accent)" : "var(--success)";
-      const glowColor = usedPct > 85 ? "var(--danger)" : usedPct > 60 ? "var(--accent)" : "var(--success)";
-      gaugeFg.style.strokeDashoffset = offset;
-      gaugeFg.style.stroke = gaugeColor;
-      gaugeFg.style.filter = `drop-shadow(0 0 8px ${glowColor})`;
-
-      const gaugeValueEl = document.getElementById("gaugeValue");
-      gaugeValueEl.textContent = fmt(remaining);
-      gaugeValueEl.style.color = isOverdue ? "var(--danger)" : "var(--text)";
-
-      // Stats
-      document.getElementById("statWaxDate").textContent = hasWaxDate ? dateStr(state.config.waxDate) : "—";
-      document.getElementById("statRidden").textContent = `${fmt(totalKm)} km`;
-      document.getElementById("statTarget").textContent = `${state.config.targetKm} km`;
-
-      // Alert banner
-      document.getElementById("alertBanner").classList.toggle("hidden", !isOverdue);
-
-      // Estimate
-      const estimateEl = document.getElementById("estimatePill");
-      if (hasWaxDate && state.rides.length > 0 && remaining > 0) {
-        const daysSince = Math.max(1, (Date.now() - new Date(state.config.waxDate).getTime()) / 86400000);
-        const avgPerDay = totalKm / daysSince;
-        if (avgPerDay > 0) {
-          const daysLeft = Math.ceil(remaining / avgPerDay);
-          estimateEl.textContent = `≈ ${daysLeft} day${daysLeft !== 1 ? "s" : ""} until re-wax at current pace`;
-          estimateEl.classList.remove("hidden");
-        } else estimateEl.classList.add("hidden");
-      } else estimateEl.classList.add("hidden");
-
-      // Ride log
-      document.getElementById("rideCount").textContent = `${state.rides.length} ride${state.rides.length !== 1 ? "s" : ""}`;
-      const rideList = document.getElementById("rideList");
-      if (state.rides.length === 0) {
-        rideList.innerHTML = '<div class="ride-empty">No rides yet. Sync Strava or add manually.</div>';
-      } else {
-        rideList.innerHTML = [...state.rides].reverse().map((r) => `
-          <div class="ride-row">
-            <div>
-              <div class="ride-name">${escHtml(r.name)}</div>
-              <div class="ride-date">${shortDate(r.date)}</div>
-            </div>
-            <div class="ride-dist">${fmt(r.distance)} km</div>
-            <div class="ride-source">${r.source === "strava" ? "Strava" : "Manual"}</div>
-            <button class="ride-del" onclick="deleteRide('${r.id}')" title="Delete">×</button>
-          </div>
-        `).join("");
-      }
-    }
-
-    function escHtml(s) {
-      const d = document.createElement("div");
-      d.textContent = s;
-      return d.innerHTML;
-    }
-
-    // ╔══════════════════════════════════════════════╗
-    // ║              INIT                            ║
-    // ╚══════════════════════════════════════════════╝
-
-    loadState();
-    renderAll();
-  </script>
+load();
+render();
+</script>
 </body>
 </html>
