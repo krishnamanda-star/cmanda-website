@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Connecting to Strava...</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: #0f0f0f; color: #e8e8e8; font-family: 'JetBrains Mono', monospace; }
+    .card { text-align: center; padding: 48px; }
+    .spinner { width: 40px; height: 40px; border: 3px solid #2a2a2a; border-top-color: #e8a838; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 24px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    h2 { font-size: 16px; margin-bottom: 8px; }
+    p { color: #888; font-size: 13px; }
+    .error { color: #e84848; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="spinner" id="spinner"></div>
+    <h2 id="title">Connecting to Strava...</h2>
+    <p id="message">Exchanging authorization code</p>
+  </div>
+  <script>
+    (async () => {
+      const params = new URLSearchParams(window.location.search);
+      const code = params.get("code");
+      const error = params.get("error");
+
+      if (error) {
+        document.getElementById("spinner").style.display = "none";
+        document.getElementById("title").textContent = "Authorization Denied";
+        document.getElementById("title").classList.add("error");
+        document.getElementById("message").textContent = "You declined the Strava authorization.";
+        return;
+      }
+
+      if (!code) {
+        document.getElementById("spinner").style.display = "none";
+        document.getElementById("title").textContent = "Error";
+        document.getElementById("title").classList.add("error");
+        document.getElementById("message").textContent = "No authorization code received.";
+        return;
+      }
+
+      try {
+        const resp = await fetch("/api/strava/auth", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ grant_type: "authorization_code", code }),
+        });
+
+        const data = await resp.json();
+
+        if (data.access_token) {
+          // Store tokens in localStorage and redirect back to main app
+          localStorage.setItem("chainwax_strava", JSON.stringify({
+            accessToken: data.access_token,
+            refreshToken: data.refresh_token,
+            expiresAt: data.expires_at,
+            athlete: data.athlete,
+          }));
+
+          document.getElementById("title").textContent = "Connected!";
+          document.getElementById("message").textContent = "Redirecting back to Chain Wax Tracker...";
+
+          setTimeout(() => { window.location.href = "/chain-wax"; }, 1000);
+        } else {
+          throw new Error(data.error || "Unknown error");
+        }
+      } catch (e) {
+        document.getElementById("spinner").style.display = "none";
+        document.getElementById("title").textContent = "Connection Failed";
+        document.getElementById("title").classList.add("error");
+        document.getElementById("message").textContent = e.message;
+      }
+    })();
+  </script>
+</body>
+</html>
