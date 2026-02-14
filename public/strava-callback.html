@@ -46,7 +46,8 @@
         const resp = await fetch("/api/strava", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-         body: JSON.stringify({
+body: JSON.stringify({
+  action: "token",
   grant_type: "authorization_code",
   code: code,
   client_id: clientId,
