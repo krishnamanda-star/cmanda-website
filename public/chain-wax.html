@@ -332,20 +332,21 @@ function disconnectStrava() {
 
 async function getToken() {
   if (!strava) return null;
-  const now = Math.floor(Date.now() / 1000);
+  var now = Math.floor(Date.now() / 1000);
   if (now < strava.expiresAt - 60) return strava.accessToken;
   try {
-    const resp = await fetch("/api/strava", {
+    var resp = await fetch("/api/strava", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
+        action: "token",
         client_id: STRAVA_CLIENT_ID,
         client_secret: STRAVA_CLIENT_SECRET,
         refresh_token: strava.refreshToken,
         grant_type: "refresh_token",
       }),
     });
-    const d = await resp.json();
+    var d = await resp.json();
     if (d.access_token) {
       strava.accessToken = d.access_token;
       strava.refreshToken = d.refresh_token;
@@ -359,27 +360,28 @@ async function getToken() {
 async function syncStrava() {
   if (!strava) { toast("Connect Strava first", "err"); return; }
   if (!cfg.waxDate) { toast("Set a wax date first", "err"); return; }
-  const btn = document.getElementById("bSync");
+  var btn = document.getElementById("bSync");
   btn.disabled = true; btn.textContent = "⏳ Syncing...";
   try {
-    const token = await getToken();
+    var token = await getToken();
     if (!token) throw new Error("Token expired. Reconnect Strava.");
-    const after = Math.floor(new Date(cfg.waxDate).getTime() / 1000);
-    let page = 1, all = [];
+    var after = Math.floor(new Date(cfg.waxDate).getTime() / 1000);
+    var pg = 1, all = [];
     while (true) {
-      const r = await fetch("https://www.strava.com/api/v3/athlete/activities?after=" + after + "&per_page=100&page=" + page, {
-        headers: { Authorization: "Bearer " + token }
+      var r = await fetch("/api/strava", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "activities", access_token: token, after: after, page: pg }),
       });
-      if (!r.ok) throw new Error("HTTP " + r.status);
-      const acts = await r.json();
-      if (acts.length === 0) break;
-      all = all.concat(acts); page++;
+      var acts = await r.json();
+      if (!Array.isArray(acts) || acts.length === 0) break;
+      all = all.concat(acts); pg++;
     }
-    const bikeRides = all
-      .filter(a => a.type === "Ride" || a.type === "VirtualRide" || a.type === "EBikeRide")
-      .map(a => ({ id: "strava_" + a.id, name: a.name, distance: a.distance / 1000, date: a.start_date_local || a.start_date, source: "strava" }));
-    const manual = rides.filter(r => r.source !== "strava");
-    rides = [...manual, ...bikeRides].sort((a, b) => new Date(a.date) - new Date(b.date));
+    var bikeRides = all
+      .filter(function(a) { return a.type === "Ride" || a.type === "VirtualRide" || a.type === "EBikeRide"; })
+      .map(function(a) { return { id: "strava_" + a.id, name: a.name, distance: a.distance / 1000, date: a.start_date_local || a.start_date, source: "strava" }; });
+    var manual = rides.filter(function(r) { return r.source !== "strava"; });
+    rides = manual.concat(bikeRides).sort(function(a, b) { return new Date(a.date) - new Date(b.date); });
     saveRides();
     toast("Synced " + bikeRides.length + " ride" + (bikeRides.length !== 1 ? "s" : ""), "ok");
   } catch(e) { toast("Sync failed: " + e.message, "err"); }
