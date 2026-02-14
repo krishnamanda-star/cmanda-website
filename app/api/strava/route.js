@@ -1,36 +1,57 @@
+var JSONBIN_KEY = "$2a$10$ea9xP1ml5wGDDWCf1Bl/ZugyBmmd9kmf0a4HmulSQ1/7no5wALgsu";
+var JSONBIN_URL = "https://api.jsonbin.io/v3/b";
+
 export async function POST(request) {
-  const body = await request.json();
-  const { action, grant_type, code, refresh_token, client_id, client_secret, access_token, after, page } = body;
+  var body = await request.json();
+  var action = body.action;
 
-  // Token exchange / refresh
   if (action === "token") {
-    const params = { client_id, client_secret, grant_type };
-    if (grant_type === "authorization_code") params.code = code;
-    else if (grant_type === "refresh_token") params.refresh_token = refresh_token;
-
+    var params = { client_id: body.client_id, client_secret: body.client_secret, grant_type: body.grant_type };
+    if (body.grant_type === "authorization_code") params.code = body.code;
+    else params.refresh_token = body.refresh_token;
     try {
-      const r = await fetch("https://www.strava.com/api/v3/oauth/token", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(params),
-      });
+      var r = await fetch("https://www.strava.com/api/v3/oauth/token", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(params) });
       return Response.json(await r.json());
-    } catch (e) {
-      return Response.json({ error: e.message }, { status: 500 });
-    }
+    } catch (e) { return Response.json({ error: e.message }, { status: 500 }); }
   }
 
-  // Fetch activities
   if (action === "activities") {
     try {
-      const url = "https://www.strava.com/api/v3/athlete/activities?after=" + after + "&per_page=100&page=" + (page || 1);
-      const r = await fetch(url, {
-        headers: { "Authorization": "Bearer " + access_token },
-      });
+      var url = "https://www.strava.com/api/v3/athlete/activities?after=" + body.after + "&per_page=100&page=" + (body.page || 1);
+      var r = await fetch(url, { headers: { "Authorization": "Bearer " + body.access_token } });
       return Response.json(await r.json());
-    } catch (e) {
-      return Response.json({ error: e.message }, { status: 500 });
-    }
+    } catch (e) { return Response.json({ error: e.message }, { status: 500 }); }
+  }
+
+  if (action === "save") {
+    try {
+      if (body.bin_id) {
+        var r = await fetch(JSONBIN_URL + "/" + body.bin_id, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json", "X-Master-Key": JSONBIN_KEY },
+          body: JSON.stringify(body.data),
+        });
+        return Response.json(await r.json());
+      } else {
+        var r = await fetch(JSONBIN_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "X-Master-Key": JSONBIN_KEY, "X-Bin-Name": "chainwax_" + body.athlete_id, "X-Bin-Private": "true" },
+          body: JSON.stringify(body.data),
+        });
+        var d = await r.json();
+        return Response.json({ bin_id: d.metadata.id });
+      }
+    } catch (e) { return Response.json({ error: e.message }, { status: 500 }); }
+  }
+
+  if (action === "load") {
+    try {
+      var r = await fetch(JSONBIN_URL + "/" + body.bin_id + "/latest", {
+        headers: { "X-Master-Key": JSONBIN_KEY },
+      });
+      var d = await r.json();
+      return Response.json({ data: d.record });
+    } catch (e) { return Response.json({ error: e.message }, { status: 500 }); }
   }
 
   return Response.json({ error: "Invalid action" }, { status: 400 });
