@@ -335,7 +335,7 @@ async function getToken() {
   const now = Math.floor(Date.now() / 1000);
   if (now < strava.expiresAt - 60) return strava.accessToken;
   try {
-    const resp = await fetch("https://www.strava.com/api/v3/oauth/token", {
+    const resp = await fetch("/api/strava", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -356,7 +356,6 @@ async function getToken() {
   } catch(e) { console.error(e); }
   return null;
 }
-
 async function syncStrava() {
   if (!strava) { toast("Connect Strava first", "err"); return; }
   if (!cfg.waxDate) { toast("Set a wax date first", "err"); return; }
