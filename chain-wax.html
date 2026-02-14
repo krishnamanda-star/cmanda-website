@@ -1,3 +1,393 @@
+
+I want to be able to input the date that I waxed my bicycle chain and set the number of km I want to ride on one wax. Based on the ride that has been registered on strava I want to be able to automatically get that data and match against the km and show the number of km left to ride on the waxed chain and when to change the chain. Can you make an app to track this
+
+7:57 PM
+I'll build this app for you. Let me first check the frontend design skill, then create it.
+
+
+Check frontend design skill
+Now let me look into the Strava API to understand how to integrate it.
+
+
+Searched the web
+
+Good, I have a solid understanding of the Strava OAuth flow. Now let me build a React app that handles Strava OAuth directly in the browser, fetches cycling activities, and tracks chain wax life. Since the artifact runs in a sandboxed environment without a backend server, I'll design it so you can either connect to Strava via OAuth or manually enter ride data.
+
+
+Created a file, ran a command, read a file
+Here's your Chain Wax Tracker app! Here's how it works:
+
+Dashboard — a circular gauge showing km remaining on your wax, with ride log, estimated days until re-wax, and an alert when it's time to re-wax.
+
+Strava Integration — go to the Strava tab and:
+
+Enter your Client ID and Secret from strava.com/settings/api (create an API app if you don't have one — set the redirect URI to http://localhost/exchange_token)
+Click "Open Strava Auth" to authorize, then copy the code parameter from the resulting URL
+Paste it and connect — after that, hit "Sync Strava" to pull all cycling activities since your last wax date
+Settings — set your wax date and target km per wax cycle (defaults to 300 km). When you re-wax, hit the "Re-Wax Chain" button to reset the cycle.
+
+All data persists across sessions. You can also add rides manually if you ride without Strava.
+
+Chain wax tracker
+Code · JSX 
+Can this be uploaded to my website and shared with my friend to use it
+
+8:08 PM
+Great question. The app as built runs as a React component inside Claude's artifact system, so it's not directly deployable as-is. There are a couple of things to consider:
+
+For your website (cmanda.org): The app would need to be bundled into a standalone React app (with a build step via Vite or Next.js) or rewritten as a plain HTML/JS single-page app. I can do either.
+
+For sharing with your friend: The Strava integration is the tricky part. Right now it uses a single set of API credentials (your Client ID/Secret). For multi-user use, each person would need their own Strava API app, OR you'd need a proper backend server to handle OAuth securely (since client secrets shouldn't be exposed in frontend code).
+
+The persistent storage (window.storage) is also specific to Claude's artifact environment and wouldn't work on a regular website — it'd need to be replaced with something like Supabase, Firebase, or even simple localStorage for single-user use.
+
+Let me know which direction you'd prefer and I can rebuild it accordingly:
+
+How about gmail login will enable login to strava
+
+8:09 PM
+That's an interesting idea, but unfortunately Strava doesn't work that way. Strava has its own OAuth system — you can't use a Google/Gmail login to authenticate with Strava's API. Even if someone signs into Strava using their Gmail account, your app still needs to go through Strava's own OAuth flow to get permission to read their activities.
+
+Here's what a practical multi-user setup would look like:
+
+Option A: Simple (no backend) Each user visits your page, clicks "Connect with Strava," authorizes via Strava's OAuth, and the app stores their token in the browser. The downside is that the Strava Client Secret would be exposed in the frontend code, which Strava discourages but works for personal/small-group use.
+
+Option B: With a small backend (proper way) A lightweight backend (e.g. a Cloudflare Worker, Vercel serverless function, or small Node server) handles the Strava OAuth token exchange securely. Users just click "Connect with Strava" — no need to create their own API apps. This is the right way to share it with friends.
+
+Ok. In that case I need the code to create a page on my website that will do this. I can share with my friend
+
+8:14 PM
+Let me clarify a couple things before I build this — since cmanda.org will host it, I want to get it right:
+
+Ok?
+
+9:55 PM
+Sorry about that — I was asking you to pick from those options so I can build the right thing. Could you let me know:
+
+How is cmanda.org hosted? Is it static files (GitHub Pages, Netlify), WordPress, or something else?
+For Strava auth — should I just make it the simplest way possible (frontend-only, you and your friend each set up a Strava API app), or would you want to set up a small backend on Vercel/Cloudflare?
+If you just want me to go ahead and build the simplest version that works, I can do that — a single HTML file you drop onto your site, each user enters their own Strava API credentials once, and everything is stored in localStorage. Want me to just go with that?
+
+My cmanda has the code on GitHub and hosted on versel https://cmanda-website.vercel.app and html that we can link to strava once and then it is done is better
+
+9:58 PM
+Perfect — since you're on Vercel, I can give you both a serverless API route for the Strava OAuth (keeps your client secret secure) and a standalone HTML page. Your friend just clicks "Connect with Strava" once, authorizes, and they're set.
+
+Let me build this out properly.
+
+
+Check available skills
+Now let me build the complete project — a Vercel-deployable app with the serverless OAuth backend and the frontend HTML page.
+
+
+Created 3 files, ran a command
+Now let me build the main app page:
+
+
+Main Chain Wax Tracker HTML page — full standalone app with Strava OAuth integration, localStorage persistence, beautiful dark cycling-inspired UI
+Now let me create a README with setup instructions:
+
+
+Created a file, ran a command, read a file
+Here's the complete project — 5 files total. The setup is:
+
+One-time setup (you):
+
+Create a Strava API app at strava.com/settings/api — set the callback domain to cmanda-website.vercel.app
+In chain-wax.html, replace YOUR_STRAVA_CLIENT_ID with your Client ID
+Add the files to your GitHub repo and add two Vercel environment variables: STRAVA_CLIENT_ID and STRAVA_CLIENT_SECRET
+Deploy — the app lives at cmanda-website.vercel.app/chain-wax
+For you and your friend: Just visit the URL, click "Connect with Strava," authorize once, and you're set. Each person's data stays in their own browser. Hit "Sync Strava" anytime to pull new rides.
+
+The serverless function (api/strava/auth.js) keeps your Client Secret secure on the server side — it never touches the browser. The README has the full step-by-step if you need it.
+
+Chain wax
+Code · HTML 
+Auth
+JS 
+Strava callback
+Code · HTML 
+Vercel
+Code · JSON 
+Readme
+Document · MD 
+how exactly do I do this "- api/strava/auth.js → into your project's api/strava/ folder
+
+10:32 PM
+Good question — it depends on your current project structure. Let me check what your repo looks like.
+
+
+Searched the web
+
+I can see your GitHub repos but couldn't find the specific cmanda-website repo. Let me check the live site to understand the project structure:
+
+
+Fetched: Krishna Manda
+
+I can see your site structure. It's a Next.js or similar framework site. Let me check more:
+
+
+Searched the web
+
+The cmanda-website repo might be private. No problem — based on your live site, it's clearly a Next.js app on Vercel. Here's exactly what you need to do, step by step:
+
+Step 1: In your local repo, create the folders and files
+
+Open your terminal, cd into your cmanda-website project folder, and run:
+
+bash
+mkdir -p api/strava
+```
+
+Then place the 3 files I gave you like this:
+```
+your-project/
+├── api/
+│   └── strava/
+│       └── auth.js          ← the serverless function file
+├── public/
+│   ├── chain-wax.html       ← main app (put alongside your existing public files)
+│   └── strava-callback.html ← OAuth callback page
+├── ... (your existing files)
+The public/ folder should already exist in your project (Next.js uses it for static files). Just drop the two HTML files in there.
+
+Step 2: Update the Client ID
+
+In public/chain-wax.html, find this line and put your Strava Client ID:
+
+javascript
+const STRAVA_CLIENT_ID = "YOUR_STRAVA_CLIENT_ID";
+Step 3: Add env vars on Vercel
+
+Go to vercel.com → your project → Settings → Environment Variables, and add:
+
+STRAVA_CLIENT_ID = (your ID)
+STRAVA_CLIENT_SECRET = (your secret)
+Step 4: Update vercel.json
+
+If you already have a vercel.json, just add these routes to it. If you don't have one, you may not even need it — Vercel auto-detects api/ as serverless functions and public/ as static files in Next.js projects.
+
+Step 5: Push and deploy
+
+bash
+git add .
+git commit -m "Add chain wax tracker"
+git push
+Vercel will auto-deploy. Your app will be at cmanda-website.vercel.app/chain-wax.html.
+
+Want me to walk through creating the Strava API app as well?
+
+how do I open terminal in github
+
+10:35 PM
+You don't need a terminal at all! You can do everything directly in GitHub's web interface. Here's the step-by-step:
+
+1. Go to your repo on github.com
+
+2. Create api/strava/auth.js:
+
+Click "Add file" → "Create new file"
+In the filename box, type: api/strava/auth.js (typing the / automatically creates the folders)
+Paste the contents of the auth.js file I gave you
+Click "Commit changes" at the bottom
+3. Create public/chain-wax.html:
+
+Click "Add file" → "Create new file" again
+Type: public/chain-wax.html
+Paste the contents of the chain-wax.html file (remember to replace YOUR_STRAVA_CLIENT_ID with your actual ID before pasting)
+Click "Commit changes"
+4. Create public/strava-callback.html:
+
+Same process — "Add file" → "Create new file"
+Type: public/strava-callback.html
+Paste the contents
+Click "Commit changes"
+That's it — every time you commit, Vercel will automatically redeploy your site. No terminal needed.
+
+Want me to walk you through setting up the Strava API app next so you have the Client ID to plug in?
+
+when I click "authorize" on strava I get 404
+This page could not be found.
+
+10:49 PM
+The 404 is happening because the Strava callback is redirecting to /strava-callback but in a Next.js project, files in public/ are served with their extension. So the URL needs to match exactly.
+
+There are two things to fix:
+
+Fix 1: Update the callback URL in chain-wax.html
+
+Find this line:
+
+javascript
+const CALLBACK_URL = BASE_URL + "/strava-callback";
+Change it to:
+
+javascript
+const CALLBACK_URL = BASE_URL + "/strava-callback.html";
+```
+
+**Fix 2: Update your Strava API app settings**
+
+Go to [https://www.strava.com/settings/api](https://www.strava.com/settings/api) and make sure the **Authorization Callback Domain** is set to exactly:
+```
+cmanda-website.vercel.app
+(No https://, no trailing slash — just the domain)
+
+After making both changes, the flow will be: you click "Connect with Strava" → authorize on Strava → Strava redirects to cmanda-website.vercel.app/strava-callback.html → tokens get exchanged → you're sent back to the main app.
+
+Can you confirm what you currently have set as the callback domain in your Strava API settings?
+
+next I get this error "Connection Failed
+Failed to execute 'json' on 'Response': Unexpected end of JSON input
+
+10:55 PM
+That error means the callback page is hitting /api/strava/auth but getting an empty response — likely the serverless function isn't working correctly. Let me check:
+
+
+Searched the web
+
+The issue is likely that your Next.js project is using the App Router (Next.js 13+), where API routes work differently. The api/strava/auth.js file I gave you uses the older Pages Router format. Let me give you an updated file that works with both, and also a simpler approach.
+
+The easiest fix is to put the API route in the right place for your Next.js project. Can you tell me — in your GitHub repo, do you see a folder called app/ or pages/? That will tell me which router you're using.
+
+In the meantime, here's the quickest fix — let's skip the serverless function entirely and handle everything in the callback HTML itself. This way you only need the 2 HTML files and nothing else:
+
+
+Created 2 files
+
+Claude's response was interrupted
+I have a vercel.json file what do I do with this
+
+10:57 PM
+You can ignore the vercel.json I gave you — you don't need it. Since we're simplifying to just two HTML files (no serverless function), your existing vercel.json should work fine as-is.
+
+The updated approach is simpler: just two HTML files in your public/ folder, and that's it. No api/ folder needed.
+
+Let me finish building the updated files properly and give them to you:
+
+
+Complete chain-wax.html - fully self-contained, no serverless function needed, calls Strava API directly from browser
+
+Claude's response was interrupted
+I want to use vercel.json file so where do I upload this file
+
+10:58 PM
+The vercel.json file goes in the root (top level) of your GitHub repository — not inside any folder.
+
+In GitHub:
+
+Go to your repo's main page
+Click "Add file" → "Create new file"
+In the filename box, just type: vercel.json (no slashes, no folders)
+Paste the contents
+Click "Commit changes"
+But before you do that — let me simplify things. Since we're dropping the serverless function approach, you don't need most of what was in that vercel.json.
+
+Do you already have a vercel.json in your repo? If so, what's in it? I want to make sure we don't break your existing site by overwriting it.
+
+Also — stepping back a bit, I think the cleanest path forward is:
+
+Delete the api/strava/auth.js file you created earlier (since we're not using it anymore)
+Replace public/strava-callback.html with an updated version that talks to Strava directly (no serverless function)
+Update public/chain-wax.html so users enter their Strava Client ID and Secret once in the app itself
+Skip vercel.json changes unless your existing one needs updating
+Want me to give you the two updated HTML files to replace what's there now? That should fix the error you're seeing.
+
+I uploaded vercel.json and now I get this error "404: NOT_FOUNDCode: NOT_FOUNDID: kix1::9z5c6-1771077638695-eb87b5cc5fed
+
+11:01 PM
+The vercel.json I gave you is overriding your existing site routing and breaking everything. Let's fix this immediately.
+
+Go to GitHub and delete the vercel.json file:
+
+Navigate to vercel.json in your repo
+Click the pencil icon (edit) or the trash icon
+Click the trash icon at the top right of the file
+Click "Commit changes"
+This will restore your site. Vercel will auto-redeploy and your main site will come back.
+
+The two HTML files in public/ will work automatically without any vercel.json — Next.js serves everything in public/ as static files at the root. So public/chain-wax.html is already accessible at cmanda-website.vercel.app/chain-wax.html.
+
+Once your site is back, also delete the api/strava/auth.js file since we're not using the serverless approach anymore. Then let me give you the updated strava-callback.html that fixes the "Connection Failed" error — it will talk to Strava directly instead of going through the broken API route.
+
+Can you confirm once you've deleted vercel.json and your site is back?
+
+I dont see a trash icon how does it look like
+
+11:02 PM
+When you open the vercel.json file in GitHub:
+
+Click on the filename vercel.json to open it
+In the top-right corner of the file content area, you'll see a row of small icons
+Look for three dots (⋯) or a menu icon — click that
+Select "Delete file" from the dropdown menu
+Alternatively, you can:
+
+Click the pencil icon (edit) to open the editor
+Then look for the three dots menu in the top right — "Delete file" should be there
+Once you find it, click "Commit changes" to confirm the deletion. Your site should come back within a minute or two after Vercel redeploys.
+
+1771077911929_image.png
+I dont see the 3 dots or trash
+
+11:05 PM
+I can see you're in the edit view already. The simplest thing to do right now: select all the text in the editor and replace it with just an empty config that won't break anything:
+
+Select everything (lines 1-12) and replace it with:
+
+{
+}
+Then click the green "Commit changes..." button in the top right.
+
+That will effectively make the vercel.json do nothing, and your site should come back. After that, you can properly delete the file — go back to the repo main page, click on vercel.json, and you should see the three dots menu when you're viewing the file (not editing it).
+
+Alternatively, if you want to fully delete it now: click "Cancel changes" first to go back to the file view — the three dots or delete option should be visible there.
+
+my site is back but when I click on authorize I get this error message "Connection Failed
+Failed to execute 'json' on 'Response': Unexpected end of JSON input
+
+11:07 PM
+That error is because strava-callback.html is still trying to call /api/strava/auth which doesn't exist. We need to replace it with a version that talks to Strava directly.
+
+Let me give you the updated files. You need to replace both HTML files in your repo.
+
+
+Updated strava-callback.html - talks directly to Strava API, no serverless function needed
+Now the main app — needs a Strava credentials section where you enter Client ID and Secret once:
+
+
+Created a file, read a file
+Here's what to do now — 3 steps:
+
+Step 1: Delete files you don't need In your GitHub repo, delete these:
+
+api/strava/auth.js (and the api folder)
+vercel.json
+Step 2: Replace the two HTML files Go to public/chain-wax.html in GitHub, click the pencil to edit, select all and delete, then paste the new chain-wax.html content I just gave you. Commit.
+
+Do the same for public/strava-callback.html.
+
+Step 3: How it works now
+
+Visit your site at /chain-wax.html
+Go to the Strava tab
+Enter your Strava Client ID and Client Secret (from strava.com/settings/api)
+Click Connect with Strava — you'll authorize on Strava and get redirected back
+Done! Hit Sync Strava to pull rides
+Your friend does the same — they'll need to create their own Strava API app (takes 2 minutes) and enter their own credentials. Each person's data stays in their own browser.
+
+Chain wax
+Code · HTML 
+Strava callback
+Code · HTML 
+
+
+
+
+Claude is AI and can make mistakes. Please double-check responses.
+Chain wax · HTML
+Copy
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -8,155 +398,67 @@
   <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Sora:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #0a0a0b;
-      --bg2: #111113;
-      --card: #16161a;
-      --card-hover: #1c1c21;
-      --border: #252530;
-      --border-light: #32323e;
-      --accent: #f0a030;
-      --accent-dim: #c88020;
-      --accent-glow: rgba(240,160,48,0.12);
-      --danger: #f04848;
-      --danger-glow: rgba(240,72,72,0.12);
-      --success: #30d870;
-      --success-glow: rgba(48,216,112,0.12);
-      --text: #eaeaef;
-      --text-dim: #7a7a8a;
-      --text-muted: #4a4a58;
+      --bg: #0a0a0b; --bg2: #111113; --card: #16161a;
+      --border: #252530; --border-light: #32323e;
+      --accent: #f0a030; --accent-dim: #c88020; --accent-glow: rgba(240,160,48,0.12);
+      --danger: #f04848; --danger-glow: rgba(240,72,72,0.12);
+      --success: #30d870; --success-glow: rgba(48,216,112,0.12);
+      --text: #eaeaef; --text-dim: #7a7a8a; --text-muted: #4a4a58;
       --strava: #fc4c02;
-      --font-display: 'Sora', sans-serif;
-      --font-mono: 'DM Mono', monospace;
+      --font-display: 'Sora', sans-serif; --font-mono: 'DM Mono', monospace;
     }
-
     * { margin: 0; padding: 0; box-sizing: border-box; }
-
-    body {
-      min-height: 100vh;
-      background: var(--bg);
-      color: var(--text);
-      font-family: var(--font-display);
-      -webkit-font-smoothing: antialiased;
-    }
-
-    /* ─── Noise texture overlay ─── */
+    body { min-height: 100vh; background: var(--bg); color: var(--text); font-family: var(--font-display); -webkit-font-smoothing: antialiased; }
     body::before {
-      content: '';
-      position: fixed;
-      inset: 0;
-      opacity: 0.025;
-      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
-      pointer-events: none;
-      z-index: 0;
+      content: ''; position: fixed; inset: 0; opacity: 0.025; pointer-events: none; z-index: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
     }
-
     .app { position: relative; z-index: 1; max-width: 640px; margin: 0 auto; padding: 0 20px 60px; }
 
-    /* ─── Header ─── */
-    .header {
-      padding: 28px 0 24px;
-      display: flex;
-      align-items: flex-end;
-      justify-content: space-between;
-      border-bottom: 1px solid var(--border);
-      margin-bottom: 32px;
-    }
+    /* Header */
+    .header { padding: 28px 0 24px; display: flex; align-items: flex-end; justify-content: space-between; border-bottom: 1px solid var(--border); margin-bottom: 32px; }
     .header-left { display: flex; align-items: center; gap: 14px; }
-    .logo {
-      width: 44px; height: 44px;
-      background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dim) 100%);
-      border-radius: 12px;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 22px;
-      box-shadow: 0 4px 20px var(--accent-glow);
-    }
-    .header h1 {
-      font-size: 20px; font-weight: 700; letter-spacing: -0.5px;
-      background: linear-gradient(135deg, var(--text) 0%, var(--text-dim) 100%);
-      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-    }
-    .header .subtitle {
-      font-family: var(--font-mono); font-size: 11px; color: var(--text-muted);
-      margin-top: 2px; letter-spacing: 0.5px;
-    }
-    .strava-badge {
-      font-family: var(--font-mono); font-size: 11px; padding: 4px 10px;
-      border-radius: 20px; letter-spacing: 0.3px;
-    }
-    .strava-badge.connected { background: var(--success-glow); color: var(--success); border: 1px solid rgba(48,216,112,0.2); }
-    .strava-badge.disconnected { background: rgba(122,122,138,0.1); color: var(--text-muted); border: 1px solid var(--border); }
+    .logo { width: 44px; height: 44px; background: linear-gradient(135deg, var(--accent), var(--accent-dim)); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 22px; box-shadow: 0 4px 20px var(--accent-glow); }
+    .header h1 { font-size: 20px; font-weight: 700; letter-spacing: -0.5px; background: linear-gradient(135deg, var(--text), var(--text-dim)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .header .subtitle { font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+    .badge { font-family: var(--font-mono); font-size: 11px; padding: 4px 10px; border-radius: 20px; letter-spacing: 0.3px; white-space: nowrap; }
+    .badge-on { background: var(--success-glow); color: var(--success); border: 1px solid rgba(48,216,112,0.2); }
+    .badge-off { background: rgba(122,122,138,0.1); color: var(--text-muted); border: 1px solid var(--border); }
 
-    /* ─── Navigation ─── */
-    .nav {
-      display: flex; gap: 4px; margin-bottom: 28px;
-      background: var(--bg2); border-radius: 10px; padding: 4px;
-      border: 1px solid var(--border);
-    }
-    .nav button {
-      flex: 1; padding: 9px 14px; border: none; border-radius: 8px;
-      font-family: var(--font-mono); font-size: 12px; font-weight: 500;
-      cursor: pointer; transition: all 0.25s ease;
-      background: transparent; color: var(--text-muted);
-      letter-spacing: 0.3px;
-    }
+    /* Nav */
+    .nav { display: flex; gap: 4px; margin-bottom: 28px; background: var(--bg2); border-radius: 10px; padding: 4px; border: 1px solid var(--border); }
+    .nav button { flex: 1; padding: 9px 10px; border: none; border-radius: 8px; font-family: var(--font-mono); font-size: 11px; font-weight: 500; cursor: pointer; transition: all 0.25s; background: transparent; color: var(--text-muted); }
     .nav button.active { background: var(--card); color: var(--accent); box-shadow: 0 2px 8px rgba(0,0,0,0.3); }
     .nav button:hover:not(.active) { color: var(--text-dim); }
 
-    /* ─── Cards ─── */
-    .card {
-      background: var(--card); border: 1px solid var(--border);
-      border-radius: 16px; padding: 28px; margin-bottom: 20px;
-      transition: border-color 0.3s;
-    }
-    .card:hover { border-color: var(--border-light); }
-    .card-title {
-      font-family: var(--font-mono); font-size: 11px; font-weight: 500;
-      text-transform: uppercase; letter-spacing: 1.5px; color: var(--text-muted);
-      margin-bottom: 20px;
-    }
+    /* Card */
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 28px; margin-bottom: 20px; }
+    .card-title { font-family: var(--font-mono); font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: 1.5px; color: var(--text-muted); margin-bottom: 20px; }
 
-    /* ─── Gauge ─── */
-    .gauge-container { display: flex; flex-direction: column; align-items: center; padding: 12px 0 20px; }
+    /* Gauge */
+    .gauge-wrap { display: flex; flex-direction: column; align-items: center; padding: 12px 0 20px; position: relative; }
     .gauge-svg { transform: rotate(-90deg); }
-    .gauge-circle-bg { fill: none; stroke: var(--border); }
-    .gauge-circle-fg { fill: none; stroke-linecap: round; transition: stroke-dashoffset 1.2s cubic-bezier(0.4,0,0.2,1), stroke 0.5s ease; }
-    .gauge-center {
-      position: absolute; text-align: center;
-      font-family: var(--font-mono);
-    }
-    .gauge-value { font-size: 36px; font-weight: 500; line-height: 1; }
-    .gauge-label { font-size: 11px; color: var(--text-muted); margin-top: 6px; letter-spacing: 1px; text-transform: uppercase; }
+    .gauge-bg { fill: none; stroke: var(--border); }
+    .gauge-fg { fill: none; stroke-linecap: round; transition: stroke-dashoffset 1.2s cubic-bezier(0.4,0,0.2,1), stroke 0.5s ease; }
+    .gauge-center { position: absolute; text-align: center; top: 50%; left: 50%; transform: translate(-50%,-50%); font-family: var(--font-mono); }
+    .gauge-val { font-size: 36px; font-weight: 500; line-height: 1; }
+    .gauge-lbl { font-size: 11px; color: var(--text-muted); margin-top: 6px; letter-spacing: 1px; text-transform: uppercase; }
 
-    /* ─── Stats grid ─── */
-    .stats {
-      display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1px;
-      background: var(--border); border-radius: 10px; overflow: hidden;
-      margin-top: 24px;
-    }
-    .stat {
-      background: var(--card); padding: 16px; text-align: center;
-    }
-    .stat-label { font-family: var(--font-mono); font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
-    .stat-value { font-family: var(--font-mono); font-size: 15px; font-weight: 500; color: var(--text); }
+    /* Stats */
+    .stats { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1px; background: var(--border); border-radius: 10px; overflow: hidden; margin-top: 24px; }
+    .stat { background: var(--card); padding: 16px; text-align: center; }
+    .stat-l { font-family: var(--font-mono); font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+    .stat-v { font-family: var(--font-mono); font-size: 15px; font-weight: 500; }
 
-    /* ─── Alert banner ─── */
-    .alert {
-      margin-top: 20px; padding: 14px 20px; border-radius: 10px;
-      font-family: var(--font-mono); font-size: 13px; font-weight: 500;
-      text-align: center; animation: alertPulse 2s infinite;
-    }
-    .alert-danger { background: var(--danger-glow); border: 1px solid rgba(240,72,72,0.25); color: var(--danger); }
-    .alert-info { background: var(--accent-glow); border: 1px solid rgba(240,160,48,0.2); color: var(--accent); }
-    @keyframes alertPulse { 0%,100% { opacity:1 } 50% { opacity:0.8 } }
+    /* Alert */
+    .alert { margin-top: 20px; padding: 14px 20px; border-radius: 10px; font-family: var(--font-mono); font-size: 13px; font-weight: 500; text-align: center; }
+    .alert-danger { background: var(--danger-glow); border: 1px solid rgba(240,72,72,0.25); color: var(--danger); animation: pulse 2s infinite; }
+    .alert-success { background: var(--success-glow); border: 1px solid rgba(48,216,112,0.2); color: var(--success); }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.8} }
 
-    /* ─── Buttons ─── */
+    /* Buttons */
     .btn-row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px; }
-    .btn {
-      padding: 10px 20px; border-radius: 8px; border: none;
-      font-family: var(--font-mono); font-size: 12px; font-weight: 500;
-      cursor: pointer; transition: all 0.2s ease;
-      letter-spacing: 0.3px; display: inline-flex; align-items: center; gap: 6px;
-    }
+    .btn { padding: 10px 20px; border-radius: 8px; border: none; font-family: var(--font-mono); font-size: 12px; font-weight: 500; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 6px; }
     .btn:disabled { opacity: 0.4; cursor: not-allowed; }
     .btn-strava { background: var(--strava); color: #fff; }
     .btn-strava:hover:not(:disabled) { background: #e04400; }
@@ -166,631 +468,531 @@
     .btn-secondary:hover:not(:disabled) { border-color: var(--border-light); color: var(--text); }
     .btn-danger { background: transparent; color: var(--danger); border: 1px solid rgba(240,72,72,0.3); }
     .btn-danger:hover:not(:disabled) { background: var(--danger-glow); }
-    .btn-sm { padding: 6px 14px; font-size: 11px; }
 
-    /* ─── Ride log ─── */
-    .ride-log { border-radius: 12px; overflow: hidden; border: 1px solid var(--border); background: var(--card); }
-    .ride-log-header {
-      padding: 14px 20px; border-bottom: 1px solid var(--border);
-      display: flex; justify-content: space-between; align-items: center;
-    }
-    .ride-log-header span { font-family: var(--font-mono); font-size: 11px; text-transform: uppercase; letter-spacing: 1px; }
-    .ride-log-header .count { color: var(--text-muted); }
-    .ride-row {
-      display: grid; grid-template-columns: 1fr 80px 70px 32px;
-      align-items: center; padding: 11px 16px; gap: 8px;
-      font-family: var(--font-mono); font-size: 12px;
-      border-bottom: 1px solid rgba(37,37,48,0.5);
-      transition: background 0.15s;
-    }
-    .ride-row:hover { background: var(--bg2); }
-    .ride-row:last-child { border-bottom: none; }
-    .ride-name { color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .ride-date { color: var(--text-muted); font-size: 10px; margin-top: 2px; }
-    .ride-dist { color: var(--accent); text-align: right; font-weight: 500; }
-    .ride-source { color: var(--text-muted); text-align: right; font-size: 10px; }
-    .ride-del {
-      background: none; border: none; color: var(--text-muted); cursor: pointer;
-      font-size: 16px; padding: 2px 4px; border-radius: 4px; transition: all 0.15s;
-      text-align: center;
-    }
-    .ride-del:hover { color: var(--danger); background: var(--danger-glow); }
-    .ride-empty { padding: 40px 20px; text-align: center; color: var(--text-muted); font-family: var(--font-mono); font-size: 12px; }
-    .ride-list { max-height: 400px; overflow-y: auto; }
+    /* Ride log */
+    .rlog { border-radius: 12px; overflow: hidden; border: 1px solid var(--border); background: var(--card); }
+    .rlog-hdr { padding: 14px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+    .rlog-hdr span { font-family: var(--font-mono); font-size: 11px; text-transform: uppercase; letter-spacing: 1px; }
+    .rlog-hdr .cnt { color: var(--text-muted); }
+    .rrow { display: grid; grid-template-columns: 1fr 80px 70px 32px; align-items: center; padding: 11px 16px; gap: 8px; font-family: var(--font-mono); font-size: 12px; border-bottom: 1px solid rgba(37,37,48,0.5); transition: background 0.15s; }
+    .rrow:hover { background: var(--bg2); }
+    .rrow:last-child { border-bottom: none; }
+    .rname { color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .rdate { color: var(--text-muted); font-size: 10px; margin-top: 2px; }
+    .rdist { color: var(--accent); text-align: right; font-weight: 500; }
+    .rsrc { color: var(--text-muted); text-align: right; font-size: 10px; }
+    .rdel { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 16px; padding: 2px 4px; border-radius: 4px; transition: all 0.15s; text-align: center; }
+    .rdel:hover { color: var(--danger); background: var(--danger-glow); }
+    .rempty { padding: 40px 20px; text-align: center; color: var(--text-muted); font-family: var(--font-mono); font-size: 12px; }
+    .rlist { max-height: 400px; overflow-y: auto; }
 
-    /* ─── Form ─── */
-    .form-group { margin-bottom: 18px; }
-    .form-label {
-      display: block; font-family: var(--font-mono); font-size: 10px;
-      text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted);
-      margin-bottom: 8px;
-    }
-    .form-input {
-      width: 100%; padding: 10px 14px; background: var(--bg);
-      border: 1px solid var(--border); border-radius: 8px;
-      color: var(--text); font-family: var(--font-mono); font-size: 13px;
-      outline: none; transition: border-color 0.2s;
-    }
-    .form-input:focus { border-color: var(--accent); }
-    .form-row { display: flex; gap: 12px; }
-    .form-row > .form-group { flex: 1; }
-    .form-suffix {
-      display: flex; align-items: center; gap: 8px;
-    }
-    .form-suffix .form-input { flex: 1; }
-    .form-suffix span { color: var(--text-muted); font-family: var(--font-mono); font-size: 12px; }
-    .form-hint {
-      margin-top: 20px; padding: 14px 18px; border-radius: 10px;
-      background: var(--accent-glow); border: 1px solid rgba(240,160,48,0.15);
-      font-size: 12px; color: var(--text-dim); line-height: 1.6;
-    }
-    .form-hint strong { color: var(--accent); }
+    /* Form */
+    .fg { margin-bottom: 18px; }
+    .fl { display: block; font-family: var(--font-mono); font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); margin-bottom: 8px; }
+    .fi { width: 100%; padding: 10px 14px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: var(--font-mono); font-size: 13px; outline: none; transition: border-color 0.2s; }
+    .fi:focus { border-color: var(--accent); }
+    .frow { display: flex; gap: 12px; }
+    .frow > .fg { flex: 1; }
+    .fsuf { display: flex; align-items: center; gap: 8px; }
+    .fsuf .fi { flex: 1; }
+    .fsuf span { color: var(--text-muted); font-family: var(--font-mono); font-size: 12px; }
+    .fhint { margin-top: 20px; padding: 14px 18px; border-radius: 10px; background: var(--accent-glow); border: 1px solid rgba(240,160,48,0.15); font-size: 12px; color: var(--text-dim); line-height: 1.6; }
+    .fhint strong { color: var(--accent); }
+    .fhint a { color: var(--accent); }
 
-    /* ─── Strava connect section ─── */
-    .strava-hero {
-      text-align: center; padding: 48px 20px;
-    }
-    .strava-hero .icon { font-size: 48px; margin-bottom: 16px; }
-    .strava-hero h2 { font-size: 18px; font-weight: 600; margin-bottom: 8px; }
-    .strava-hero p { color: var(--text-dim); font-size: 13px; margin-bottom: 28px; line-height: 1.6; }
+    /* Hero */
+    .hero { text-align: center; padding: 40px 20px; }
+    .hero .icon { font-size: 48px; margin-bottom: 16px; }
+    .hero h2 { font-size: 18px; font-weight: 600; margin-bottom: 8px; font-family: var(--font-display); }
+    .hero p { color: var(--text-dim); font-size: 13px; margin-bottom: 24px; line-height: 1.6; }
 
-    /* ─── Toast notification ─── */
-    .toast {
-      position: fixed; top: 20px; right: 20px; z-index: 1000;
-      padding: 12px 20px; border-radius: 8px;
-      font-family: var(--font-mono); font-size: 12px;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.5);
-      animation: toastIn 0.3s ease;
-    }
-    .toast-success { background: var(--success); color: #fff; }
-    .toast-error { background: var(--danger); color: #fff; }
+    /* Estimate */
+    .estimate { margin-top: 16px; font-family: var(--font-mono); font-size: 12px; color: var(--text-muted); text-align: center; }
+
+    /* Toast */
+    .toast { position: fixed; top: 20px; right: 20px; z-index: 1000; padding: 12px 20px; border-radius: 8px; font-family: var(--font-mono); font-size: 12px; box-shadow: 0 8px 32px rgba(0,0,0,0.5); animation: slideIn 0.3s ease; }
+    .toast-ok { background: var(--success); color: #fff; }
+    .toast-err { background: var(--danger); color: #fff; }
     .toast-info { background: var(--accent); color: var(--bg); }
-    @keyframes toastIn { from { transform: translateY(-20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    @keyframes slideIn { from { transform: translateY(-20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 
-    /* ─── Estimate pill ─── */
-    .estimate {
-      margin-top: 16px; font-family: var(--font-mono); font-size: 12px;
-      color: var(--text-muted); text-align: center;
-    }
+    .hidden { display: none !important; }
+    @keyframes fadeIn { from { opacity:0; transform:translateY(8px) } to { opacity:1; transform:translateY(0) } }
+    .view { animation: fadeIn 0.35s ease; }
 
-    /* ─── Responsive ─── */
+    /* Responsive */
     @media (max-width: 480px) {
       .header { flex-direction: column; align-items: flex-start; gap: 12px; }
-      .nav button { font-size: 11px; padding: 8px 8px; }
-      .gauge-value { font-size: 28px; }
       .stats { grid-template-columns: 1fr; }
       .btn-row { flex-direction: column; }
       .btn { width: 100%; justify-content: center; }
-      .form-row { flex-direction: column; gap: 0; }
+      .frow { flex-direction: column; gap: 0; }
     }
-
-    /* ─── Scrollbar ─── */
     ::-webkit-scrollbar { width: 5px; }
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
-
-    /* ─── Fade in ─── */
-    .fade-in { animation: fadeIn 0.4s ease; }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
-
-    .hidden { display: none !important; }
   </style>
 </head>
 <body>
-  <div class="app">
-    <!-- Header -->
-    <div class="header">
-      <div class="header-left">
-        <div class="logo">⛓</div>
-        <div>
-          <h1>Chain Wax Tracker</h1>
-          <div class="subtitle" id="headerSubtitle">Track your chain wax life</div>
-        </div>
-      </div>
-      <div class="strava-badge disconnected" id="stravaBadge">○ not connected</div>
-    </div>
+<div class="app">
 
-    <!-- Navigation -->
-    <div class="nav">
-      <button class="active" data-view="dashboard" onclick="switchView('dashboard')">Dashboard</button>
-      <button data-view="rides" onclick="switchView('rides')">Rides</button>
-      <button data-view="strava" onclick="switchView('strava')">Strava</button>
-      <button data-view="settings" onclick="switchView('settings')">Settings</button>
-    </div>
-
-    <!-- Toast container -->
-    <div id="toastContainer"></div>
-
-    <!-- ═══════════════ DASHBOARD VIEW ═══════════════ -->
-    <div id="view-dashboard" class="fade-in">
-      <!-- Empty state -->
-      <div id="emptyState" class="card hidden">
-        <div class="strava-hero">
-          <div class="icon">🔧</div>
-          <h2>Set Up Your Chain Wax Cycle</h2>
-          <p>Configure your last wax date and target distance in Settings, then connect Strava to automatically track your rides.</p>
-          <button class="btn btn-accent" onclick="switchView('settings')">Go to Settings</button>
-        </div>
-      </div>
-
-      <!-- Main dashboard -->
-      <div id="mainDashboard" class="hidden">
-        <!-- Gauge card -->
-        <div class="card">
-          <div class="gauge-container" style="position:relative;">
-            <svg class="gauge-svg" width="200" height="200" id="gaugeSvg">
-              <circle class="gauge-circle-bg" cx="100" cy="100" r="88" stroke-width="9"/>
-              <circle class="gauge-circle-fg" id="gaugeFg" cx="100" cy="100" r="88" stroke-width="9"
-                stroke-dasharray="553" stroke-dashoffset="553"/>
-            </svg>
-            <div class="gauge-center" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);">
-              <div class="gauge-value" id="gaugeValue">—</div>
-              <div class="gauge-label">km remaining</div>
-            </div>
-          </div>
-
-          <div id="alertBanner" class="alert alert-danger hidden">
-            ⚠ TIME TO RE-WAX YOUR CHAIN
-          </div>
-
-          <div class="stats">
-            <div class="stat">
-              <div class="stat-label">Waxed</div>
-              <div class="stat-value" id="statWaxDate">—</div>
-            </div>
-            <div class="stat">
-              <div class="stat-label">Ridden</div>
-              <div class="stat-value" id="statRidden">—</div>
-            </div>
-            <div class="stat">
-              <div class="stat-label">Target</div>
-              <div class="stat-value" id="statTarget">—</div>
-            </div>
-          </div>
-
-          <div class="estimate hidden" id="estimatePill"></div>
-        </div>
-
-        <!-- Action buttons -->
-        <div class="btn-row">
-          <button class="btn btn-strava hidden" id="btnSync" onclick="syncStrava()" disabled>
-            <span id="syncLabel">↻ Sync Strava</span>
-          </button>
-          <button class="btn btn-secondary" onclick="switchView('rides')">+ Add Ride</button>
-          <button class="btn btn-danger" onclick="reWaxChain()">🔗 Re-Wax Chain</button>
-        </div>
+  <!-- Header -->
+  <div class="header">
+    <div class="header-left">
+      <div class="logo">⛓</div>
+      <div>
+        <h1>Chain Wax Tracker</h1>
+        <div class="subtitle">Track your chain wax life</div>
       </div>
     </div>
+    <div class="badge badge-off" id="badge">○ not connected</div>
+  </div>
 
-    <!-- ═══════════════ RIDES VIEW ═══════════════ -->
-    <div id="view-rides" class="fade-in hidden">
-      <!-- Add ride form -->
+  <!-- Nav -->
+  <div class="nav">
+    <button class="active" onclick="go('dashboard')">Dashboard</button>
+    <button onclick="go('rides')">Rides</button>
+    <button onclick="go('strava')">Strava</button>
+    <button onclick="go('settings')">Settings</button>
+  </div>
+
+  <!-- ════════ DASHBOARD ════════ -->
+  <div id="v-dashboard" class="view">
+    <div id="emptyState" class="card hidden">
+      <div class="hero">
+        <div class="icon">🔧</div>
+        <h2>Set Up Your Chain Wax Cycle</h2>
+        <p>Go to Settings to set your wax date and target distance, then connect Strava.</p>
+        <button class="btn btn-accent" onclick="go('settings')">Go to Settings</button>
+      </div>
+    </div>
+    <div id="mainDash" class="hidden">
       <div class="card">
-        <div class="card-title">Add Manual Ride</div>
-        <div class="form-group">
-          <label class="form-label">Ride Name</label>
-          <input class="form-input" type="text" id="rideName" placeholder="Morning ride">
-        </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label class="form-label">Distance</label>
-            <div class="form-suffix">
-              <input class="form-input" type="number" id="rideDist" placeholder="0" min="0" step="0.1">
-              <span>km</span>
-            </div>
-          </div>
-          <div class="form-group">
-            <label class="form-label">Date</label>
-            <input class="form-input" type="date" id="rideDate">
+        <div class="gauge-wrap">
+          <svg class="gauge-svg" width="200" height="200">
+            <circle class="gauge-bg" cx="100" cy="100" r="88" stroke-width="9"/>
+            <circle class="gauge-fg" id="gFg" cx="100" cy="100" r="88" stroke-width="9" stroke-dasharray="553" stroke-dashoffset="553"/>
+          </svg>
+          <div class="gauge-center">
+            <div class="gauge-val" id="gVal">—</div>
+            <div class="gauge-lbl">km remaining</div>
           </div>
         </div>
-        <button class="btn btn-accent" onclick="addManualRide()">Save Ride</button>
+        <div id="alertWax" class="alert alert-danger hidden">⚠ TIME TO RE-WAX YOUR CHAIN</div>
+        <div class="stats">
+          <div class="stat"><div class="stat-l">Waxed</div><div class="stat-v" id="sWax">—</div></div>
+          <div class="stat"><div class="stat-l">Ridden</div><div class="stat-v" id="sRid">—</div></div>
+          <div class="stat"><div class="stat-l">Target</div><div class="stat-v" id="sTgt">—</div></div>
+        </div>
+        <div class="estimate hidden" id="estPill"></div>
       </div>
-
-      <!-- Ride log -->
-      <div class="ride-log" id="rideLog">
-        <div class="ride-log-header">
-          <span>Ride Log</span>
-          <span class="count" id="rideCount">0 rides</span>
-        </div>
-        <div class="ride-list" id="rideList">
-          <div class="ride-empty">No rides yet</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- ═══════════════ STRAVA VIEW ═══════════════ -->
-    <div id="view-strava" class="fade-in hidden">
-      <div class="card" id="stravaNotConnected">
-        <div class="strava-hero">
-          <div class="icon">🚴</div>
-          <h2>Connect Strava</h2>
-          <p>Link your Strava account to automatically pull cycling activities. One click and you're set — all your rides since the last wax will be synced.</p>
-          <button class="btn btn-strava" onclick="connectStrava()" id="btnConnect">
-            Connect with Strava
-          </button>
-        </div>
-      </div>
-
-      <div class="card hidden" id="stravaConnected">
-        <div class="card-title">Strava Connection</div>
-        <div class="alert alert-info" style="margin-top:0;margin-bottom:20px;">
-          ✓ Connected as <strong id="stravaAthlete">—</strong>
-        </div>
-        <div class="btn-row">
-          <button class="btn btn-strava" onclick="syncStrava()">↻ Sync Rides Now</button>
-          <button class="btn btn-danger" onclick="disconnectStrava()">Disconnect</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- ═══════════════ SETTINGS VIEW ═══════════════ -->
-    <div id="view-settings" class="fade-in hidden">
-      <div class="card">
-        <div class="card-title">Wax Settings</div>
-        <div class="form-group">
-          <label class="form-label">Last Wax Date</label>
-          <input class="form-input" type="date" id="cfgWaxDate" onchange="saveSettings()">
-        </div>
-        <div class="form-group">
-          <label class="form-label">Target Distance Per Wax</label>
-          <div class="form-suffix">
-            <input class="form-input" type="number" id="cfgTargetKm" min="50" step="50" onchange="saveSettings()">
-            <span>km</span>
-          </div>
-        </div>
-        <div class="form-hint">
-          <strong>Tip:</strong> Most chain wax treatments last 200–500 km depending on conditions. Dry = longer life. Wet/muddy = re-wax sooner.
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="card-title">Data Management</div>
-        <button class="btn btn-danger" onclick="resetAllData()">Reset All Data</button>
+      <div class="btn-row">
+        <button class="btn btn-strava hidden" id="bSync" onclick="syncStrava()">↻ Sync Strava</button>
+        <button class="btn btn-secondary" onclick="go('rides')">+ Add Ride</button>
+        <button class="btn btn-danger" onclick="reWax()">🔗 Re-Wax Chain</button>
       </div>
     </div>
   </div>
 
-  <script>
-    // ╔══════════════════════════════════════════════╗
-    // ║              STATE & STORAGE                 ║
-    // ╚══════════════════════════════════════════════╝
+  <!-- ════════ RIDES ════════ -->
+  <div id="v-rides" class="view hidden">
+    <div class="card">
+      <div class="card-title">Add Manual Ride</div>
+      <div class="fg">
+        <label class="fl">Ride Name</label>
+        <input class="fi" type="text" id="rName" placeholder="Morning ride">
+      </div>
+      <div class="frow">
+        <div class="fg">
+          <label class="fl">Distance</label>
+          <div class="fsuf"><input class="fi" type="number" id="rDist" placeholder="0" min="0" step="0.1"><span>km</span></div>
+        </div>
+        <div class="fg">
+          <label class="fl">Date</label>
+          <input class="fi" type="date" id="rDateIn">
+        </div>
+      </div>
+      <button class="btn btn-accent" onclick="addRide()">Save Ride</button>
+    </div>
+    <div class="rlog">
+      <div class="rlog-hdr"><span>Ride Log</span><span class="cnt" id="rCnt">0 rides</span></div>
+      <div class="rlist" id="rList"><div class="rempty">No rides yet</div></div>
+    </div>
+  </div>
 
-    const LS = {
-      config: "chainwax_config",
-      rides: "chainwax_rides",
-      strava: "chainwax_strava",
-    };
+  <!-- ════════ STRAVA ════════ -->
+  <div id="v-strava" class="view hidden">
+    <!-- Not connected -->
+    <div id="strOff" class="card">
+      <div class="card-title">Connect Strava</div>
+      <p style="color:var(--text-dim);font-size:13px;line-height:1.6;margin-bottom:20px;">
+        Link your Strava account to automatically pull cycling activities.
+        You need a Strava API app — create one at
+        <a href="https://www.strava.com/settings/api" target="_blank" style="color:var(--accent)">strava.com/settings/api</a>.
+      </p>
+      <div class="fhint" style="margin-top:0;margin-bottom:20px;">
+        <strong>Setup:</strong> Create a Strava API app. Set the <strong>Authorization Callback Domain</strong> to your website domain
+        (e.g. <code style="color:var(--accent)">cmanda-website.vercel.app</code>). Then paste your Client ID and Secret below.
+      </div>
+      <div class="fg">
+        <label class="fl">Client ID</label>
+        <input class="fi" type="text" id="inCid" placeholder="12345">
+      </div>
+      <div class="fg">
+        <label class="fl">Client Secret</label>
+        <input class="fi" type="password" id="inCsec" placeholder="abc123def456...">
+      </div>
+      <button class="btn btn-strava" onclick="connectStrava()">Connect with Strava</button>
+    </div>
+    <!-- Connected -->
+    <div id="strOn" class="card hidden">
+      <div class="card-title">Strava Connection</div>
+      <div class="alert alert-success" style="margin-top:0;margin-bottom:20px;">
+        ✓ Connected as <strong id="strName">—</strong>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-strava" onclick="syncStrava()">↻ Sync Rides Now</button>
+        <button class="btn btn-danger" onclick="disconnectStrava()">Disconnect</button>
+      </div>
+    </div>
+  </div>
 
-    // ── YOUR STRAVA APP CONFIG ──
-    // Replace with your actual Strava Client ID.
-    // The Client Secret is stored in your Vercel environment variables (secure).
-    const STRAVA_CLIENT_ID = "YOUR_STRAVA_CLIENT_ID";
+  <!-- ════════ SETTINGS ════════ -->
+  <div id="v-settings" class="view hidden">
+    <div class="card">
+      <div class="card-title">Wax Settings</div>
+      <div class="fg">
+        <label class="fl">Last Wax Date</label>
+        <input class="fi" type="date" id="cfgDate" onchange="saveCfg()">
+      </div>
+      <div class="fg">
+        <label class="fl">Target Distance Per Wax</label>
+        <div class="fsuf"><input class="fi" type="number" id="cfgKm" min="50" step="50" onchange="saveCfg()"><span>km</span></div>
+      </div>
+      <div class="fhint">
+        <strong>Tip:</strong> Most chain wax treatments last 200–500 km depending on conditions. Dry = longer. Wet/muddy = re-wax sooner.
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Data</div>
+      <button class="btn btn-danger" onclick="resetAll()">Reset All Data</button>
+    </div>
+  </div>
 
-    // Detect base URL for callbacks
-    const BASE_URL = window.location.origin;
-    const CALLBACK_URL = BASE_URL + "/strava-callback";
+</div>
 
-    let state = {
-      config: { waxDate: "", targetKm: 300 },
-      rides: [],
-      strava: null, // { accessToken, refreshToken, expiresAt, athlete }
-    };
+<script>
+// ═══════════════════════════════════
+//  STATE
+// ═══════════════════════════════════
 
-    function loadState() {
-      try {
-        const c = localStorage.getItem(LS.config);
-        if (c) state.config = JSON.parse(c);
-        const r = localStorage.getItem(LS.rides);
-        if (r) state.rides = JSON.parse(r);
-        const s = localStorage.getItem(LS.strava);
-        if (s) state.strava = JSON.parse(s);
-      } catch (e) { console.error("Load error:", e); }
+let cfg = { waxDate: "", targetKm: 300 };
+let rides = [];
+let strava = null; // { accessToken, refreshToken, expiresAt, athlete }
+let clientId = "";
+let clientSecret = "";
+
+const BASE = window.location.origin;
+
+function load() {
+  try {
+    const c = localStorage.getItem("chainwax_config"); if (c) cfg = JSON.parse(c);
+    const r = localStorage.getItem("chainwax_rides"); if (r) rides = JSON.parse(r);
+    const s = localStorage.getItem("chainwax_strava"); if (s) strava = JSON.parse(s);
+    const ci = localStorage.getItem("chainwax_client_id"); if (ci) clientId = ci;
+    const cs = localStorage.getItem("chainwax_client_secret"); if (cs) clientSecret = cs;
+  } catch(e) { console.error(e); }
+}
+
+function saveCfg() {
+  cfg.waxDate = document.getElementById("cfgDate").value;
+  cfg.targetKm = parseInt(document.getElementById("cfgKm").value) || 300;
+  localStorage.setItem("chainwax_config", JSON.stringify(cfg));
+  render();
+}
+
+function saveRides() { localStorage.setItem("chainwax_rides", JSON.stringify(rides)); }
+function saveStrava() {
+  if (strava) localStorage.setItem("chainwax_strava", JSON.stringify(strava));
+  else localStorage.removeItem("chainwax_strava");
+}
+function saveCreds() {
+  localStorage.setItem("chainwax_client_id", clientId);
+  localStorage.setItem("chainwax_client_secret", clientSecret);
+}
+
+// ═══════════════════════════════════
+//  HELPERS
+// ═══════════════════════════════════
+
+const fmt = n => Math.round(n * 10) / 10;
+const dateStr = d => new Date(d).toLocaleDateString("en-GB", { day:"numeric", month:"short", year:"numeric" });
+const shortDate = d => new Date(d).toLocaleDateString("en-GB", { day:"2-digit", month:"2-digit" });
+const esc = s => { const d = document.createElement("div"); d.textContent = s; return d.innerHTML; };
+
+function toast(msg, type) {
+  const el = document.createElement("div");
+  el.className = "toast toast-" + (type || "info");
+  el.textContent = msg;
+  document.body.appendChild(el);
+  setTimeout(() => { el.style.opacity = "0"; el.style.transition = "opacity 0.3s"; setTimeout(() => el.remove(), 300); }, 3000);
+}
+
+// ═══════════════════════════════════
+//  NAVIGATION
+// ═══════════════════════════════════
+
+let currentView = "dashboard";
+function go(name) {
+  currentView = name;
+  ["dashboard","rides","strava","settings"].forEach(v => {
+    document.getElementById("v-" + v).classList.toggle("hidden", v !== name);
+  });
+  document.querySelectorAll(".nav button").forEach((btn, i) => {
+    btn.classList.toggle("active", ["dashboard","rides","strava","settings"][i] === name);
+  });
+  if (name === "rides") document.getElementById("rDateIn").value = new Date().toISOString().split("T")[0];
+  if (name === "strava") {
+    document.getElementById("inCid").value = clientId;
+    document.getElementById("inCsec").value = clientSecret;
+  }
+}
+
+// ═══════════════════════════════════
+//  STRAVA AUTH
+// ═══════════════════════════════════
+
+function connectStrava() {
+  const cid = document.getElementById("inCid").value.trim();
+  const csec = document.getElementById("inCsec").value.trim();
+  if (!cid || !csec) { toast("Enter both Client ID and Secret", "err"); return; }
+  clientId = cid;
+  clientSecret = csec;
+  saveCreds();
+
+  const callbackUrl = BASE + "/strava-callback.html";
+  const url = "https://www.strava.com/oauth/authorize?client_id=" + cid +
+    "&response_type=code&redirect_uri=" + encodeURIComponent(callbackUrl) +
+    "&approval_prompt=auto&scope=activity:read_all";
+  window.location.href = url;
+}
+
+function disconnectStrava() {
+  strava = null;
+  saveStrava();
+  toast("Strava disconnected", "info");
+  render();
+}
+
+async function getToken() {
+  if (!strava) return null;
+  const now = Math.floor(Date.now() / 1000);
+  if (now < strava.expiresAt - 60) return strava.accessToken;
+
+  // Refresh
+  try {
+    const resp = await fetch("https://www.strava.com/api/v3/oauth/token", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        client_id: clientId,
+        client_secret: clientSecret,
+        refresh_token: strava.refreshToken,
+        grant_type: "refresh_token",
+      }),
+    });
+    const d = await resp.json();
+    if (d.access_token) {
+      strava.accessToken = d.access_token;
+      strava.refreshToken = d.refresh_token;
+      strava.expiresAt = d.expires_at;
+      saveStrava();
+      return d.access_token;
     }
+  } catch(e) { console.error(e); }
+  return null;
+}
 
-    function saveConfig() { localStorage.setItem(LS.config, JSON.stringify(state.config)); }
-    function saveRides() { localStorage.setItem(LS.rides, JSON.stringify(state.rides)); }
-    function saveStravaTokens() {
-      if (state.strava) localStorage.setItem(LS.strava, JSON.stringify(state.strava));
-      else localStorage.removeItem(LS.strava);
-    }
+async function syncStrava() {
+  if (!strava) { toast("Connect Strava first", "err"); return; }
+  if (!cfg.waxDate) { toast("Set a wax date first", "err"); return; }
 
-    // ╔══════════════════════════════════════════════╗
-    // ║              HELPERS                         ║
-    // ╚══════════════════════════════════════════════╝
+  const btn = document.getElementById("bSync");
+  btn.disabled = true; btn.textContent = "⏳ Syncing...";
 
-    const fmt = (n) => Math.round(n * 10) / 10;
-    const dateStr = (d) => new Date(d).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
-    const shortDate = (d) => new Date(d).toLocaleDateString("en-GB", { day: "2-digit", month: "2-digit" });
+  try {
+    const token = await getToken();
+    if (!token) throw new Error("Token expired. Reconnect Strava.");
 
-    function toast(msg, type = "info") {
-      const el = document.createElement("div");
-      el.className = `toast toast-${type}`;
-      el.textContent = msg;
-      document.body.appendChild(el);
-      setTimeout(() => { el.style.opacity = "0"; setTimeout(() => el.remove(), 300); }, 3000);
-    }
-
-    // ╔══════════════════════════════════════════════╗
-    // ║              VIEW SWITCHING                  ║
-    // ╚══════════════════════════════════════════════╝
-
-    function switchView(name) {
-      ["dashboard", "rides", "strava", "settings"].forEach((v) => {
-        document.getElementById(`view-${v}`).classList.toggle("hidden", v !== name);
+    const after = Math.floor(new Date(cfg.waxDate).getTime() / 1000);
+    let page = 1, all = [];
+    while (true) {
+      const r = await fetch("https://www.strava.com/api/v3/athlete/activities?after=" + after + "&per_page=100&page=" + page, {
+        headers: { Authorization: "Bearer " + token }
       });
-      document.querySelectorAll(".nav button").forEach((btn) => {
-        btn.classList.toggle("active", btn.dataset.view === name);
-      });
-      if (name === "rides") {
-        document.getElementById("rideDate").value = new Date().toISOString().split("T")[0];
-      }
+      if (!r.ok) throw new Error("HTTP " + r.status);
+      const acts = await r.json();
+      if (acts.length === 0) break;
+      all = all.concat(acts);
+      page++;
     }
 
-    // ╔══════════════════════════════════════════════╗
-    // ║              STRAVA OAUTH                    ║
-    // ╚══════════════════════════════════════════════╝
+    const bikeRides = all
+      .filter(a => a.type === "Ride" || a.type === "VirtualRide" || a.type === "EBikeRide")
+      .map(a => ({
+        id: "strava_" + a.id,
+        name: a.name,
+        distance: a.distance / 1000,
+        date: a.start_date_local || a.start_date,
+        source: "strava",
+      }));
 
-    function connectStrava() {
-      const url = `https://www.strava.com/oauth/authorize?client_id=${STRAVA_CLIENT_ID}&response_type=code&redirect_uri=${encodeURIComponent(CALLBACK_URL)}&approval_prompt=auto&scope=activity:read_all`;
-      window.location.href = url;
-    }
+    const manual = rides.filter(r => r.source !== "strava");
+    rides = [...manual, ...bikeRides].sort((a, b) => new Date(a.date) - new Date(b.date));
+    saveRides();
+    toast("Synced " + bikeRides.length + " ride" + (bikeRides.length !== 1 ? "s" : "") + " from Strava", "ok");
+  } catch(e) {
+    toast("Sync failed: " + e.message, "err");
+  }
 
-    function disconnectStrava() {
-      state.strava = null;
-      saveStravaTokens();
-      toast("Strava disconnected", "info");
-      renderAll();
-    }
+  btn.disabled = false; btn.textContent = "↻ Sync Strava";
+  render();
+}
 
-    async function getValidToken() {
-      if (!state.strava) return null;
-      const now = Math.floor(Date.now() / 1000);
-      if (now < state.strava.expiresAt - 60) return state.strava.accessToken;
+// ═══════════════════════════════════
+//  RIDES
+// ═══════════════════════════════════
 
-      // Refresh token
-      try {
-        const resp = await fetch("/api/strava/auth", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ grant_type: "refresh_token", refresh_token: state.strava.refreshToken }),
-        });
-        const data = await resp.json();
-        if (data.access_token) {
-          state.strava.accessToken = data.access_token;
-          state.strava.refreshToken = data.refresh_token;
-          state.strava.expiresAt = data.expires_at;
-          saveStravaTokens();
-          return data.access_token;
-        }
-      } catch (e) { console.error("Token refresh failed:", e); }
-      return null;
-    }
+function addRide() {
+  const name = document.getElementById("rName").value.trim();
+  const dist = parseFloat(document.getElementById("rDist").value);
+  const date = document.getElementById("rDateIn").value;
+  if (!name || !dist || !date) { toast("Fill all fields", "err"); return; }
+  rides.push({ id: "m_" + Date.now(), name, distance: dist, date, source: "manual" });
+  rides.sort((a, b) => new Date(a.date) - new Date(b.date));
+  saveRides();
+  document.getElementById("rName").value = "";
+  document.getElementById("rDist").value = "";
+  toast("Ride added", "ok");
+  render();
+}
 
-    async function syncStrava() {
-      if (!state.strava) { toast("Connect Strava first", "error"); return; }
-      if (!state.config.waxDate) { toast("Set a wax date first", "error"); return; }
+function delRide(id) {
+  rides = rides.filter(r => r.id !== id);
+  saveRides();
+  render();
+}
 
-      const syncBtn = document.getElementById("btnSync");
-      const syncLabel = document.getElementById("syncLabel");
-      syncBtn.disabled = true;
-      syncLabel.textContent = "⏳ Syncing...";
+function reWax() {
+  if (!confirm("Start a fresh wax cycle? This clears all tracked rides.")) return;
+  cfg.waxDate = new Date().toISOString().split("T")[0];
+  rides = [];
+  localStorage.setItem("chainwax_config", JSON.stringify(cfg));
+  saveRides();
+  toast("Chain waxed! Fresh cycle started.", "ok");
+  render();
+}
 
-      try {
-        const token = await getValidToken();
-        if (!token) { toast("Token expired. Reconnect Strava.", "error"); return; }
+function resetAll() {
+  if (!confirm("Delete ALL data including Strava connection?")) return;
+  ["chainwax_config","chainwax_rides","chainwax_strava","chainwax_client_id","chainwax_client_secret"].forEach(k => localStorage.removeItem(k));
+  cfg = { waxDate: "", targetKm: 300 }; rides = []; strava = null; clientId = ""; clientSecret = "";
+  toast("All data cleared", "info");
+  render();
+}
 
-        const after = Math.floor(new Date(state.config.waxDate).getTime() / 1000);
-        let page = 1, all = [], hasMore = true;
+// ═══════════════════════════════════
+//  RENDER
+// ═══════════════════════════════════
 
-        while (hasMore) {
-          const resp = await fetch(
-            `https://www.strava.com/api/v3/athlete/activities?after=${after}&per_page=100&page=${page}`,
-            { headers: { Authorization: `Bearer ${token}` } }
-          );
-          if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-          const activities = await resp.json();
-          if (activities.length === 0) hasMore = false;
-          else { all = all.concat(activities); page++; }
-        }
+function render() {
+  const conn = !!strava;
+  const hasWax = !!cfg.waxDate;
 
-        const bikeRides = all
-          .filter((a) => a.type === "Ride" || a.type === "VirtualRide" || a.type === "EBikeRide")
-          .map((a) => ({
-            id: `strava_${a.id}`,
-            name: a.name,
-            distance: a.distance / 1000,
-            date: a.start_date_local || a.start_date,
-            source: "strava",
-          }));
+  // Badge
+  const badge = document.getElementById("badge");
+  badge.className = "badge " + (conn ? "badge-on" : "badge-off");
+  badge.textContent = conn ? "● Strava" : "○ not connected";
 
-        // Merge: keep manual, replace strava
-        const manual = state.rides.filter((r) => r.source !== "strava");
-        state.rides = [...manual, ...bikeRides].sort((a, b) => new Date(a.date) - new Date(b.date));
-        saveRides();
-        toast(`Synced ${bikeRides.length} ride${bikeRides.length !== 1 ? "s" : ""} from Strava`, "success");
-      } catch (e) {
-        toast("Sync failed: " + e.message, "error");
-      }
+  // Dashboard
+  document.getElementById("emptyState").classList.toggle("hidden", hasWax);
+  document.getElementById("mainDash").classList.toggle("hidden", !hasWax);
+  document.getElementById("bSync").classList.toggle("hidden", !conn);
 
-      syncBtn.disabled = false;
-      syncLabel.textContent = "↻ Sync Strava";
-      renderAll();
-    }
+  // Strava view
+  document.getElementById("strOff").classList.toggle("hidden", conn);
+  document.getElementById("strOn").classList.toggle("hidden", !conn);
+  if (conn && strava.athlete) {
+    const a = strava.athlete;
+    document.getElementById("strName").textContent = ((a.firstname || "") + " " + (a.lastname || "")).trim() || "Athlete";
+  }
 
-    // ╔══════════════════════════════════════════════╗
-    // ║              RIDE MANAGEMENT                 ║
-    // ╚══════════════════════════════════════════════╝
+  // Settings
+  document.getElementById("cfgDate").value = cfg.waxDate;
+  document.getElementById("cfgKm").value = cfg.targetKm;
 
-    function addManualRide() {
-      const name = document.getElementById("rideName").value.trim();
-      const dist = parseFloat(document.getElementById("rideDist").value);
-      const date = document.getElementById("rideDate").value;
+  // Calculations
+  const totalKm = rides.reduce((s, r) => s + r.distance, 0);
+  const remaining = Math.max(0, cfg.targetKm - totalKm);
+  const pct = cfg.targetKm > 0 ? Math.min((totalKm / cfg.targetKm) * 100, 100) : 0;
+  const overdue = totalKm >= cfg.targetKm;
 
-      if (!name || !dist || !date) { toast("Fill in all fields", "error"); return; }
+  // Gauge
+  const circ = 2 * Math.PI * 88;
+  const off = circ - (pct / 100) * circ;
+  const gFg = document.getElementById("gFg");
+  const col = pct > 85 ? "var(--danger)" : pct > 60 ? "var(--accent)" : "var(--success)";
+  gFg.style.strokeDashoffset = off;
+  gFg.style.stroke = col;
+  gFg.style.filter = "drop-shadow(0 0 8px " + col + ")";
 
-      state.rides.push({
-        id: `manual_${Date.now()}`,
-        name, distance: dist, date, source: "manual",
-      });
-      state.rides.sort((a, b) => new Date(a.date) - new Date(b.date));
-      saveRides();
+  const gVal = document.getElementById("gVal");
+  gVal.textContent = fmt(remaining);
+  gVal.style.color = overdue ? "var(--danger)" : "var(--text)";
 
-      document.getElementById("rideName").value = "";
-      document.getElementById("rideDist").value = "";
-      toast("Ride added", "success");
-      renderAll();
-    }
+  // Stats
+  document.getElementById("sWax").textContent = hasWax ? dateStr(cfg.waxDate) : "—";
+  document.getElementById("sRid").textContent = fmt(totalKm) + " km";
+  document.getElementById("sTgt").textContent = cfg.targetKm + " km";
 
-    function deleteRide(id) {
-      state.rides = state.rides.filter((r) => r.id !== id);
-      saveRides();
-      toast("Ride removed", "info");
-      renderAll();
-    }
+  // Alert
+  document.getElementById("alertWax").classList.toggle("hidden", !overdue);
 
-    // ╔══════════════════════════════════════════════╗
-    // ║              SETTINGS                        ║
-    // ╚══════════════════════════════════════════════╝
+  // Estimate
+  const est = document.getElementById("estPill");
+  if (hasWax && rides.length > 0 && remaining > 0) {
+    const days = Math.max(1, (Date.now() - new Date(cfg.waxDate).getTime()) / 86400000);
+    const avg = totalKm / days;
+    if (avg > 0) {
+      const left = Math.ceil(remaining / avg);
+      est.textContent = "≈ " + left + " day" + (left !== 1 ? "s" : "") + " until re-wax at current pace";
+      est.classList.remove("hidden");
+    } else est.classList.add("hidden");
+  } else est.classList.add("hidden");
 
-    function saveSettings() {
-      state.config.waxDate = document.getElementById("cfgWaxDate").value;
-      state.config.targetKm = parseInt(document.getElementById("cfgTargetKm").value) || 300;
-      saveConfig();
-      renderAll();
-    }
+  // Ride log
+  document.getElementById("rCnt").textContent = rides.length + " ride" + (rides.length !== 1 ? "s" : "");
+  const rl = document.getElementById("rList");
+  if (rides.length === 0) {
+    rl.innerHTML = '<div class="rempty">No rides yet. Sync Strava or add manually.</div>';
+  } else {
+    rl.innerHTML = [...rides].reverse().map(r =>
+      '<div class="rrow">' +
+        '<div><div class="rname">' + esc(r.name) + '</div><div class="rdate">' + shortDate(r.date) + '</div></div>' +
+        '<div class="rdist">' + fmt(r.distance) + ' km</div>' +
+        '<div class="rsrc">' + (r.source === "strava" ? "Strava" : "Manual") + '</div>' +
+        '<button class="rdel" onclick="delRide(\'' + r.id + '\')" title="Delete">×</button>' +
+      '</div>'
+    ).join("");
+  }
+}
 
-    function reWaxChain() {
-      if (!confirm("Start a fresh wax cycle? This clears all tracked rides.")) return;
-      state.config.waxDate = new Date().toISOString().split("T")[0];
-      state.rides = [];
-      saveConfig(); saveRides();
-      toast("Chain waxed! Fresh cycle started.", "success");
-      renderAll();
-    }
+// ═══════════════════════════════════
+//  INIT
+// ═══════════════════════════════════
 
-    function resetAllData() {
-      if (!confirm("Delete ALL data including Strava connection?")) return;
-      localStorage.removeItem(LS.config);
-      localStorage.removeItem(LS.rides);
-      localStorage.removeItem(LS.strava);
-      state = { config: { waxDate: "", targetKm: 300 }, rides: [], strava: null };
-      toast("All data cleared", "info");
-      renderAll();
-    }
-
-    // ╔══════════════════════════════════════════════╗
-    // ║              RENDERING                       ║
-    // ╚══════════════════════════════════════════════╝
-
-    function renderAll() {
-      const connected = !!state.strava;
-      const hasWaxDate = !!state.config.waxDate;
-
-      // Strava badge
-      const badge = document.getElementById("stravaBadge");
-      if (connected) {
-        badge.className = "strava-badge connected";
-        badge.textContent = "● Strava";
-      } else {
-        badge.className = "strava-badge disconnected";
-        badge.textContent = "○ not connected";
-      }
-
-      // Empty vs main dashboard
-      document.getElementById("emptyState").classList.toggle("hidden", hasWaxDate);
-      document.getElementById("mainDashboard").classList.toggle("hidden", !hasWaxDate);
-
-      // Sync button visibility
-      const btnSync = document.getElementById("btnSync");
-      btnSync.classList.toggle("hidden", !connected);
-      btnSync.disabled = false;
-
-      // Strava view states
-      document.getElementById("stravaNotConnected").classList.toggle("hidden", connected);
-      document.getElementById("stravaConnected").classList.toggle("hidden", !connected);
-      if (connected && state.strava.athlete) {
-        const a = state.strava.athlete;
-        document.getElementById("stravaAthlete").textContent =
-          `${a.firstname || ""} ${a.lastname || ""}`.trim() || "Athlete";
-      }
-
-      // Settings
-      document.getElementById("cfgWaxDate").value = state.config.waxDate;
-      document.getElementById("cfgTargetKm").value = state.config.targetKm;
-
-      // Calculations
-      const totalKm = state.rides.reduce((sum, r) => sum + r.distance, 0);
-      const remaining = Math.max(0, state.config.targetKm - totalKm);
-      const usedPct = state.config.targetKm > 0 ? Math.min((totalKm / state.config.targetKm) * 100, 100) : 0;
-      const isOverdue = totalKm >= state.config.targetKm;
-
-      // Gauge
-      const circumference = 2 * Math.PI * 88; // radius=88
-      const offset = circumference - (usedPct / 100) * circumference;
-      const gaugeFg = document.getElementById("gaugeFg");
-      const gaugeColor = usedPct > 85 ? "var(--danger)" : usedPct > 60 ? "var(--accent)" : "var(--success)";
-      const glowColor = usedPct > 85 ? "var(--danger)" : usedPct > 60 ? "var(--accent)" : "var(--success)";
-      gaugeFg.style.strokeDashoffset = offset;
-      gaugeFg.style.stroke = gaugeColor;
-      gaugeFg.style.filter = `drop-shadow(0 0 8px ${glowColor})`;
-
-      const gaugeValueEl = document.getElementById("gaugeValue");
-      gaugeValueEl.textContent = fmt(remaining);
-      gaugeValueEl.style.color = isOverdue ? "var(--danger)" : "var(--text)";
-
-      // Stats
-      document.getElementById("statWaxDate").textContent = hasWaxDate ? dateStr(state.config.waxDate) : "—";
-      document.getElementById("statRidden").textContent = `${fmt(totalKm)} km`;
-      document.getElementById("statTarget").textContent = `${state.config.targetKm} km`;
-
-      // Alert banner
-      document.getElementById("alertBanner").classList.toggle("hidden", !isOverdue);
-
-      // Estimate
-      const estimateEl = document.getElementById("estimatePill");
-      if (hasWaxDate && state.rides.length > 0 && remaining > 0) {
-        const daysSince = Math.max(1, (Date.now() - new Date(state.config.waxDate).getTime()) / 86400000);
-        const avgPerDay = totalKm / daysSince;
-        if (avgPerDay > 0) {
-          const daysLeft = Math.ceil(remaining / avgPerDay);
-          estimateEl.textContent = `≈ ${daysLeft} day${daysLeft !== 1 ? "s" : ""} until re-wax at current pace`;
-          estimateEl.classList.remove("hidden");
-        } else estimateEl.classList.add("hidden");
-      } else estimateEl.classList.add("hidden");
-
-      // Ride log
-      document.getElementById("rideCount").textContent = `${state.rides.length} ride${state.rides.length !== 1 ? "s" : ""}`;
-      const rideList = document.getElementById("rideList");
-      if (state.rides.length === 0) {
-        rideList.innerHTML = '<div class="ride-empty">No rides yet. Sync Strava or add manually.</div>';
-      } else {
-        rideList.innerHTML = [...state.rides].reverse().map((r) => `
-          <div class="ride-row">
-            <div>
-              <div class="ride-name">${escHtml(r.name)}</div>
-              <div class="ride-date">${shortDate(r.date)}</div>
-            </div>
-            <div class="ride-dist">${fmt(r.distance)} km</div>
-            <div class="ride-source">${r.source === "strava" ? "Strava" : "Manual"}</div>
-            <button class="ride-del" onclick="deleteRide('${r.id}')" title="Delete">×</button>
-          </div>
-        `).join("");
-      }
-    }
-
-    function escHtml(s) {
-      const d = document.createElement("div");
-      d.textContent = s;
-      return d.innerHTML;
-    }
-
-    // ╔══════════════════════════════════════════════╗
-    // ║              INIT                            ║
-    // ╚══════════════════════════════════════════════╝
-
-    loadState();
-    renderAll();
-  </script>
+load();
+render();
+</script>
 </body>
 </html>
