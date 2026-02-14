@@ -24,8 +24,6 @@
       background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
     }
     .app { position: relative; z-index: 1; max-width: 640px; margin: 0 auto; padding: 0 20px 60px; }
-
-    /* Header */
     .header { padding: 28px 0 24px; display: flex; align-items: flex-end; justify-content: space-between; border-bottom: 1px solid var(--border); margin-bottom: 32px; }
     .header-left { display: flex; align-items: center; gap: 14px; }
     .logo { width: 44px; height: 44px; background: linear-gradient(135deg, var(--accent), var(--accent-dim)); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 22px; box-shadow: 0 4px 20px var(--accent-glow); }
@@ -34,18 +32,12 @@
     .badge { font-family: var(--font-mono); font-size: 11px; padding: 4px 10px; border-radius: 20px; letter-spacing: 0.3px; white-space: nowrap; }
     .badge-on { background: var(--success-glow); color: var(--success); border: 1px solid rgba(48,216,112,0.2); }
     .badge-off { background: rgba(122,122,138,0.1); color: var(--text-muted); border: 1px solid var(--border); }
-
-    /* Nav */
     .nav { display: flex; gap: 4px; margin-bottom: 28px; background: var(--bg2); border-radius: 10px; padding: 4px; border: 1px solid var(--border); }
     .nav button { flex: 1; padding: 9px 10px; border: none; border-radius: 8px; font-family: var(--font-mono); font-size: 11px; font-weight: 500; cursor: pointer; transition: all 0.25s; background: transparent; color: var(--text-muted); }
     .nav button.active { background: var(--card); color: var(--accent); box-shadow: 0 2px 8px rgba(0,0,0,0.3); }
     .nav button:hover:not(.active) { color: var(--text-dim); }
-
-    /* Card */
     .card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 28px; margin-bottom: 20px; }
     .card-title { font-family: var(--font-mono); font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: 1.5px; color: var(--text-muted); margin-bottom: 20px; }
-
-    /* Gauge */
     .gauge-wrap { display: flex; flex-direction: column; align-items: center; padding: 12px 0 20px; position: relative; }
     .gauge-svg { transform: rotate(-90deg); }
     .gauge-bg { fill: none; stroke: var(--border); }
@@ -53,20 +45,14 @@
     .gauge-center { position: absolute; text-align: center; top: 50%; left: 50%; transform: translate(-50%,-50%); font-family: var(--font-mono); }
     .gauge-val { font-size: 36px; font-weight: 500; line-height: 1; }
     .gauge-lbl { font-size: 11px; color: var(--text-muted); margin-top: 6px; letter-spacing: 1px; text-transform: uppercase; }
-
-    /* Stats */
     .stats { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1px; background: var(--border); border-radius: 10px; overflow: hidden; margin-top: 24px; }
     .stat { background: var(--card); padding: 16px; text-align: center; }
     .stat-l { font-family: var(--font-mono); font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
     .stat-v { font-family: var(--font-mono); font-size: 15px; font-weight: 500; }
-
-    /* Alert */
     .alert { margin-top: 20px; padding: 14px 20px; border-radius: 10px; font-family: var(--font-mono); font-size: 13px; font-weight: 500; text-align: center; }
     .alert-danger { background: var(--danger-glow); border: 1px solid rgba(240,72,72,0.25); color: var(--danger); animation: pulse 2s infinite; }
     .alert-success { background: var(--success-glow); border: 1px solid rgba(48,216,112,0.2); color: var(--success); }
     @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.8} }
-
-    /* Buttons */
     .btn-row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px; }
     .btn { padding: 10px 20px; border-radius: 8px; border: none; font-family: var(--font-mono); font-size: 12px; font-weight: 500; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 6px; }
     .btn:disabled { opacity: 0.4; cursor: not-allowed; }
@@ -78,8 +64,6 @@
     .btn-secondary:hover:not(:disabled) { border-color: var(--border-light); color: var(--text); }
     .btn-danger { background: transparent; color: var(--danger); border: 1px solid rgba(240,72,72,0.3); }
     .btn-danger:hover:not(:disabled) { background: var(--danger-glow); }
-
-    /* Ride log */
     .rlog { border-radius: 12px; overflow: hidden; border: 1px solid var(--border); background: var(--card); }
     .rlog-hdr { padding: 14px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
     .rlog-hdr span { font-family: var(--font-mono); font-size: 11px; text-transform: uppercase; letter-spacing: 1px; }
@@ -95,8 +79,6 @@
     .rdel:hover { color: var(--danger); background: var(--danger-glow); }
     .rempty { padding: 40px 20px; text-align: center; color: var(--text-muted); font-family: var(--font-mono); font-size: 12px; }
     .rlist { max-height: 400px; overflow-y: auto; }
-
-    /* Form */
     .fg { margin-bottom: 18px; }
     .fl { display: block; font-family: var(--font-mono); font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); margin-bottom: 8px; }
     .fi { width: 100%; padding: 10px 14px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: var(--font-mono); font-size: 13px; outline: none; transition: border-color 0.2s; }
@@ -108,29 +90,19 @@
     .fsuf span { color: var(--text-muted); font-family: var(--font-mono); font-size: 12px; }
     .fhint { margin-top: 20px; padding: 14px 18px; border-radius: 10px; background: var(--accent-glow); border: 1px solid rgba(240,160,48,0.15); font-size: 12px; color: var(--text-dim); line-height: 1.6; }
     .fhint strong { color: var(--accent); }
-    .fhint a { color: var(--accent); }
-
-    /* Hero */
     .hero { text-align: center; padding: 40px 20px; }
     .hero .icon { font-size: 48px; margin-bottom: 16px; }
-    .hero h2 { font-size: 18px; font-weight: 600; margin-bottom: 8px; font-family: var(--font-display); }
+    .hero h2 { font-size: 18px; font-weight: 600; margin-bottom: 8px; }
     .hero p { color: var(--text-dim); font-size: 13px; margin-bottom: 24px; line-height: 1.6; }
-
-    /* Estimate */
     .estimate { margin-top: 16px; font-family: var(--font-mono); font-size: 12px; color: var(--text-muted); text-align: center; }
-
-    /* Toast */
     .toast { position: fixed; top: 20px; right: 20px; z-index: 1000; padding: 12px 20px; border-radius: 8px; font-family: var(--font-mono); font-size: 12px; box-shadow: 0 8px 32px rgba(0,0,0,0.5); animation: slideIn 0.3s ease; }
     .toast-ok { background: var(--success); color: #fff; }
     .toast-err { background: var(--danger); color: #fff; }
     .toast-info { background: var(--accent); color: var(--bg); }
     @keyframes slideIn { from { transform: translateY(-20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-
     .hidden { display: none !important; }
     @keyframes fadeIn { from { opacity:0; transform:translateY(8px) } to { opacity:1; transform:translateY(0) } }
     .view { animation: fadeIn 0.35s ease; }
-
-    /* Responsive */
     @media (max-width: 480px) {
       .header { flex-direction: column; align-items: flex-start; gap: 12px; }
       .stats { grid-template-columns: 1fr; }
@@ -146,7 +118,6 @@
 <body>
 <div class="app">
 
-  <!-- Header -->
   <div class="header">
     <div class="header-left">
       <div class="logo">⛓</div>
@@ -158,7 +129,6 @@
     <div class="badge badge-off" id="badge">○ not connected</div>
   </div>
 
-  <!-- Nav -->
   <div class="nav">
     <button class="active" onclick="go('dashboard')">Dashboard</button>
     <button onclick="go('rides')">Rides</button>
@@ -166,7 +136,7 @@
     <button onclick="go('settings')">Settings</button>
   </div>
 
-  <!-- ════════ DASHBOARD ════════ -->
+  <!-- DASHBOARD -->
   <div id="v-dashboard" class="view">
     <div id="emptyState" class="card hidden">
       <div class="hero">
@@ -204,7 +174,7 @@
     </div>
   </div>
 
-  <!-- ════════ RIDES ════════ -->
+  <!-- RIDES -->
   <div id="v-rides" class="view hidden">
     <div class="card">
       <div class="card-title">Add Manual Ride</div>
@@ -230,31 +200,16 @@
     </div>
   </div>
 
-  <!-- ════════ STRAVA ════════ -->
+  <!-- STRAVA -->
   <div id="v-strava" class="view hidden">
-    <!-- Not connected -->
     <div id="strOff" class="card">
-      <div class="card-title">Connect Strava</div>
-      <p style="color:var(--text-dim);font-size:13px;line-height:1.6;margin-bottom:20px;">
-        Link your Strava account to automatically pull cycling activities.
-        You need a Strava API app — create one at
-        <a href="https://www.strava.com/settings/api" target="_blank" style="color:var(--accent)">strava.com/settings/api</a>.
-      </p>
-      <div class="fhint" style="margin-top:0;margin-bottom:20px;">
-        <strong>Setup:</strong> Create a Strava API app. Set the <strong>Authorization Callback Domain</strong> to your website domain
-        (e.g. <code style="color:var(--accent)">cmanda-website.vercel.app</code>). Then paste your Client ID and Secret below.
+      <div class="hero">
+        <div class="icon">🚴</div>
+        <h2>Connect Strava</h2>
+        <p>Link your Strava account to automatically pull cycling activities. Click below to authorize — your rides since the last wax will be synced.</p>
+        <button class="btn btn-strava" onclick="connectStrava()">Connect with Strava</button>
       </div>
-      <div class="fg">
-        <label class="fl">Client ID</label>
-        <input class="fi" type="text" id="inCid" placeholder="12345">
-      </div>
-      <div class="fg">
-        <label class="fl">Client Secret</label>
-        <input class="fi" type="password" id="inCsec" placeholder="abc123def456...">
-      </div>
-      <button class="btn btn-strava" onclick="connectStrava()">Connect with Strava</button>
     </div>
-    <!-- Connected -->
     <div id="strOn" class="card hidden">
       <div class="card-title">Strava Connection</div>
       <div class="alert alert-success" style="margin-top:0;margin-bottom:20px;">
@@ -267,7 +222,7 @@
     </div>
   </div>
 
-  <!-- ════════ SETTINGS ════════ -->
+  <!-- SETTINGS -->
   <div id="v-settings" class="view hidden">
     <div class="card">
       <div class="card-title">Wax Settings</div>
@@ -292,25 +247,30 @@
 </div>
 
 <script>
-// ═══════════════════════════════════
-//  STATE
-// ═══════════════════════════════════
+// ══════════════════════════════════════════════════════════
+//  *** ENTER YOUR STRAVA CREDENTIALS HERE ***
+//
+//  Get these from: https://www.strava.com/settings/api
+//  Set "Authorization Callback Domain" to: cmanda-website.vercel.app
+// ══════════════════════════════════════════════════════════
+
+const STRAVA_CLIENT_ID     = "202550";
+const STRAVA_CLIENT_SECRET = "28a52c20e5aa595af90ed7477e8cd1443f00de5a";
+
+// ══════════════════════════════════════════════════════════
+
+const BASE = window.location.origin;
+const CALLBACK = BASE + "/strava-callback.html";
 
 let cfg = { waxDate: "", targetKm: 300 };
 let rides = [];
-let strava = null; // { accessToken, refreshToken, expiresAt, athlete }
-let clientId = "";
-let clientSecret = "";
-
-const BASE = window.location.origin;
+let strava = null;
 
 function load() {
   try {
     const c = localStorage.getItem("chainwax_config"); if (c) cfg = JSON.parse(c);
     const r = localStorage.getItem("chainwax_rides"); if (r) rides = JSON.parse(r);
     const s = localStorage.getItem("chainwax_strava"); if (s) strava = JSON.parse(s);
-    const ci = localStorage.getItem("chainwax_client_id"); if (ci) clientId = ci;
-    const cs = localStorage.getItem("chainwax_client_secret"); if (cs) clientSecret = cs;
   } catch(e) { console.error(e); }
 }
 
@@ -320,20 +280,11 @@ function saveCfg() {
   localStorage.setItem("chainwax_config", JSON.stringify(cfg));
   render();
 }
-
 function saveRides() { localStorage.setItem("chainwax_rides", JSON.stringify(rides)); }
 function saveStrava() {
   if (strava) localStorage.setItem("chainwax_strava", JSON.stringify(strava));
   else localStorage.removeItem("chainwax_strava");
 }
-function saveCreds() {
-  localStorage.setItem("chainwax_client_id", clientId);
-  localStorage.setItem("chainwax_client_secret", clientSecret);
-}
-
-// ═══════════════════════════════════
-//  HELPERS
-// ═══════════════════════════════════
 
 const fmt = n => Math.round(n * 10) / 10;
 const dateStr = d => new Date(d).toLocaleDateString("en-GB", { day:"numeric", month:"short", year:"numeric" });
@@ -348,10 +299,6 @@ function toast(msg, type) {
   setTimeout(() => { el.style.opacity = "0"; el.style.transition = "opacity 0.3s"; setTimeout(() => el.remove(), 300); }, 3000);
 }
 
-// ═══════════════════════════════════
-//  NAVIGATION
-// ═══════════════════════════════════
-
 let currentView = "dashboard";
 function go(name) {
   currentView = name;
@@ -362,34 +309,23 @@ function go(name) {
     btn.classList.toggle("active", ["dashboard","rides","strava","settings"][i] === name);
   });
   if (name === "rides") document.getElementById("rDateIn").value = new Date().toISOString().split("T")[0];
-  if (name === "strava") {
-    document.getElementById("inCid").value = clientId;
-    document.getElementById("inCsec").value = clientSecret;
-  }
 }
 
-// ═══════════════════════════════════
-//  STRAVA AUTH
-// ═══════════════════════════════════
+// ── STRAVA ──
 
 function connectStrava() {
-  const cid = document.getElementById("inCid").value.trim();
-  const csec = document.getElementById("inCsec").value.trim();
-  if (!cid || !csec) { toast("Enter both Client ID and Secret", "err"); return; }
-  clientId = cid;
-  clientSecret = csec;
-  saveCreds();
+  // Store credentials so callback page can use them
+  localStorage.setItem("chainwax_client_id", STRAVA_CLIENT_ID);
+  localStorage.setItem("chainwax_client_secret", STRAVA_CLIENT_SECRET);
 
-  const callbackUrl = BASE + "/strava-callback.html";
-  const url = "https://www.strava.com/oauth/authorize?client_id=" + cid +
-    "&response_type=code&redirect_uri=" + encodeURIComponent(callbackUrl) +
+  const url = "https://www.strava.com/oauth/authorize?client_id=" + STRAVA_CLIENT_ID +
+    "&response_type=code&redirect_uri=" + encodeURIComponent(CALLBACK) +
     "&approval_prompt=auto&scope=activity:read_all";
   window.location.href = url;
 }
 
 function disconnectStrava() {
-  strava = null;
-  saveStrava();
+  strava = null; saveStrava();
   toast("Strava disconnected", "info");
   render();
 }
@@ -398,15 +334,13 @@ async function getToken() {
   if (!strava) return null;
   const now = Math.floor(Date.now() / 1000);
   if (now < strava.expiresAt - 60) return strava.accessToken;
-
-  // Refresh
   try {
     const resp = await fetch("https://www.strava.com/api/v3/oauth/token", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        client_id: clientId,
-        client_secret: clientSecret,
+        client_id: STRAVA_CLIENT_ID,
+        client_secret: STRAVA_CLIENT_SECRET,
         refresh_token: strava.refreshToken,
         grant_type: "refresh_token",
       }),
@@ -426,14 +360,11 @@ async function getToken() {
 async function syncStrava() {
   if (!strava) { toast("Connect Strava first", "err"); return; }
   if (!cfg.waxDate) { toast("Set a wax date first", "err"); return; }
-
   const btn = document.getElementById("bSync");
   btn.disabled = true; btn.textContent = "⏳ Syncing...";
-
   try {
     const token = await getToken();
     if (!token) throw new Error("Token expired. Reconnect Strava.");
-
     const after = Math.floor(new Date(cfg.waxDate).getTime() / 1000);
     let page = 1, all = [];
     while (true) {
@@ -443,35 +374,21 @@ async function syncStrava() {
       if (!r.ok) throw new Error("HTTP " + r.status);
       const acts = await r.json();
       if (acts.length === 0) break;
-      all = all.concat(acts);
-      page++;
+      all = all.concat(acts); page++;
     }
-
     const bikeRides = all
       .filter(a => a.type === "Ride" || a.type === "VirtualRide" || a.type === "EBikeRide")
-      .map(a => ({
-        id: "strava_" + a.id,
-        name: a.name,
-        distance: a.distance / 1000,
-        date: a.start_date_local || a.start_date,
-        source: "strava",
-      }));
-
+      .map(a => ({ id: "strava_" + a.id, name: a.name, distance: a.distance / 1000, date: a.start_date_local || a.start_date, source: "strava" }));
     const manual = rides.filter(r => r.source !== "strava");
     rides = [...manual, ...bikeRides].sort((a, b) => new Date(a.date) - new Date(b.date));
     saveRides();
-    toast("Synced " + bikeRides.length + " ride" + (bikeRides.length !== 1 ? "s" : "") + " from Strava", "ok");
-  } catch(e) {
-    toast("Sync failed: " + e.message, "err");
-  }
-
+    toast("Synced " + bikeRides.length + " ride" + (bikeRides.length !== 1 ? "s" : ""), "ok");
+  } catch(e) { toast("Sync failed: " + e.message, "err"); }
   btn.disabled = false; btn.textContent = "↻ Sync Strava";
   render();
 }
 
-// ═══════════════════════════════════
-//  RIDES
-// ═══════════════════════════════════
+// ── RIDES ──
 
 function addRide() {
   const name = document.getElementById("rName").value.trim();
@@ -487,11 +404,7 @@ function addRide() {
   render();
 }
 
-function delRide(id) {
-  rides = rides.filter(r => r.id !== id);
-  saveRides();
-  render();
-}
+function delRide(id) { rides = rides.filter(r => r.id !== id); saveRides(); render(); }
 
 function reWax() {
   if (!confirm("Start a fresh wax cycle? This clears all tracked rides.")) return;
@@ -506,48 +419,35 @@ function reWax() {
 function resetAll() {
   if (!confirm("Delete ALL data including Strava connection?")) return;
   ["chainwax_config","chainwax_rides","chainwax_strava","chainwax_client_id","chainwax_client_secret"].forEach(k => localStorage.removeItem(k));
-  cfg = { waxDate: "", targetKm: 300 }; rides = []; strava = null; clientId = ""; clientSecret = "";
+  cfg = { waxDate: "", targetKm: 300 }; rides = []; strava = null;
   toast("All data cleared", "info");
   render();
 }
 
-// ═══════════════════════════════════
-//  RENDER
-// ═══════════════════════════════════
+// ── RENDER ──
 
 function render() {
   const conn = !!strava;
   const hasWax = !!cfg.waxDate;
-
-  // Badge
   const badge = document.getElementById("badge");
   badge.className = "badge " + (conn ? "badge-on" : "badge-off");
   badge.textContent = conn ? "● Strava" : "○ not connected";
-
-  // Dashboard
   document.getElementById("emptyState").classList.toggle("hidden", hasWax);
   document.getElementById("mainDash").classList.toggle("hidden", !hasWax);
   document.getElementById("bSync").classList.toggle("hidden", !conn);
-
-  // Strava view
   document.getElementById("strOff").classList.toggle("hidden", conn);
   document.getElementById("strOn").classList.toggle("hidden", !conn);
   if (conn && strava.athlete) {
     const a = strava.athlete;
     document.getElementById("strName").textContent = ((a.firstname || "") + " " + (a.lastname || "")).trim() || "Athlete";
   }
-
-  // Settings
   document.getElementById("cfgDate").value = cfg.waxDate;
   document.getElementById("cfgKm").value = cfg.targetKm;
 
-  // Calculations
   const totalKm = rides.reduce((s, r) => s + r.distance, 0);
   const remaining = Math.max(0, cfg.targetKm - totalKm);
   const pct = cfg.targetKm > 0 ? Math.min((totalKm / cfg.targetKm) * 100, 100) : 0;
   const overdue = totalKm >= cfg.targetKm;
-
-  // Gauge
   const circ = 2 * Math.PI * 88;
   const off = circ - (pct / 100) * circ;
   const gFg = document.getElementById("gFg");
@@ -555,20 +455,14 @@ function render() {
   gFg.style.strokeDashoffset = off;
   gFg.style.stroke = col;
   gFg.style.filter = "drop-shadow(0 0 8px " + col + ")";
-
   const gVal = document.getElementById("gVal");
   gVal.textContent = fmt(remaining);
   gVal.style.color = overdue ? "var(--danger)" : "var(--text)";
-
-  // Stats
   document.getElementById("sWax").textContent = hasWax ? dateStr(cfg.waxDate) : "—";
   document.getElementById("sRid").textContent = fmt(totalKm) + " km";
   document.getElementById("sTgt").textContent = cfg.targetKm + " km";
-
-  // Alert
   document.getElementById("alertWax").classList.toggle("hidden", !overdue);
 
-  // Estimate
   const est = document.getElementById("estPill");
   if (hasWax && rides.length > 0 && remaining > 0) {
     const days = Math.max(1, (Date.now() - new Date(cfg.waxDate).getTime()) / 86400000);
@@ -580,26 +474,18 @@ function render() {
     } else est.classList.add("hidden");
   } else est.classList.add("hidden");
 
-  // Ride log
   document.getElementById("rCnt").textContent = rides.length + " ride" + (rides.length !== 1 ? "s" : "");
   const rl = document.getElementById("rList");
   if (rides.length === 0) {
     rl.innerHTML = '<div class="rempty">No rides yet. Sync Strava or add manually.</div>';
   } else {
     rl.innerHTML = [...rides].reverse().map(r =>
-      '<div class="rrow">' +
-        '<div><div class="rname">' + esc(r.name) + '</div><div class="rdate">' + shortDate(r.date) + '</div></div>' +
-        '<div class="rdist">' + fmt(r.distance) + ' km</div>' +
-        '<div class="rsrc">' + (r.source === "strava" ? "Strava" : "Manual") + '</div>' +
-        '<button class="rdel" onclick="delRide(\'' + r.id + '\')" title="Delete">×</button>' +
-      '</div>'
+      '<div class="rrow"><div><div class="rname">' + esc(r.name) + '</div><div class="rdate">' + shortDate(r.date) + '</div></div>' +
+      '<div class="rdist">' + fmt(r.distance) + ' km</div><div class="rsrc">' + (r.source === "strava" ? "Strava" : "Manual") + '</div>' +
+      '<button class="rdel" onclick="delRide(\'' + r.id + '\')" title="Delete">×</button></div>'
     ).join("");
   }
 }
-
-// ═══════════════════════════════════
-//  INIT
-// ═══════════════════════════════════
 
 load();
 render();
