@@ -259,10 +259,13 @@ async function saveToCloud(){
 }
 
 async function loadFromCloud(aid, bid){
-  try {
+  try{
+    var payload = {};
+    if(bid) payload = { action:"load", bin_id:bid };
+    else payload = { action:"load", athlete_id:aid };
     var r = await fetch("/api/strava",{
       method:"POST", headers:{"Content-Type":"application/json"},
-      body: JSON.stringify({ action:"load", bin_id:bid })
+      body: JSON.stringify(payload)
     });
     var d = await r.json();
     if(d.data){
@@ -271,9 +274,10 @@ async function loadFromCloud(aid, bid){
       if(d.data.rides) rides = d.data.rides;
       if(d.data.strava) strava = d.data.strava;
       if(d.data.waxHistory) waxHistory = d.data.waxHistory;
+      if(d.bin_id){ binId = d.bin_id; localStorage.setItem("chainwax_bin_"+aid, binId); }
       return true;
     }
-  } catch(e){ console.error("Load failed:",e); }
+  }catch(e){console.error("Load failed:",e);}
   return false;
 }
 
@@ -473,14 +477,10 @@ function render(){
         strava={accessToken:sd.accessToken,refreshToken:sd.refreshToken,expiresAt:sd.expiresAt};
         localStorage.removeItem("chainwax_strava");
 
-        // Check if this user already has a bin
-        var existingBin = localStorage.getItem("chainwax_bin_"+athlete.id);
-        if(existingBin){
-          binId=existingBin;
-          await loadFromCloud(athlete.id, binId);
-          // Keep fresh tokens
-          strava={accessToken:sd.accessToken,refreshToken:sd.refreshToken,expiresAt:sd.expiresAt};
-        }
+        // Look up existing data by athlete ID (works across devices)
+        await loadFromCloud(athlete.id, null);
+        // Keep fresh tokens from this OAuth
+        strava={accessToken:sd.accessToken,refreshToken:sd.refreshToken,expiresAt:sd.expiresAt};
         await saveAll();
         loadEl.style.display="none"; appEl.style.display="block";
         showApp();
