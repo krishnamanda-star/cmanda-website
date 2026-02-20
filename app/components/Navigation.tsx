@@ -15,8 +15,9 @@ export default function Navigation() {
     { href: '/meditation', label: 'Meditation' },
     { href: '/cycling', label: 'Cycling' },
     { href: '/coffee', label: 'Coffee' },
-    { href: '/ai-solutions', label: 'AI Solutions' },
-    { href: 'https://garden-bice-sigma.vercel.app', label: 'Garden' },
+   { href: '/ai-solutions', label: 'AI Solutions' },
+   { href: '/notes', label: 'Notes' },
+   { href: 'https://garden-bice-sigma.vercel.app', label: 'Garden' },
   ];
 
   return (
