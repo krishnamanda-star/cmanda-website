@@ -1,2 +1,11 @@
+{```json
 {
+  "crons": [
+    {
+      "path": "/api/oura/sync",
+      "schedule": "0 6 * * *"
+    }
+  ]
+}
+```
 }
