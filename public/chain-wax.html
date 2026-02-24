@@ -7,93 +7,122 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Sora:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <style>
-    :root{--bg:#0a0a0b;--bg2:#111113;--card:#16161a;--border:#252530;--border-light:#32323e;--accent:#f0a030;--accent-dim:#c88020;--accent-glow:rgba(240,160,48,0.12);--danger:#f04848;--danger-glow:rgba(240,72,72,0.12);--success:#30d870;--success-glow:rgba(48,216,112,0.12);--text:#eaeaef;--text-dim:#7a7a8a;--text-muted:#4a4a58;--strava:#fc4c02;--font-display:'Sora',sans-serif;--font-mono:'DM Mono',monospace}
+    :root{
+      --bg:#f5f4f0;
+      --bg2:#eeede8;
+      --card:#ffffff;
+      --border:#d8d6ce;
+      --border-light:#e8e6df;
+      --accent:#c47a00;
+      --accent-dim:#a66500;
+      --accent-bright:#e08c00;
+      --accent-glow:rgba(196,122,0,0.10);
+      --accent-bg:#fff8ec;
+      --danger:#c0392b;
+      --danger-glow:rgba(192,57,43,0.09);
+      --danger-bg:#fff2f0;
+      --success:#1a7a45;
+      --success-glow:rgba(26,122,69,0.10);
+      --success-bg:#f0fff6;
+      --text:#1a1916;
+      --text-dim:#4a4740;
+      --text-muted:#7a776e;
+      --strava:#fc4c02;
+      --font-display:'Sora',sans-serif;
+      --font-mono:'DM Mono',monospace;
+      --shadow-sm:0 1px 3px rgba(0,0,0,0.08),0 1px 2px rgba(0,0,0,0.05);
+      --shadow-md:0 4px 12px rgba(0,0,0,0.08),0 2px 4px rgba(0,0,0,0.05);
+    }
     *{margin:0;padding:0;box-sizing:border-box}
     body{min-height:100vh;background:var(--bg);color:var(--text);font-family:var(--font-display);-webkit-font-smoothing:antialiased}
-    body::before{content:'';position:fixed;inset:0;opacity:0.025;pointer-events:none;z-index:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
     .app{position:relative;z-index:1;max-width:640px;margin:0 auto;padding:0 20px 60px}
-    .header{padding:28px 0 24px;display:flex;align-items:flex-end;justify-content:space-between;border-bottom:1px solid var(--border);margin-bottom:32px}
+    .header{padding:28px 0 24px;display:flex;align-items:flex-end;justify-content:space-between;border-bottom:2px solid var(--border);margin-bottom:32px}
     .header-left{display:flex;align-items:center;gap:14px}
-    .logo{width:44px;height:44px;background:linear-gradient(135deg,var(--accent),var(--accent-dim));border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;box-shadow:0 4px 20px var(--accent-glow)}
-    .header h1{font-size:20px;font-weight:700;letter-spacing:-0.5px;background:linear-gradient(135deg,var(--text),var(--text-dim));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+    .logo{width:44px;height:44px;background:linear-gradient(135deg,var(--accent-bright),var(--accent-dim));border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;box-shadow:var(--shadow-md)}
+    .header h1{font-size:20px;font-weight:700;letter-spacing:-0.5px;color:var(--text)}
     .header .subtitle{font-family:var(--font-mono);font-size:11px;color:var(--text-muted);margin-top:2px}
     .badge{font-family:var(--font-mono);font-size:11px;padding:4px 10px;border-radius:20px;white-space:nowrap}
-    .badge-on{background:var(--success-glow);color:var(--success);border:1px solid rgba(48,216,112,0.2)}
-    .badge-off{background:rgba(122,122,138,0.1);color:var(--text-muted);border:1px solid var(--border)}
+    .badge-on{background:var(--success-bg);color:var(--success);border:1px solid rgba(26,122,69,0.25)}
+    .badge-off{background:var(--bg2);color:var(--text-muted);border:1px solid var(--border)}
     .nav{display:flex;gap:4px;margin-bottom:28px;background:var(--bg2);border-radius:10px;padding:4px;border:1px solid var(--border)}
-    .nav button{flex:1;padding:9px 10px;border:none;border-radius:8px;font-family:var(--font-mono);font-size:11px;font-weight:500;cursor:pointer;transition:all 0.25s;background:transparent;color:var(--text-muted)}
-    .nav button.active{background:var(--card);color:var(--accent);box-shadow:0 2px 8px rgba(0,0,0,0.3)}
-    .nav button:hover:not(.active){color:var(--text-dim)}
-    .card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:28px;margin-bottom:20px}
-    .card-title{font-family:var(--font-mono);font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-muted);margin-bottom:20px}
+    .nav button{flex:1;padding:9px 10px;border:none;border-radius:8px;font-family:var(--font-mono);font-size:11px;font-weight:500;cursor:pointer;transition:all 0.2s;background:transparent;color:var(--text-muted)}
+    .nav button.active{background:var(--card);color:var(--accent);box-shadow:var(--shadow-sm);font-weight:600}
+    .nav button:hover:not(.active){color:var(--text-dim);background:rgba(0,0,0,0.04)}
+    .card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:28px;margin-bottom:20px;box-shadow:var(--shadow-sm)}
+    .card-title{font-family:var(--font-mono);font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-muted);margin-bottom:20px;padding-bottom:12px;border-bottom:1px solid var(--border-light)}
     .gauge-wrap{display:flex;flex-direction:column;align-items:center;padding:12px 0 20px;position:relative}
     .gauge-svg{transform:rotate(-90deg)}
     .gauge-bg{fill:none;stroke:var(--border)}
     .gauge-fg{fill:none;stroke-linecap:round;transition:stroke-dashoffset 1.2s cubic-bezier(0.4,0,0.2,1),stroke 0.5s ease}
     .gauge-center{position:absolute;text-align:center;top:50%;left:50%;transform:translate(-50%,-50%);font-family:var(--font-mono)}
-    .gauge-val{font-size:36px;font-weight:500;line-height:1}
+    .gauge-val{font-size:36px;font-weight:500;line-height:1;color:var(--text)}
     .gauge-lbl{font-size:11px;color:var(--text-muted);margin-top:6px;letter-spacing:1px;text-transform:uppercase}
-    .stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1px;background:var(--border);border-radius:10px;overflow:hidden;margin-top:24px}
+    .stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0;background:var(--border);border-radius:10px;overflow:hidden;margin-top:24px;border:1px solid var(--border)}
     .stat{background:var(--card);padding:16px;text-align:center}
+    .stat + .stat{border-left:1px solid var(--border)}
     .stat-l{font-family:var(--font-mono);font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px}
-    .stat-v{font-family:var(--font-mono);font-size:15px;font-weight:500}
+    .stat-v{font-family:var(--font-mono);font-size:15px;font-weight:500;color:var(--text)}
     .alert{margin-top:20px;padding:14px 20px;border-radius:10px;font-family:var(--font-mono);font-size:13px;font-weight:500;text-align:center}
-    .alert-danger{background:var(--danger-glow);border:1px solid rgba(240,72,72,0.25);color:var(--danger);animation:pulse 2s infinite}
-    .alert-success{background:var(--success-glow);border:1px solid rgba(48,216,112,0.2);color:var(--success)}
-    @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.8}}
+    .alert-danger{background:var(--danger-bg);border:1px solid rgba(192,57,43,0.25);color:var(--danger);animation:pulse 2s infinite}
+    .alert-success{background:var(--success-bg);border:1px solid rgba(26,122,69,0.2);color:var(--success)}
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.7}}
     .btn-row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px}
     .btn{padding:10px 20px;border-radius:8px;border:none;font-family:var(--font-mono);font-size:12px;font-weight:500;cursor:pointer;transition:all 0.2s;display:inline-flex;align-items:center;gap:6px}
     .btn:disabled{opacity:0.4;cursor:not-allowed}
-    .btn-strava{background:var(--strava);color:#fff}
-    .btn-strava:hover:not(:disabled){background:#e04400}
-    .btn-accent{background:var(--accent);color:var(--bg)}
-    .btn-secondary{background:var(--bg2);color:var(--text-dim);border:1px solid var(--border)}
-    .btn-danger{background:transparent;color:var(--danger);border:1px solid rgba(240,72,72,0.3)}
-    .btn-danger:hover:not(:disabled){background:var(--danger-glow)}
-    .rlog{border-radius:12px;overflow:hidden;border:1px solid var(--border);background:var(--card)}
-    .rlog-hdr{padding:14px 20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
-    .rlog-hdr span{font-family:var(--font-mono);font-size:11px;text-transform:uppercase;letter-spacing:1px}
-    .rlog-hdr .cnt{color:var(--text-muted)}
-    .rrow{display:grid;grid-template-columns:1fr 80px 70px 32px;align-items:center;padding:11px 16px;gap:8px;font-family:var(--font-mono);font-size:12px;border-bottom:1px solid rgba(37,37,48,0.5)}
+    .btn-strava{background:var(--strava);color:#fff;box-shadow:var(--shadow-sm)}
+    .btn-strava:hover:not(:disabled){background:#e04400;box-shadow:var(--shadow-md)}
+    .btn-accent{background:var(--accent);color:#fff;box-shadow:var(--shadow-sm)}
+    .btn-accent:hover:not(:disabled){background:var(--accent-dim);box-shadow:var(--shadow-md)}
+    .btn-secondary{background:var(--card);color:var(--text-dim);border:1px solid var(--border);box-shadow:var(--shadow-sm)}
+    .btn-secondary:hover:not(:disabled){background:var(--bg2);color:var(--text)}
+    .btn-danger{background:transparent;color:var(--danger);border:1px solid rgba(192,57,43,0.3)}
+    .btn-danger:hover:not(:disabled){background:var(--danger-bg);border-color:rgba(192,57,43,0.5)}
+    .rlog{border-radius:12px;overflow:hidden;border:1px solid var(--border);background:var(--card);box-shadow:var(--shadow-sm)}
+    .rlog-hdr{padding:14px 20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;background:var(--bg2)}
+    .rlog-hdr span{font-family:var(--font-mono);font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--text-dim);font-weight:500}
+    .rlog-hdr .cnt{color:var(--text-muted);font-weight:400}
+    .rrow{display:grid;grid-template-columns:1fr 80px 70px 32px;align-items:center;padding:12px 16px;gap:8px;font-family:var(--font-mono);font-size:12px;border-bottom:1px solid var(--border-light);transition:background 0.15s}
     .rrow:hover{background:var(--bg2)}
     .rrow:last-child{border-bottom:none}
-    .rname{color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .rname{color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:500}
     .rdate{color:var(--text-muted);font-size:10px;margin-top:2px}
-    .rdist{color:var(--accent);text-align:right;font-weight:500}
+    .rdist{color:var(--accent);text-align:right;font-weight:600}
     .rsrc{color:var(--text-muted);text-align:right;font-size:10px}
-    .rdel{background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:16px;padding:2px 4px;border-radius:4px;text-align:center}
-    .rdel:hover{color:var(--danger);background:var(--danger-glow)}
+    .rdel{background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:16px;padding:2px 4px;border-radius:4px;text-align:center;transition:all 0.15s}
+    .rdel:hover{color:var(--danger);background:var(--danger-bg)}
     .rempty{padding:40px 20px;text-align:center;color:var(--text-muted);font-family:var(--font-mono);font-size:12px}
     .rlist{max-height:400px;overflow-y:auto}
     .fg{margin-bottom:18px}
-    .fl{display:block;font-family:var(--font-mono);font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);margin-bottom:8px}
-    .fi{width:100%;padding:10px 14px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--font-mono);font-size:13px;outline:none}
-    .fi:focus{border-color:var(--accent)}
+    .fl{display:block;font-family:var(--font-mono);font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--text-dim);margin-bottom:8px;font-weight:500}
+    .fi{width:100%;padding:10px 14px;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--font-mono);font-size:13px;outline:none;transition:border-color 0.2s,box-shadow 0.2s}
+    .fi:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-glow)}
+    .fi::placeholder{color:var(--text-muted)}
     .frow{display:flex;gap:12px}
     .frow>.fg{flex:1}
     .fsuf{display:flex;align-items:center;gap:8px}
     .fsuf .fi{flex:1}
-    .fsuf span{color:var(--text-muted);font-family:var(--font-mono);font-size:12px}
-    .fhint{margin-top:20px;padding:14px 18px;border-radius:10px;background:var(--accent-glow);border:1px solid rgba(240,160,48,0.15);font-size:12px;color:var(--text-dim);line-height:1.6}
+    .fsuf span{color:var(--text-muted);font-family:var(--font-mono);font-size:12px;font-weight:500}
+    .fhint{margin-top:20px;padding:14px 18px;border-radius:10px;background:var(--accent-bg);border:1px solid rgba(196,122,0,0.2);font-size:12px;color:var(--text-dim);line-height:1.6}
     .fhint strong{color:var(--accent)}
     .hero{text-align:center;padding:40px 20px}
     .hero .icon{font-size:48px;margin-bottom:16px}
-    .hero h2{font-size:18px;font-weight:600;margin-bottom:8px}
+    .hero h2{font-size:18px;font-weight:600;margin-bottom:8px;color:var(--text)}
     .hero p{color:var(--text-dim);font-size:13px;margin-bottom:24px;line-height:1.6}
-    .estimate{margin-top:16px;font-family:var(--font-mono);font-size:12px;color:var(--text-muted);text-align:center}
-    .toast{position:fixed;top:20px;right:20px;z-index:1000;padding:12px 20px;border-radius:8px;font-family:var(--font-mono);font-size:12px;box-shadow:0 8px 32px rgba(0,0,0,0.5);animation:slideIn 0.3s ease}
+    .estimate{margin-top:16px;font-family:var(--font-mono);font-size:12px;color:var(--text-muted);text-align:center;padding:8px 16px;background:var(--bg2);border-radius:20px;display:inline-block;margin-left:50%;transform:translateX(-50%)}
+    .toast{position:fixed;top:20px;right:20px;z-index:1000;padding:12px 20px;border-radius:8px;font-family:var(--font-mono);font-size:12px;box-shadow:0 8px 32px rgba(0,0,0,0.15);animation:slideIn 0.3s ease}
     .toast-ok{background:var(--success);color:#fff}
     .toast-err{background:var(--danger);color:#fff}
-    .toast-info{background:var(--accent);color:var(--bg)}
+    .toast-info{background:var(--accent);color:#fff}
     @keyframes slideIn{from{transform:translateY(-20px);opacity:0}to{transform:translateY(0);opacity:1}}
     .hidden{display:none !important}
     @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
-    .view{animation:fadeIn 0.35s ease}
+    .view{animation:fadeIn 0.3s ease}
     .loading-overlay{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:999;font-family:var(--font-mono);color:var(--accent);font-size:14px}
     .spinner{width:24px;height:24px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin 0.8s linear infinite;margin-right:12px}
     @keyframes spin{to{transform:rotate(360deg)}}
     @media(max-width:480px){.header{flex-direction:column;align-items:flex-start;gap:12px}.stats{grid-template-columns:1fr}.btn-row{flex-direction:column}.btn{width:100%;justify-content:center}.frow{flex-direction:column;gap:0}}
-    ::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+    ::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:var(--bg2)}::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+    ::-webkit-scrollbar-thumb:hover{background:var(--text-muted)}
   </style>
 </head>
 <body>
@@ -167,7 +196,7 @@
             <div class="stat"><div class="stat-l">Ridden</div><div class="stat-v" id="sRid">—</div></div>
             <div class="stat"><div class="stat-l">Target</div><div class="stat-v" id="sTgt">—</div></div>
           </div>
-          <div class="estimate hidden" id="estPill"></div>
+          <div class="hidden" id="estPill"></div>
         </div>
         <div class="btn-row">
           <button class="btn btn-strava" id="bSync" onclick="syncStrava()">↻ Sync Strava</button>
@@ -221,15 +250,13 @@ var STRAVA_CLIENT_SECRET = "28a52c20e5aa595af90ed7477e8cd1443f00de5a";
 var BASE = window.location.origin;
 var CALLBACK = BASE + "/strava-callback.html";
 
-// App state
 var athlete = null;
 var cfg = { waxDate: "", targetKm: 300 };
 var rides = [];
 var strava = null;
 var waxHistory = [];
-var binId = null;  // JSONBin bin ID for this user
+var binId = null;
 
-// Helpers
 var fmt = function(n){ return Math.round(n*10)/10; };
 var dateStr = function(d){ return new Date(d).toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"}); };
 var shortDate = function(d){ return new Date(d).toLocaleDateString("en-GB",{day:"2-digit",month:"2-digit"}); };
@@ -240,8 +267,6 @@ function toast(msg,type){
   document.body.appendChild(el);
   setTimeout(function(){el.style.opacity="0";el.style.transition="opacity 0.3s";setTimeout(function(){el.remove();},300);},3000);
 }
-
-// ═══ SAVE / LOAD (JSONBin via API proxy) ═══
 
 async function saveToCloud(){
   var payload = { athlete:athlete, config:cfg, rides:rides, strava:strava, waxHistory:waxHistory };
@@ -281,7 +306,6 @@ async function loadFromCloud(aid, bid){
   return false;
 }
 
-// Also keep localStorage as quick cache
 function saveLocal(){
   try{ localStorage.setItem("chainwax_session", JSON.stringify({athlete:athlete,strava:strava,cfg:cfg,rides:rides,waxHistory:waxHistory,binId:binId})); }catch(e){}
 }
@@ -297,8 +321,6 @@ async function saveAll(){
   saveLocal();
   await saveToCloud();
 }
-
-// ═══ AUTH ═══
 
 function connectStrava(){
   localStorage.setItem("chainwax_client_id", STRAVA_CLIENT_ID);
@@ -325,15 +347,11 @@ function showApp(){
   render();
 }
 
-// ═══ NAV ═══
-
 function go(name){
   ["dashboard","rides","settings"].forEach(function(v){ document.getElementById("v-"+v).classList.toggle("hidden",v!==name); });
   document.querySelectorAll(".nav button").forEach(function(btn,i){ btn.classList.toggle("active",["dashboard","rides","settings"][i]===name); });
   if(name==="rides") document.getElementById("rDateIn").value=new Date().toISOString().split("T")[0];
 }
-
-// ═══ STRAVA ═══
 
 async function getToken(){
   if(!strava) return null;
@@ -373,8 +391,6 @@ async function syncStrava(){
   btn.disabled=false; btn.textContent="↻ Sync Strava"; render();
 }
 
-// ═══ RIDES ═══
-
 async function addRide(){
   var name=document.getElementById("rName").value.trim();
   var dist=parseFloat(document.getElementById("rDist").value);
@@ -408,8 +424,6 @@ async function saveCfg(){
   await saveAll(); render();
 }
 
-// ═══ RENDER ═══
-
 function render(){
   var hasWax=!!cfg.waxDate;
   document.getElementById("emptyState").classList.toggle("hidden",hasWax);
@@ -423,8 +437,8 @@ function render(){
   var overdue=totalKm>=cfg.targetKm;
   var circ=2*Math.PI*88, off=circ-(pct/100)*circ;
   var gFg=document.getElementById("gFg");
-  var col=pct>85?"var(--danger)":pct>60?"var(--accent)":"var(--success)";
-  gFg.style.strokeDashoffset=off; gFg.style.stroke=col; gFg.style.filter="drop-shadow(0 0 8px "+col+")";
+  var col=pct>85?"#c0392b":pct>60?"#c47a00":"#1a7a45";
+  gFg.style.strokeDashoffset=off; gFg.style.stroke=col; gFg.style.filter="drop-shadow(0 0 6px "+col+"44)";
   var gVal=document.getElementById("gVal"); gVal.textContent=fmt(remaining);
   gVal.style.color=overdue?"var(--danger)":"var(--text)";
   document.getElementById("sWax").textContent=hasWax?dateStr(cfg.waxDate):"—";
@@ -455,19 +469,16 @@ function render(){
   if(waxHistory.length===0){wh.textContent="No previous wax cycles.";}
   else{
     wh.innerHTML=waxHistory.slice().reverse().map(function(h){
-      return '<div style="padding:8px 0;border-bottom:1px solid var(--border)"><span style="color:var(--accent)">'+dateStr(h.waxDate)+'</span> → '+dateStr(h.endDate)+
-        ' — '+h.totalKm+' km over '+h.rideCount+' ride'+(h.rideCount!==1?'s':'')+'</div>';
+      return '<div style="padding:10px 0;border-bottom:1px solid var(--border-light)"><span style="color:var(--accent);font-weight:600">'+dateStr(h.waxDate)+'</span> → '+dateStr(h.endDate)+
+        ' — <strong>'+h.totalKm+' km</strong> over '+h.rideCount+' ride'+(h.rideCount!==1?'s':'')+'</div>';
     }).join("");
   }
 }
-
-// ═══ INIT ═══
 
 (async function(){
   var loadEl=document.getElementById("loadingScreen");
   var appEl=document.getElementById("appWrap");
 
-  // Check if returning from Strava OAuth
   var stravaRaw = localStorage.getItem("chainwax_strava");
   if(stravaRaw){
     try{
@@ -476,10 +487,7 @@ function render(){
         athlete=sd.athlete;
         strava={accessToken:sd.accessToken,refreshToken:sd.refreshToken,expiresAt:sd.expiresAt};
         localStorage.removeItem("chainwax_strava");
-
-        // Look up existing data by athlete ID (works across devices)
         await loadFromCloud(athlete.id, null);
-        // Keep fresh tokens from this OAuth
         strava={accessToken:sd.accessToken,refreshToken:sd.refreshToken,expiresAt:sd.expiresAt};
         await saveAll();
         loadEl.style.display="none"; appEl.style.display="block";
@@ -489,18 +497,13 @@ function render(){
     }catch(e){}
   }
 
-  // Try loading from localStorage cache
   if(loadLocal() && athlete){
-    // Try refreshing from cloud
-    if(binId){
-      await loadFromCloud(athlete.id, binId);
-    }
+    if(binId){ await loadFromCloud(athlete.id, binId); }
     loadEl.style.display="none"; appEl.style.display="block";
     showApp();
     return;
   }
 
-  // Not logged in
   loadEl.style.display="none"; appEl.style.display="block";
   showLogin();
 })();
