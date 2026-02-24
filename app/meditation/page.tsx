@@ -27,7 +27,7 @@ async function getData() {
       return { data: json.data, source: json.source, lastSync: json.lastSync };
     }
   } catch (e) {
-    console.log("[meditation] Could not fetch live data, using mock:", e.message);
+   console.log("[meditation] Could not fetch live data, using mock:", e instanceof Error ? e.message : e);
   }
 
   // Fallback: return null so client uses mock data
