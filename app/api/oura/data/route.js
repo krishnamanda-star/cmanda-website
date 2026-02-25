@@ -6,40 +6,37 @@ function adaptDay(d) {
   const hrPts = pts.filter(p => p.hr != null && p.hr > 0);
   const hrvPts = pts.filter(p => p.hrv != null && p.hrv > 0);
   const hasSession = (d.medDuration > 0) || hrPts.length > 10;
-  const durationMin = d.medDuration || (hrPts.length > 0 ? Math.round(hrPts[hrPts.length - 1].minute) : 0);
-  const avgHR = hrPts.length ? Math.round(hrPts.reduce((s, p) => s + p.hr, 0) / hrPts.length) : 0;
-  const minHR = hrPts.length ? Math.round(Math.min(...hrPts.map(p => p.hr))) : 0;
-  const avgHRV = hrvPts.length ? Math.round(hrvPts.reduce((s, p) => s + p.hrv, 0) / hrvPts.length) : (d.avgSessionHRV || 0);
-  const peakHRV = hrvPts.length ? Math.round(Math.max(...hrvPts.map(p => p.hrv))) : (d.peakSessionHRV || 0);
-  const sessionData = hasSession ? [{
-    durationMin,
-    heartRateAvg: d.avgSessionHR || avgHR,
-    heartRateMin: d.lowestSessionHR || minHR,
-    hrvAvg: d.avgSessionHRV || avgHRV,
-    peakHRV: d.peakSessionHRV || peakHRV,
-    settleTimeMin: d.settleMin || 0,
-    type: d.medType || "meditation",
-    mood: d.mood || "",
-    quality: d.medQuality || 0,
-    hrSamples: hrPts.map(p => ({ time: p.minute, hr: p.hr })),
-    hrvSamples: hrvPts.map(p => ({ time: p.minute, hrv: p.hrv })),
-  }] : [];
+
   return {
     date: d.date, label: d.label, dayOfWeek: d.dayOfWeek,
+    // Sleep — read directly by dashboard as session.sleepHours etc
     sleepScore: d.sleepScore || 0,
+    sleepHours: d.sleepHours || 0,
+    deepSleepPct: d.deepSleepPct || 0,
+    nightHRV: d.nightHRV || 0,
     sleepDurationMin: Math.round((d.sleepHours || 0) * 60),
     deepSleepMin: Math.round((d.sleepHours || 0) * 60 * (d.deepSleepPct || 0) / 100),
     remSleepMin: Math.round((d.sleepHours || 0) * 60 * (d.remSleepPct || 0) / 100),
     restingHR: d.restingHR || 0,
     hrvAvg: d.nightHRV || 0,
+    // Stress
     stressBalance: d.stressRecovery != null ? d.stressRecovery - d.stressHigh : 0,
     dayStress: d.dayStress || 0,
     stressHigh: d.stressHigh || 0,
     stressRecovery: d.stressRecovery || 0,
+    // Readiness
     readinessScore: d.readiness || 0,
+    // Activity
     steps: d.steps || 0,
     activeCalories: d.activeCalories || 0,
-    sessionData,
+    // Settle time read directly as session.settleMin
+    settleMin: d.settleMin || 0,
+    medDuration: d.medDuration || 0,
+    medType: d.medType || "",
+    mood: d.mood || "",
+    medQuality: d.medQuality || 0,
+    // sessionData = raw {minute, hr, hrv} time series — this is what stats useMemo averages
+    sessionData: hasSession ? pts : [],
   };
 }
 
