@@ -46,7 +46,8 @@ const TABS = [{ key: "session", icon: "◉", label: "Session" }, { key: "sleep",
 export default function MeditationDashboard({ data }) {
   const days30 = useMemo(() => data && data.length > 0 ? data : generateMockData(), [data]);
   const [tab, setTab] = useState("session");
-  const [selIdx, setSelIdx] = useState(0);
+ const firstSessionIdx = days30.findIndex(d => d.sessionData?.length > 0);
+const [selIdx, setSelIdx] = useState(firstSessionIdx >= 0 ? firstSessionIdx : 0);
   const [metric, setMetric] = useState("both");
   const [range, setRange] = useState(7);
 
