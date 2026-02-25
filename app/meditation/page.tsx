@@ -1,37 +1,62 @@
 import MeditationDashboard from "../../components/MeditationDashboard";
+import Redis from "ioredis";
 
 export const metadata = {
   title: "Just Watching — Meditation Analytics",
   description: "Sleep, stress, and meditation data from Oura Ring",
 };
 
-// Revalidate every hour (ISR)
 export const revalidate = 3600;
+
+function adaptDay(d: any) {
+  return {
+    date: d.date,
+    label: d.label,
+    dayOfWeek: d.dayOfWeek,
+    sleepScore: d.sleepScore || 0,
+    sleepDurationMin: Math.round((d.sleepHours || 0) * 60),
+    deepSleepMin: Math.round((d.sleepHours || 0) * 60 * (d.deepSleepPct || 0) / 100),
+    remSleepMin: Math.round((d.sleepHours || 0) * 60 * (d.remSleepPct || 0) / 100),
+    restingHR: d.restingHR || 0,
+    hrvAvg: d.nightHRV || 0,
+    stressBalance: d.stressRecovery != null ? d.stressRecovery - d.stressHigh : 0,
+    dayStress: d.dayStress || 0,
+    stressHigh: d.stressHigh || 0,
+    stressRecovery: d.stressRecovery || 0,
+    readinessScore: d.readiness || 0,
+    steps: d.steps || 0,
+    activeCalories: d.activeCalories || 0,
+    sessionData: (d.sessionData || []).map((s: any) => ({
+      ...s,
+      heartRateAvg: s.avgSessionHR || s.heartRateAvg || 0,
+      heartRateMin: s.lowestSessionHR || s.heartRateMin || 0,
+      hrvAvg: s.avgSessionHRV || s.hrvAvg || 0,
+      peakHRV: s.peakSessionHRV || s.peakHRV || 0,
+      durationMin: s.medDuration || s.durationMin || 0,
+      settleTimeMin: s.settleMin || s.settleTimeMin || 0,
+      hrSamples: s.sessionData || s.hrSamples || [],
+      hrvSamples: s.sessionData || s.hrvSamples || [],
+    })),
+  };
+}
 
 async function getData() {
   try {
-    // In production, fetch from our own API route
-    const baseUrl = process.env.VERCEL_URL
-      ? `https://${process.env.VERCEL_URL}`
-      : "http://localhost:3000";
+    const redis = new Redis(process.env.REDIS_URL!);
+    const datesRaw = await redis.get("oura:dates");
+    if (!datesRaw) return { data: null, source: "mock", lastSync: null };
 
-    const res = await fetch(`${baseUrl}/api/oura/data?days=30`, {
-      next: { revalidate: 3600 },
-    });
+    const dates: string[] = JSON.parse(datesRaw);
+    const dayKeys = dates.slice(0, 30).map((d) => `oura:day:${d}`);
+    const rawDays = await redis.mget(...dayKeys);
+    await redis.quit();
 
-    if (!res.ok) throw new Error(`API returned ${res.status}`);
-
-    const json = await res.json();
-
-    if (json.data && json.data.length > 0) {
-      return { data: json.data, source: json.source, lastSync: json.lastSync };
-    }
+    const data = rawDays.filter(Boolean).map((d) => adaptDay(JSON.parse(d!)));
+    return { data, source: "live", lastSync: new Date().toISOString() };
   } catch (e) {
-   console.log("[meditation] Could not fetch live data, using mock:", (e as Error).message);
+    console.log("[meditation] Redis error:", (e as Error).message);
+    return { data: null, source: "mock", lastSync: null };
   }
-
-  // Fallback: return null so client uses mock data
-  return { data: null, source: "mock", lastSync: null };
 }
 
 export default async function MeditationPage() {
