@@ -9,6 +9,23 @@ export const metadata = {
 export const revalidate = 3600;
 
 function adaptDay(d: any) {
+  // Build one session object from the day-level meditation fields
+  const hasSession = d.medDuration > 0;
+  const sessionData = hasSession ? [{
+    durationMin: d.medDuration || 0,
+    heartRateAvg: d.avgSessionHR || 0,
+    heartRateMin: d.lowestSessionHR || 0,
+    hrvAvg: d.avgSessionHRV || 0,
+    peakHRV: d.peakSessionHRV || 0,
+    settleTimeMin: d.settleMin || 0,
+    type: d.medType || "meditation",
+    mood: d.mood || "",
+    quality: d.medQuality || 0,
+    // sessionData contains the minute-by-minute HR/HRV time series
+    hrSamples: (d.sessionData || []).filter((p: any) => p.hr != null).map((p: any) => ({ time: p.minute, hr: p.hr })),
+    hrvSamples: (d.sessionData || []).filter((p: any) => p.hrv != null).map((p: any) => ({ time: p.minute, hrv: p.hrv })),
+  }] : [];
+
   return {
     date: d.date,
     label: d.label,
@@ -26,17 +43,7 @@ function adaptDay(d: any) {
     readinessScore: d.readiness || 0,
     steps: d.steps || 0,
     activeCalories: d.activeCalories || 0,
-    sessionData: (d.sessionData || []).map((s: any) => ({
-      ...s,
-      heartRateAvg: s.avgSessionHR || s.heartRateAvg || 0,
-      heartRateMin: s.lowestSessionHR || s.heartRateMin || 0,
-      hrvAvg: s.avgSessionHRV || s.hrvAvg || 0,
-      peakHRV: s.peakSessionHRV || s.peakHRV || 0,
-      durationMin: s.medDuration || s.durationMin || 0,
-      settleTimeMin: s.settleMin || s.settleTimeMin || 0,
-      hrSamples: s.sessionData || s.hrSamples || [],
-      hrvSamples: s.sessionData || s.hrvSamples || [],
-    })),
+    sessionData,
   };
 }
 
