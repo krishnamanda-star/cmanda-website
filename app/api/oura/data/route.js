@@ -1,42 +1,45 @@
 import Redis from "ioredis";
-
 const redis = new Redis(process.env.REDIS_URL);
 
-// Map stored field names → what MeditationDashboard.jsx expects
 function adaptDay(d) {
+  const pts = d.sessionData || [];
+  const hrPts = pts.filter(p => p.hr != null && p.hr > 0);
+  const hrvPts = pts.filter(p => p.hrv != null && p.hrv > 0);
+  const hasSession = (d.medDuration > 0) || hrPts.length > 10;
+  const durationMin = d.medDuration || (hrPts.length > 0 ? Math.round(hrPts[hrPts.length - 1].minute) : 0);
+  const avgHR = hrPts.length ? Math.round(hrPts.reduce((s, p) => s + p.hr, 0) / hrPts.length) : 0;
+  const minHR = hrPts.length ? Math.round(Math.min(...hrPts.map(p => p.hr))) : 0;
+  const avgHRV = hrvPts.length ? Math.round(hrvPts.reduce((s, p) => s + p.hrv, 0) / hrvPts.length) : (d.avgSessionHRV || 0);
+  const peakHRV = hrvPts.length ? Math.round(Math.max(...hrvPts.map(p => p.hrv))) : (d.peakSessionHRV || 0);
+  const sessionData = hasSession ? [{
+    durationMin,
+    heartRateAvg: d.avgSessionHR || avgHR,
+    heartRateMin: d.lowestSessionHR || minHR,
+    hrvAvg: d.avgSessionHRV || avgHRV,
+    peakHRV: d.peakSessionHRV || peakHRV,
+    settleTimeMin: d.settleMin || 0,
+    type: d.medType || "meditation",
+    mood: d.mood || "",
+    quality: d.medQuality || 0,
+    hrSamples: hrPts.map(p => ({ time: p.minute, hr: p.hr })),
+    hrvSamples: hrvPts.map(p => ({ time: p.minute, hrv: p.hrv })),
+  }] : [];
   return {
-    date: d.date,
-    label: d.label,
-    dayOfWeek: d.dayOfWeek,
-    // Sleep
+    date: d.date, label: d.label, dayOfWeek: d.dayOfWeek,
     sleepScore: d.sleepScore || 0,
     sleepDurationMin: Math.round((d.sleepHours || 0) * 60),
     deepSleepMin: Math.round((d.sleepHours || 0) * 60 * (d.deepSleepPct || 0) / 100),
     remSleepMin: Math.round((d.sleepHours || 0) * 60 * (d.remSleepPct || 0) / 100),
     restingHR: d.restingHR || 0,
     hrvAvg: d.nightHRV || 0,
-    // Stress
     stressBalance: d.stressRecovery != null ? d.stressRecovery - d.stressHigh : 0,
     dayStress: d.dayStress || 0,
     stressHigh: d.stressHigh || 0,
     stressRecovery: d.stressRecovery || 0,
-    // Readiness
     readinessScore: d.readiness || 0,
-    // Activity
     steps: d.steps || 0,
     activeCalories: d.activeCalories || 0,
-    // Meditation session data (pass through as-is)
-    sessionData: (d.sessionData || []).map(s => ({
-      ...s,
-      heartRateAvg: s.avgSessionHR || s.heartRateAvg || 0,
-      heartRateMin: s.lowestSessionHR || s.heartRateMin || 0,
-      hrvAvg: s.avgSessionHRV || s.hrvAvg || 0,
-      peakHRV: s.peakSessionHRV || s.peakHRV || 0,
-      durationMin: s.medDuration || s.durationMin || 0,
-      settleTimeMin: s.settleMin || s.settleTimeMin || 0,
-      hrSamples: s.sessionData || s.hrSamples || [],
-      hrvSamples: s.sessionData || s.hrvSamples || [],
-    })),
+    sessionData,
   };
 }
 
@@ -44,24 +47,12 @@ export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url);
     const days = parseInt(searchParams.get("days") || "30", 10);
-
     const datesRaw = await redis.get("oura:dates");
-    if (!datesRaw) {
-      return Response.json({ error: "No data synced yet" }, { status: 404 });
-    }
-
-    const allDates = JSON.parse(datesRaw);
-    const dates = allDates.slice(0, days);
-
-    const dayKeys = dates.map((d) => `oura:day:${d}`);
-    const rawDays = await redis.mget(...dayKeys);
-
-    const data = rawDays
-      .filter(Boolean)
-      .map((d) => adaptDay(JSON.parse(d)));
-
+    if (!datesRaw) return Response.json({ error: "No data synced yet" }, { status: 404 });
+    const dates = JSON.parse(datesRaw).slice(0, days);
+    const rawDays = await redis.mget(...dates.map(d => `oura:day:${d}`));
+    const data = rawDays.filter(Boolean).map(d => adaptDay(JSON.parse(d)));
     const lastSync = await redis.get("oura:last_sync");
-
     return Response.json({ data, source: "live", lastSync });
   } catch (error) {
     console.error("[oura/data] Error:", error);
