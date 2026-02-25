@@ -9,21 +9,30 @@ export const metadata = {
 export const revalidate = 3600;
 
 function adaptDay(d: any) {
-  // Build one session object from the day-level meditation fields
-  const hasSession = d.medDuration > 0;
+  // The raw sessionData is the minute-by-minute HR/HRV time series
+  const pts = d.sessionData || [];
+  const hrPts = pts.filter((p: any) => p.hr != null && p.hr > 0);
+  const hrvPts = pts.filter((p: any) => p.hrv != null && p.hrv > 0);
+
+  const hasSession = d.medDuration > 0 || hrPts.length > 10;
+  const durationMin = d.medDuration || (hrPts.length > 0 ? Math.round(hrPts[hrPts.length-1].minute) : 0);
+  const avgHR = hrPts.length ? Math.round(hrPts.reduce((s: number, p: any) => s + p.hr, 0) / hrPts.length) : 0;
+  const minHR = hrPts.length ? Math.round(Math.min(...hrPts.map((p: any) => p.hr))) : 0;
+  const avgHRV = hrvPts.length ? Math.round(hrvPts.reduce((s: number, p: any) => s + p.hrv, 0) / hrvPts.length) : (d.avgSessionHRV || 0);
+  const peakHRV = hrvPts.length ? Math.round(Math.max(...hrvPts.map((p: any) => p.hrv))) : (d.peakSessionHRV || 0);
+
   const sessionData = hasSession ? [{
-    durationMin: d.medDuration || 0,
-    heartRateAvg: d.avgSessionHR || 0,
-    heartRateMin: d.lowestSessionHR || 0,
-    hrvAvg: d.avgSessionHRV || 0,
-    peakHRV: d.peakSessionHRV || 0,
+    durationMin,
+    heartRateAvg: d.avgSessionHR || avgHR,
+    heartRateMin: d.lowestSessionHR || minHR,
+    hrvAvg: d.avgSessionHRV || avgHRV,
+    peakHRV: d.peakSessionHRV || peakHRV,
     settleTimeMin: d.settleMin || 0,
     type: d.medType || "meditation",
     mood: d.mood || "",
     quality: d.medQuality || 0,
-    // sessionData contains the minute-by-minute HR/HRV time series
-    hrSamples: (d.sessionData || []).filter((p: any) => p.hr != null).map((p: any) => ({ time: p.minute, hr: p.hr })),
-    hrvSamples: (d.sessionData || []).filter((p: any) => p.hrv != null).map((p: any) => ({ time: p.minute, hrv: p.hrv })),
+    hrSamples: hrPts.map((p: any) => ({ time: p.minute, hr: p.hr })),
+    hrvSamples: hrvPts.map((p: any) => ({ time: p.minute, hrv: p.hrv })),
   }] : [];
 
   return {
