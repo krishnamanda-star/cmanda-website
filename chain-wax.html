@@ -544,11 +544,16 @@ async function reWax(){
 }
 
 async function saveCfg(){
-  setActiveCfg({
-    waxDate: document.getElementById("cfgDate").value,
-    targetKm: parseInt(document.getElementById("cfgKm").value)||300
-  });
-  await saveAll(); render();
+  var dateVal = document.getElementById("cfgDate").value;
+  var kmVal = parseInt(document.getElementById("cfgKm").value)||300;
+  if(!dateVal){ toast("Please select a date","err"); return; }
+  setActiveCfg({ waxDate: dateVal, targetKm: kmVal });
+  await saveAll();
+  // Re-set the input explicitly after render to prevent browser reset
+  render();
+  document.getElementById("cfgDate").value = dateVal;
+  document.getElementById("cfgKm").value = kmVal;
+  toast("Settings saved","ok");
 }
 
 // ── RENDER ────────────────────────────────────────────────
