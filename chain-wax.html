@@ -368,7 +368,7 @@ function connectStrava(){
   localStorage.setItem("chainwax_client_secret", STRAVA_CLIENT_SECRET);
   window.location.href = "https://www.strava.com/oauth/authorize?client_id="+STRAVA_CLIENT_ID+
     "&response_type=code&redirect_uri="+encodeURIComponent(CALLBACK)+
-    "&approval_prompt=auto&scope=activity:read_all";
+    "&approval_prompt=force&scope=read_all,activity:read_all,profile:read_all";
 }
 
 function logout(){
