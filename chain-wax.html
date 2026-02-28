@@ -215,9 +215,10 @@
           <label class="fl">Bike</label>
           <select class="fi" id="settingsBikeSelect" onchange="switchBike(this.value)"></select>
         </div>
-        <div class="fg"><label class="fl">Last Wax Date</label><input class="fi" type="date" id="cfgDate" onchange="saveCfg()"></div>
-        <div class="fg"><label class="fl">Target Distance Per Wax</label><div class="fsuf"><input class="fi" type="number" id="cfgKm" min="50" step="50" onchange="saveCfg()"><span>km</span></div></div>
-        <div class="fhint"><strong>Tip:</strong> Most chain wax treatments last 200–500 km. Dry = longer. Wet/muddy = re-wax sooner.</div>
+        <div class="fg"><label class="fl">Last Wax Date</label><input class="fi" type="date" id="cfgDate"></div>
+        <div class="fg"><label class="fl">Target Distance Per Wax</label><div class="fsuf"><input class="fi" type="number" id="cfgKm" min="50" step="50"><span>km</span></div></div>
+     <div class="fhint"><strong>Tip:</strong> Most chain wax treatments last 200–500 km. Dry = longer. Wet/muddy = re-wax sooner.</div>
+<button class="btn btn-accent" style="margin-top:16px" onclick="saveCfg()">Save Settings</button>
       </div>
       <div class="card">
         <div class="card-title">Wax History</div>
