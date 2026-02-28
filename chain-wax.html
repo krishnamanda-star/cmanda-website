@@ -95,6 +95,15 @@
     .bike-tab:hover{border-color:var(--border-light);color:var(--text-dim)}
     .bike-tab.active{background:var(--accent-glow);border-color:rgba(240,160,48,0.4);color:var(--accent)}
     .bike-tab .bkm{font-size:10px;opacity:0.7;margin-left:4px}
+    .bike-stat-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+    .bike-stat-name{font-size:15px;font-weight:600;display:flex;align-items:center;gap:8px}
+    .bike-stat-total{font-family:var(--font-mono);font-size:13px;color:var(--accent)}
+    .year-rows{display:flex;flex-direction:column;gap:8px}
+    .year-row{display:flex;align-items:center;gap:10px;font-family:var(--font-mono);font-size:12px}
+    .year-label{color:var(--text-muted);width:36px;flex-shrink:0}
+    .year-bar-wrap{flex:1;height:6px;background:var(--border);border-radius:99px;overflow:hidden}
+    .year-bar{height:100%;border-radius:99px;background:var(--accent);transition:width 0.8s cubic-bezier(0.4,0,0.2,1)}
+    .year-km{color:var(--text-dim);width:60px;text-align:right;flex-shrink:0}
     @media(max-width:480px){.header{flex-direction:column;align-items:flex-start;gap:12px}.stats{grid-template-columns:1fr}.btn-row{flex-direction:column}.btn{width:100%;justify-content:center}.frow{flex-direction:column;gap:0}}
     ::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
   </style>
@@ -178,6 +187,7 @@
           <button class="btn btn-secondary" onclick="go('rides')">+ Add Ride</button>
           <button class="btn btn-danger" onclick="reWax()">🔗 Re-Wax Chain</button>
         </div>
+        <div class="card" id="bikeStatsCard"></div>
       </div>
     </div>
 
@@ -536,6 +546,61 @@ async function saveCfg(){
   render();
 }
 
+// ── BIKE STATS CARD ───────────────────────────────────────
+function renderBikeStats(){
+  var card = document.getElementById("bikeStatsCard");
+  if(!card) return;
+
+  // Build per-bike year breakdown across ALL bikes
+  var html = "";
+  var bikesToShow = bikes.length > 0 ? bikes : (activeBikeId ? [{id:activeBikeId, name:"My Bike", totalKm:0}] : []);
+
+  bikesToShow.forEach(function(bike){
+    var data = bikeData[bike.id] || {};
+    var bikeRides = (data.rides || []);
+
+    // Year breakdown from rides
+    var byYear = {};
+    bikeRides.forEach(function(r){
+      var y = new Date(r.date).getFullYear();
+      if(!byYear[y]) byYear[y] = 0;
+      byYear[y] += r.distance;
+    });
+    var years = Object.keys(byYear).sort().reverse();
+    var maxKm = years.length > 0 ? Math.max.apply(null, years.map(function(y){return byYear[y];})) : 0;
+
+    html += '<div style="margin-bottom:'+(bikesToShow.length>1?"24px":"0")+'">';
+    html += '<div class="bike-stat-header">';
+    html += '<div class="bike-stat-name">🚴 '+esc(bike.name)+'</div>';
+    html += '<div class="bike-stat-total">'+bike.totalKm.toLocaleString()+' km total</div>';
+    html += '</div>';
+
+    if(years.length === 0){
+      html += '<div style="font-family:var(--font-mono);font-size:12px;color:var(--text-muted)">Sync Strava to see yearly breakdown.</div>';
+    } else {
+      html += '<div class="year-rows">';
+      years.forEach(function(y){
+        var km = byYear[y];
+        var pct = maxKm > 0 ? (km/maxKm)*100 : 0;
+        html += '<div class="year-row">';
+        html += '<span class="year-label">'+y+'</span>';
+        html += '<div class="year-bar-wrap"><div class="year-bar" style="width:'+pct+'%"></div></div>';
+        html += '<span class="year-km">'+Math.round(km)+' km</span>';
+        html += '</div>';
+      });
+      html += '</div>';
+    }
+    html += '</div>';
+  });
+
+  if(!html){
+    card.style.display = "none";
+    return;
+  }
+  card.style.display = "block";
+  card.innerHTML = '<div class="card-title">Bike Stats</div>' + html;
+}
+
 // ── RENDER ────────────────────────────────────────────────
 // IMPORTANT: render() never touches cfgDate or cfgKm inputs.
 // Those are only written by go('settings') and saveCfg().
@@ -544,6 +609,7 @@ function render(){
   document.getElementById("emptyState").classList.toggle("hidden", hasWax);
   document.getElementById("mainDash").classList.toggle("hidden", !hasWax);
   renderBikeTabs();
+  renderBikeStats();
   if(!hasWax) return;
 
   var totalKm   = rides.reduce(function(s,r){return s+r.distance;},0);
