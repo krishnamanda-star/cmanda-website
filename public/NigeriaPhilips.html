@@ -1,0 +1,993 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nigeria Phillips Curve — AP Macroeconomics 2024</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,700;0,900;1,400&family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@300;400;500;600&display=swap');
+
+:root {
+  --bg: #faf7f2;
+  --surface: #ffffff;
+  --surface2: #f4f0e8;
+  --ink: #1a1208;
+  --muted: #7a6e5f;
+  --border: rgba(26,18,8,0.1);
+
+  --nigeria-green: #008751;
+  --nigeria-green-light: rgba(0,135,81,0.12);
+  --naira: #c8860a;
+  --naira-light: rgba(200,134,10,0.12);
+  --red: #c0392b;
+  --red-light: rgba(192,57,43,0.1);
+  --blue: #1a6496;
+  --blue-light: rgba(26,100,150,0.1);
+
+  /* AP curve colors */
+  --srpc-col: #1a6496;
+  --lrpc-col: #c0392b;
+  --shifted-col: #c8860a;
+  --nairu-col: #008751;
+
+  /* Quarter dots */
+  --q1: #008751;
+  --q2: #c8860a;
+  --q3: #c0392b;
+  --q4: #6b3fa0;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'Outfit', sans-serif;
+  min-height: 100vh;
+}
+
+/* ── TOP BAR ── */
+.topbar {
+  background: var(--nigeria-green);
+  height: 4px;
+}
+
+/* ── HEADER ── */
+.header {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 18px 28px;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 16px;
+}
+
+.flag {
+  width: 36px;
+  height: 24px;
+  display: flex;
+  border-radius: 3px;
+  overflow: hidden;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+  flex-shrink: 0;
+}
+.flag-stripe { flex: 1; }
+.flag-green { background: #008751; }
+.flag-white { background: #ffffff; }
+
+.header-titles h1 {
+  font-family: 'Fraunces', serif;
+  font-size: 20px;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  line-height: 1.1;
+}
+
+.header-titles p {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--muted);
+  letter-spacing: 0.1em;
+  margin-top: 3px;
+  text-transform: uppercase;
+}
+
+.header-badges {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.badge {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  padding: 4px 9px;
+  border-radius: 4px;
+  letter-spacing: 0.05em;
+  border: 1px solid;
+}
+
+.badge-ap {
+  background: var(--blue-light);
+  border-color: rgba(26,100,150,0.3);
+  color: var(--blue);
+}
+
+.badge-ng {
+  background: var(--nigeria-green-light);
+  border-color: rgba(0,135,81,0.3);
+  color: var(--nigeria-green);
+}
+
+/* ── LAYOUT ── */
+.layout {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  min-height: calc(100vh - 73px);
+}
+
+@media (max-width: 860px) {
+  .layout { grid-template-columns: 1fr; }
+  .sidebar { border-top: 1px solid var(--border); border-left: none; }
+}
+
+/* ── CHART PANEL ── */
+.chart-panel {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Mode tabs */
+.mode-tabs {
+  display: flex;
+  gap: 0;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--surface2);
+}
+
+.mode-tab {
+  flex: 1;
+  padding: 9px 8px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.05em;
+  text-align: center;
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  transition: all 0.2s;
+  border-right: 1px solid var(--border);
+}
+
+.mode-tab:last-child { border-right: none; }
+.mode-tab:hover { background: rgba(0,0,0,0.04); color: var(--ink); }
+
+.mode-tab.active {
+  background: var(--surface);
+  color: var(--ink);
+  font-weight: 600;
+  box-shadow: inset 0 -2px 0 var(--nigeria-green);
+}
+
+/* Chart box */
+.chart-box {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 20px;
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Subtle grid pattern */
+.chart-box::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(0,0,0,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,0,0,0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none;
+  border-radius: 10px;
+}
+
+.chart-wrap { position: relative; height: 420px; }
+
+/* ── LOWER PANELS ── */
+.lower-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+@media (max-width: 600px) {
+  .lower-grid { grid-template-columns: 1fr; }
+}
+
+.mini-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 14px;
+}
+
+.mini-card-title {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+}
+
+/* Quarter data pills */
+.q-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 5px 0;
+  border-bottom: 1px solid rgba(0,0,0,0.04);
+  font-size: 12px;
+}
+
+.q-row:last-child { border-bottom: none; }
+
+.q-label {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.q-dot {
+  width: 9px; height: 9px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.q-values {
+  display: flex;
+  gap: 12px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+}
+
+.val-u { color: var(--blue); }
+.val-pi { color: var(--red); }
+
+/* AP Concepts */
+.concept-block {
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(0,0,0,0.05);
+}
+
+.concept-block:last-child { border-bottom: none; }
+
+.concept-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  margin-bottom: 4px;
+  color: var(--ink);
+}
+
+.concept-line {
+  width: 20px; height: 3px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.concept-body {
+  font-size: 11.5px;
+  color: var(--muted);
+  line-height: 1.6;
+  padding-left: 28px;
+}
+
+/* ── SIDEBAR ── */
+.sidebar {
+  border-left: 1px solid var(--border);
+  background: var(--surface);
+  overflow-y: auto;
+}
+
+.sb-section {
+  padding: 18px 18px;
+  border-bottom: 1px solid var(--border);
+}
+
+.sb-title {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 14px;
+}
+
+/* Key Finding box */
+.finding-box {
+  background: linear-gradient(135deg, rgba(200,134,10,0.08), rgba(192,57,43,0.06));
+  border: 1px solid rgba(200,134,10,0.25);
+  border-radius: 8px;
+  padding: 14px;
+}
+
+.finding-box h3 {
+  font-family: 'Fraunces', serif;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--naira);
+  margin-bottom: 6px;
+}
+
+.finding-box p {
+  font-size: 12px;
+  line-height: 1.65;
+  color: var(--muted);
+}
+
+.finding-box strong { color: var(--ink); }
+
+/* AP Connection */
+.ap-block {
+  background: var(--blue-light);
+  border-left: 3px solid var(--blue);
+  border-radius: 0 6px 6px 0;
+  padding: 10px 12px;
+  margin-bottom: 8px;
+  font-size: 11.5px;
+  line-height: 1.6;
+  color: var(--muted);
+}
+
+.ap-block strong { color: var(--ink); font-size: 12px; display: block; margin-bottom: 2px; }
+
+/* Shifts causes */
+.cause-list { display: flex; flex-direction: column; gap: 8px; }
+
+.cause-item {
+  display: flex;
+  gap: 9px;
+  font-size: 11.5px;
+  line-height: 1.55;
+  color: var(--muted);
+}
+
+.cause-num {
+  background: var(--naira);
+  color: white;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  font-weight: 600;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.cause-item strong { color: var(--ink); }
+
+/* Equation */
+.eq-box {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 12px 14px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12.5px;
+  color: var(--ink);
+  text-align: center;
+  letter-spacing: 0.04em;
+  margin-bottom: 10px;
+}
+
+.eq-key {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px 12px;
+  margin-top: 10px;
+}
+
+.eq-row {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--muted);
+}
+
+.eq-row span { color: var(--naira); }
+
+/* Sources */
+.source-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.chip {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  padding: 3px 8px;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  color: var(--muted);
+  background: var(--surface2);
+}
+
+/* Stagflation annotation */
+.stagflation-tag {
+  display: inline-block;
+  background: rgba(192,57,43,0.1);
+  border: 1px solid rgba(192,57,43,0.25);
+  color: var(--red);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  padding: 3px 8px;
+  border-radius: 3px;
+  letter-spacing: 0.08em;
+  margin-bottom: 6px;
+}
+
+/* Mode description banner */
+.mode-desc {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 10px 14px;
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.6;
+  min-height: 44px;
+  transition: all 0.2s;
+}
+
+.mode-desc strong { color: var(--ink); }
+</style>
+</head>
+<body>
+
+<div class="topbar"></div>
+
+<div class="header">
+  <div class="flag">
+    <div class="flag-stripe flag-green"></div>
+    <div class="flag-stripe flag-white"></div>
+    <div class="flag-stripe flag-green"></div>
+  </div>
+  <div class="header-titles">
+    <h1>Nigeria Phillips Curve — 2024</h1>
+    <p>Real Data · AP Macroeconomics Framework · NBS + IMF Sources</p>
+  </div>
+  <div class="header-badges">
+    <span class="badge badge-ap">AP MACRO · Unit 5</span>
+    <span class="badge badge-ng">Nigeria · FY2024</span>
+  </div>
+</div>
+
+<div class="layout">
+
+  <!-- ── LEFT: Chart Panel ── -->
+  <div class="chart-panel">
+
+    <!-- Mode tabs -->
+    <div class="mode-tabs">
+      <button class="mode-tab active" onclick="setMode('data')"     id="tab-data">📍 Real Data</button>
+      <button class="mode-tab"        onclick="setMode('srpc')"     id="tab-srpc">SR Curve</button>
+      <button class="mode-tab"        onclick="setMode('lrpc')"     id="tab-lrpc">+ LR Curve</button>
+      <button class="mode-tab"        onclick="setMode('shift')"    id="tab-shift">SRPC Shift →</button>
+      <button class="mode-tab"        onclick="setMode('full')"     id="tab-full">Full Picture</button>
+    </div>
+
+    <!-- Mode description -->
+    <div class="mode-desc" id="modeDesc">
+      <strong>📍 Real Data Mode:</strong> Nigeria's actual quarterly data from NBS (2024). Both inflation AND unemployment stayed high — the data points cluster in the <strong>upper-right stagflation zone</strong>, breaking the classical downward-sloping relationship.
+    </div>
+
+    <!-- Chart -->
+    <div class="chart-box">
+      <div class="chart-wrap">
+        <canvas id="phillipsChart"></canvas>
+      </div>
+    </div>
+
+    <!-- Lower grid -->
+    <div class="lower-grid">
+
+      <!-- Quarterly data -->
+      <div class="mini-card">
+        <div class="mini-card-title">Nigeria 2024 — Quarterly Data (NBS)</div>
+        <div class="q-row">
+          <div class="q-label"><div class="q-dot" style="background:#008751"></div>Q1 2024</div>
+          <div class="q-values">
+            <span class="val-u">u = 5.3%</span>
+            <span class="val-pi">π = 31.7%</span>
+          </div>
+        </div>
+        <div class="q-row">
+          <div class="q-label"><div class="q-dot" style="background:#c8860a"></div>Q2 2024</div>
+          <div class="q-values">
+            <span class="val-u">u = 4.3%</span>
+            <span class="val-pi">π = 33.4%</span>
+          </div>
+        </div>
+        <div class="q-row">
+          <div class="q-label"><div class="q-dot" style="background:#c0392b"></div>Q3 2024</div>
+          <div class="q-values">
+            <span class="val-u">u = 4.6%</span>
+            <span class="val-pi">π = 32.7%</span>
+          </div>
+        </div>
+        <div class="q-row">
+          <div class="q-label"><div class="q-dot" style="background:#6b3fa0"></div>Q4 2024</div>
+          <div class="q-values">
+            <span class="val-u">u = 4.9%</span>
+            <span class="val-pi">π = 34.6%</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- AP Concepts -->
+      <div class="mini-card">
+        <div class="mini-card-title">AP Macro Connections</div>
+        <div class="concept-block">
+          <div class="concept-head">
+            <div class="concept-line" style="background:var(--srpc-col)"></div>
+            SRPC — Nigeria
+          </div>
+          <div class="concept-body">Fitted curve shows high inflation at all unemployment levels — shifted far right vs. a stable economy.</div>
+        </div>
+        <div class="concept-block">
+          <div class="concept-head">
+            <div class="concept-line" style="background:var(--lrpc-col)"></div>
+            LRPC at u* ≈ 4.5%
+          </div>
+          <div class="concept-body">Nigeria's NAIRU estimated at ~4.5%. Long run returns here regardless of inflation level.</div>
+        </div>
+        <div class="concept-block">
+          <div class="concept-head">
+            <div class="concept-line" style="background:var(--shifted-col)"></div>
+            Supply Shock → Shift Right
+          </div>
+          <div class="concept-body">Naira collapse + subsidy removal acted as a massive negative supply shock, shifting SRPC rightward.</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── SIDEBAR ── -->
+  <div class="sidebar">
+
+    <!-- Key finding -->
+    <div class="sb-section">
+      <div class="sb-title">Key Finding</div>
+      <div class="stagflation-tag">⚠ STAGFLATION CONFIRMED</div>
+      <div class="finding-box">
+        <h3>The Trade-off Broke Down</h3>
+        <p>Classical AP Macro says the SRPC slopes <strong>downward</strong> — lower unemployment means higher inflation. Nigeria's 2024 data shows the <strong>opposite pattern</strong>: both stayed simultaneously high, confirming a <strong>rightward-shifted SRPC</strong> driven by supply shocks, not demand.</p>
+      </div>
+    </div>
+
+    <!-- AP Framework -->
+    <div class="sb-section">
+      <div class="sb-title">AP Framework Applied</div>
+      <div class="ap-block">
+        <strong>Why the SRPC shifted RIGHT</strong>
+        In AP Macro, the SRPC shifts right when inflation expectations rise or a negative supply shock hits. Nigeria experienced both simultaneously in 2023–2024.
+      </div>
+      <div class="ap-block">
+        <strong>LRPC & NAIRU</strong>
+        Nigeria's NAIRU ≈ 4.5% (NBS new methodology). The LRPC is vertical here. Even at full employment, inflation was ~33% — far above any target.
+      </div>
+      <div class="ap-block">
+        <strong>Policy Implication (AP Exam)</strong>
+        To shift SRPC back left: reduce inflation expectations via tight monetary policy (CBN raised MPR to 27.5%) or improve supply conditions.
+      </div>
+    </div>
+
+    <!-- Why shifted -->
+    <div class="sb-section">
+      <div class="sb-title">What Caused the Shift? (Exam Answer)</div>
+      <div class="cause-list">
+        <div class="cause-item">
+          <div class="cause-num">1</div>
+          <div><strong>Naira depreciation (~70%)</strong> — raised import prices across the entire economy (cost-push inflation)</div>
+        </div>
+        <div class="cause-item">
+          <div class="cause-num">2</div>
+          <div><strong>Fuel subsidy removal</strong> — petrol prices rose 167%, pushing up transport & energy costs at every output level</div>
+        </div>
+        <div class="cause-item">
+          <div class="cause-num">3</div>
+          <div><strong>Rising inflation expectations</strong> — households & firms expected higher prices → self-fulfilling wage & price setting</div>
+        </div>
+        <div class="cause-item">
+          <div class="cause-num">4</div>
+          <div><strong>Food supply shocks</strong> — floods and insecurity caused food inflation to hit 38–40%, independent of labour market slack</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Equation -->
+    <div class="sb-section">
+      <div class="sb-title">Expectations-Augmented Equation</div>
+      <div class="eq-box">π = π<sup>e</sup> − β(u − u*)</div>
+      <div class="eq-key">
+        <div class="eq-row"><span>π</span> = actual inflation</div>
+        <div class="eq-row"><span>π<sup>e</sup></span> = expected inflation</div>
+        <div class="eq-row"><span>β</span> = sensitivity</div>
+        <div class="eq-row"><span>u*</span> = NAIRU (~4.5%)</div>
+      </div>
+      <div style="font-size:11px; color:var(--muted); margin-top:10px; line-height:1.6">
+        In Nigeria 2024, <strong style="color:var(--ink)">πᵉ surged to ~30%+</strong> as the naira collapsed, shifting the entire curve upward regardless of unemployment.
+      </div>
+    </div>
+
+    <!-- Sources -->
+    <div class="sb-section">
+      <div class="sb-title">Data Sources</div>
+      <div class="source-chips">
+        <span class="chip">NBS NLFS Q1–Q4 2024</span>
+        <span class="chip">NBS CPI Reports 2024</span>
+        <span class="chip">IMF Art. IV 2024</span>
+        <span class="chip">World Bank NDU Oct 2024</span>
+        <span class="chip">AfDB Outlook 2024</span>
+      </div>
+      <div style="font-size:10px; color:var(--muted); margin-top:10px; line-height:1.6; font-family:'JetBrains Mono',monospace;">
+        ⚠ NBS revised unemployment methodology in 2023 (ILO-aligned). Combined unemployment + underemployment (LU2) ≈ 13–15%.
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ── DATA ──
+const NAIRU = 4.5;
+const quarters = [
+  { q: 'Q1', u: 5.3,  pi: 31.7, color: '#008751' },
+  { q: 'Q2', u: 4.3,  pi: 33.4, color: '#c8860a' },
+  { q: 'Q3', u: 4.6,  pi: 32.7, color: '#c0392b' },
+  { q: 'Q4', u: 4.9,  pi: 34.6, color: '#6b3fa0' },
+];
+
+// ── CURVE GENERATORS ──
+function srpcNigeria(uRange = [2, 10]) {
+  // Fitted to Nigeria's actual data range — high-inflation shifted curve
+  const pts = [];
+  for (let u = uRange[0]; u <= uRange[1]; u += 0.15) {
+    const pi = 160 / (u + 0.5) + 5;  // Shifted right: high inflation throughout
+    pts.push({ x: parseFloat(u.toFixed(2)), y: parseFloat(pi.toFixed(2)) });
+  }
+  return pts;
+}
+
+function srpcClassical(uRange = [2, 10]) {
+  // What a "normal" low-inflation SRPC would look like
+  const pts = [];
+  for (let u = uRange[0]; u <= uRange[1]; u += 0.15) {
+    const pi = 22 / (u + 0.3) - 2;
+    pts.push({ x: parseFloat(u.toFixed(2)), y: parseFloat(pi.toFixed(2)) });
+  }
+  return pts;
+}
+
+function lrpcPoints() {
+  return [{ x: NAIRU, y: 0 }, { x: NAIRU, y: 52 }];
+}
+
+// ── CHART ──
+const ctx = document.getElementById('phillipsChart').getContext('2d');
+
+const chart = new Chart(ctx, {
+  type: 'scatter',
+  data: {
+    datasets: [
+      // 0: Nigeria SRPC (actual, shifted right)
+      {
+        label: 'Nigeria SRPC 2024',
+        data: srpcNigeria(),
+        type: 'line',
+        borderColor: '#1a6496',
+        borderWidth: 2.5,
+        pointRadius: 0,
+        fill: false,
+        tension: 0.4,
+        hidden: true,
+        order: 5,
+      },
+      // 1: Classical SRPC reference (pre-shock)
+      {
+        label: 'Classical SRPC (pre-shock)',
+        data: srpcClassical(),
+        type: 'line',
+        borderColor: 'rgba(26,100,150,0.25)',
+        borderWidth: 1.5,
+        borderDash: [5, 4],
+        pointRadius: 0,
+        fill: false,
+        tension: 0.4,
+        hidden: true,
+        order: 6,
+      },
+      // 2: LRPC
+      {
+        label: 'LRPC',
+        data: lrpcPoints(),
+        type: 'line',
+        borderColor: '#c0392b',
+        borderWidth: 2.5,
+        pointRadius: 0,
+        fill: false,
+        hidden: true,
+        order: 4,
+      },
+      // 3: NAIRU dashed
+      {
+        label: 'NAIRU',
+        data: [{ x: NAIRU, y: 0 }, { x: NAIRU, y: 52 }],
+        type: 'line',
+        borderColor: '#008751',
+        borderWidth: 1.5,
+        borderDash: [5, 4],
+        pointRadius: 0,
+        fill: false,
+        hidden: true,
+        order: 3,
+      },
+      // 4: Trajectory line connecting quarters
+      {
+        label: 'Trajectory',
+        data: quarters.map(q => ({ x: q.u, y: q.pi })),
+        type: 'line',
+        borderColor: 'rgba(0,0,0,0.15)',
+        borderWidth: 1,
+        borderDash: [3, 3],
+        pointRadius: 0,
+        fill: false,
+        order: 2,
+      },
+      // 5: Actual quarter dots
+      {
+        label: 'Nigeria 2024 Quarters',
+        data: quarters.map(q => ({ x: q.u, y: q.pi, q: q.q, color: q.color })),
+        type: 'scatter',
+        pointRadius: 14,
+        pointHoverRadius: 16,
+        backgroundColor: quarters.map(q => q.color),
+        borderColor: '#ffffff',
+        borderWidth: 2,
+        order: 1,
+      },
+    ]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    layout: { padding: { top: 24, right: 50, bottom: 10, left: 10 } },
+    scales: {
+      x: {
+        min: 1, max: 10,
+        title: {
+          display: true,
+          text: 'Unemployment Rate — u (%)',
+          font: { family: "'JetBrains Mono'", size: 11 },
+          color: '#7a6e5f',
+          padding: { top: 8 }
+        },
+        ticks: {
+          font: { family: "'JetBrains Mono'", size: 10 },
+          color: '#7a6e5f',
+          callback: v => v + '%'
+        },
+        grid: { color: 'rgba(0,0,0,0.05)' }
+      },
+      y: {
+        min: 0, max: 52,
+        title: {
+          display: true,
+          text: 'Inflation Rate — π (% YoY)',
+          font: { family: "'JetBrains Mono'", size: 11 },
+          color: '#7a6e5f',
+          padding: { bottom: 8 }
+        },
+        ticks: {
+          font: { family: "'JetBrains Mono'", size: 10 },
+          color: '#7a6e5f',
+          callback: v => v + '%'
+        },
+        grid: { color: 'rgba(0,0,0,0.05)' }
+      }
+    },
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        filter: item => item.datasetIndex === 5,
+        callbacks: {
+          label: ctx => {
+            const d = ctx.raw;
+            return [`${d.q} 2024`, `u = ${d.x}%`, `π = ${d.y}%`];
+          }
+        },
+        titleFont: { family: "'JetBrains Mono'", size: 11 },
+        bodyFont: { family: "'JetBrains Mono'", size: 11 },
+        backgroundColor: '#1a1208',
+        titleColor: '#faf7f2',
+        bodyColor: '#c8860a',
+        padding: 10,
+        cornerRadius: 4,
+      }
+    },
+    animation: { duration: 600, easing: 'easeInOutQuart' }
+  },
+  plugins: [{
+    id: 'customLabels',
+    afterDraw(chart) {
+      const { ctx, scales: { x, y }, chartArea: ca } = chart;
+
+      // Quarter labels inside dots
+      const dotMeta = chart.getDatasetMeta(5);
+      if (!dotMeta.hidden) {
+        dotMeta.data.forEach((pt, i) => {
+          ctx.save();
+          ctx.font = "bold 9px 'JetBrains Mono'";
+          ctx.fillStyle = '#ffffff';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(quarters[i].q, pt.x, pt.y);
+          ctx.restore();
+        });
+      }
+
+      // SRPC label
+      const srpcMeta = chart.getDatasetMeta(0);
+      if (!srpcMeta.hidden) {
+        const px = x.getPixelForValue(2.5);
+        const py = y.getPixelForValue(49);
+        ctx.save();
+        ctx.font = "600 11px 'JetBrains Mono'";
+        ctx.fillStyle = '#1a6496';
+        ctx.textAlign = 'left';
+        ctx.fillText('SRPC (Nigeria 2024)', px, py);
+        ctx.restore();
+      }
+
+      // Classical SRPC dashed label
+      const classMeta = chart.getDatasetMeta(1);
+      if (!classMeta.hidden) {
+        const px = x.getPixelForValue(2.5);
+        const py = y.getPixelForValue(12);
+        ctx.save();
+        ctx.font = "500 10px 'JetBrains Mono'";
+        ctx.fillStyle = 'rgba(26,100,150,0.5)';
+        ctx.textAlign = 'left';
+        ctx.fillText('SRPC (pre-shock / classical)', px, py);
+        ctx.restore();
+      }
+
+      // LRPC label
+      const lrpcMeta = chart.getDatasetMeta(2);
+      if (!lrpcMeta.hidden) {
+        const px = x.getPixelForValue(NAIRU) + 7;
+        const py = y.getPixelForValue(49);
+        ctx.save();
+        ctx.font = "600 11px 'JetBrains Mono'";
+        ctx.fillStyle = '#c0392b';
+        ctx.textAlign = 'left';
+        ctx.fillText('LRPC', px, py);
+        ctx.restore();
+      }
+
+      // NAIRU label on x-axis
+      const nairuMeta = chart.getDatasetMeta(3);
+      if (!nairuMeta.hidden) {
+        const px = x.getPixelForValue(NAIRU);
+        ctx.save();
+        ctx.font = "500 10px 'JetBrains Mono'";
+        ctx.fillStyle = '#008751';
+        ctx.textAlign = 'center';
+        ctx.fillText('u* ≈ 4.5%', px, ca.bottom + 18);
+        ctx.restore();
+      }
+
+      // Stagflation zone annotation (only when dots show)
+      const trajMeta = chart.getDatasetMeta(4);
+      if (!trajMeta.hidden) {
+        const px = x.getPixelForValue(7);
+        const py = y.getPixelForValue(36);
+        ctx.save();
+        ctx.font = "500 10px 'JetBrains Mono'";
+        ctx.fillStyle = 'rgba(192,57,43,0.5)';
+        ctx.textAlign = 'left';
+        ctx.fillText('▲ STAGFLATION ZONE', px, py);
+        ctx.restore();
+      }
+
+      // Rightward shift arrow (shift mode)
+      const showShiftArrow = !chart.getDatasetMeta(0).hidden && !chart.getDatasetMeta(1).hidden;
+      if (showShiftArrow) {
+        const ax1 = x.getPixelForValue(5.5);
+        const ax2 = x.getPixelForValue(7.5);
+        const ay = y.getPixelForValue(26);
+        ctx.save();
+        ctx.strokeStyle = 'rgba(200,134,10,0.6)';
+        ctx.lineWidth = 1.5;
+        ctx.setLineDash([4, 3]);
+        ctx.beginPath();
+        ctx.moveTo(ax1, ay);
+        ctx.lineTo(ax2, ay);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.fillStyle = 'rgba(200,134,10,0.6)';
+        ctx.beginPath();
+        ctx.moveTo(ax2, ay - 5);
+        ctx.lineTo(ax2 + 9, ay);
+        ctx.lineTo(ax2, ay + 5);
+        ctx.fill();
+        ctx.font = "500 10px 'JetBrains Mono'";
+        ctx.fillStyle = 'rgba(200,134,10,0.7)';
+        ctx.textAlign = 'center';
+        ctx.fillText('SRPC shifts right', (ax1 + ax2) / 2, ay - 10);
+        ctx.restore();
+      }
+    }
+  }]
+});
+
+// ── MODE DESCRIPTIONS ──
+const descs = {
+  data: '<strong>📍 Real Data Mode:</strong> Nigeria\'s actual quarterly NBS data (2024). Both inflation AND unemployment stayed high — the data points cluster in the <strong>upper-right stagflation zone</strong>, breaking the classical downward-sloping relationship.',
+  srpc: '<strong>📈 SRPC Mode:</strong> The fitted <strong>Short-Run Phillips Curve</strong> for Nigeria 2024 (blue). Notice how it sits at extremely high inflation levels (30–45%) — far above a "normal" economy — because supply shocks pushed the entire curve rightward.',
+  lrpc: '<strong>📊 Long-Run Mode:</strong> The <strong>LRPC</strong> (red vertical line) at Nigeria\'s NAIRU of ~4.5%. In the long run, Nigeria returns to this unemployment rate regardless of inflation. The NAIRU dashed line (green) marks full employment.',
+  shift: '<strong>➡ Shift Mode:</strong> Compares the <strong>classical pre-shock SRPC</strong> (dashed blue) vs. Nigeria\'s actual 2024 SRPC (solid blue). The rightward shift is caused by the naira collapse, fuel subsidy removal, and surging inflation expectations.',
+  full: '<strong>🗺 Full Picture:</strong> All AP Macro elements together — actual data points, Nigeria SRPC, LRPC, classical reference curve, NAIRU line, and the stagflation zone. This is the complete AP exam diagram for Nigeria\'s 2024 stagflation case.',
+};
+
+// ── MODE CONTROLLER ──
+// Datasets: [0: SRPC-NG, 1: SRPC-classical, 2: LRPC, 3: NAIRU, 4: trajectory, 5: dots]
+const modes = {
+  data:  { hidden: [true, true,  true,  true,  false, false] },
+  srpc:  { hidden: [false, true, true,  true,  true,  false] },
+  lrpc:  { hidden: [false, true, false, false, true,  false] },
+  shift: { hidden: [false, false, true, true,  true,  false] },
+  full:  { hidden: [false, false, false, false, false, false] },
+};
+
+function setMode(mode) {
+  const cfg = modes[mode];
+  cfg.hidden.forEach((h, i) => {
+    chart.getDatasetMeta(i).hidden = h;
+  });
+  chart.update();
+
+  // Tab styles
+  document.querySelectorAll('.mode-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-' + mode).classList.add('active');
+
+  // Description
+  document.getElementById('modeDesc').innerHTML = descs[mode];
+}
+</script>
+</body>
+</html>
