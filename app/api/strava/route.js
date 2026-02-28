@@ -39,7 +39,14 @@ export async function POST(request) {
       return Response.json(await r.json());
     } catch (e) { return Response.json({ error: e.message }, { status: 500 }); }
   }
-
+if (action === "gear") {
+  try {
+    var r = await fetch("https://www.strava.com/api/v3/gear/" + body.gear_id, {
+      headers: { "Authorization": "Bearer " + body.access_token }
+    });
+    return Response.json(await r.json());
+  } catch(e) { return Response.json({ error: e.message }, { status: 500 }); }
+}
   if (action === "save") {
     try {
       if (body.bin_id) {
