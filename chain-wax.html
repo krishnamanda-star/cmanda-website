@@ -274,12 +274,12 @@ function getActiveBikeData(){
   return bikeData[activeBikeId];
 }
 function getActiveCfg(){ return getActiveBikeData().cfg; }
-function getActiveRides(){ return getActiveBikeData().rides; }
-function getActiveWaxHistory(){ return getActiveBikeData().waxHistory; }
+function getrides(){ return getActiveBikeData().rides; }
+function getwaxHistory(){ return getActiveBikeData().waxHistory; }
 
 function setActiveCfg(c){ getActiveBikeData().cfg=c; syncLegacy(); }
-function setActiveRides(r){ getActiveBikeData().rides=r; syncLegacy(); }
-function setActiveWaxHistory(h){ getActiveBikeData().waxHistory=h; syncLegacy(); }
+function setrides(r){ getActiveBikeData().rides=r; syncLegacy(); }
+function setwaxHistory(h){ getActiveBikeData().waxHistory=h; syncLegacy(); }
 
 // Keep legacy vars in sync with active bike for any code that still reads them directly
 function syncLegacy(){
@@ -463,7 +463,7 @@ async function getToken(){
 async function syncStrava(){
   if(!strava){toast("Not connected","err");return;}
   var activeCfg=getActiveCfg();
-  if(!activeCfg.waxDate){toast("Set a wax date first in Settings","err");return;}
+  if(!cfg.waxDate){toast("Set a wax date first in Settings","err");return;}
   var btn=document.getElementById("bSync"); btn.disabled=true; btn.textContent="⏳ Syncing...";
   try{
     var token=await getToken(); if(!token) throw new Error("Token expired. Reconnect.");
@@ -471,7 +471,7 @@ async function syncStrava(){
     // Refresh bike totals while we have a token
     await fetchBikes(token);
 
-    var after=Math.floor(new Date(activeCfg.waxDate).getTime()/1000);
+    var after=Math.floor(new Date(cfg.waxDate).getTime()/1000);
     var pg=1, all=[];
     while(true){
       var r=await fetch("/api/strava",{method:"POST",headers:{"Content-Type":"application/json"},
@@ -492,8 +492,8 @@ async function syncStrava(){
       return{id:"strava_"+a.id,name:a.name,distance:a.distance/1000,date:a.start_date_local||a.start_date,source:"strava"};
     });
 
-    var manual=getActiveRides().filter(function(r){return r.source!=="strava";});
-    setActiveRides(manual.concat(bikeRides).sort(function(a,b){return new Date(a.date)-new Date(b.date);}));
+    var manual=getrides().filter(function(r){return r.source!=="strava";});
+    setrides(manual.concat(bikeRides).sort(function(a,b){return new Date(a.date)-new Date(b.date);}));
     await saveAll();
     toast("Synced "+bikeRides.length+" ride"+(bikeRides.length!==1?"s":"")+" for "+getActiveBikeName(),"ok");
   }catch(e){toast("Sync failed: "+e.message,"err");}
@@ -514,32 +514,32 @@ async function addRide(){
   var dist=parseFloat(document.getElementById("rDist").value);
   var date=document.getElementById("rDateIn").value;
   if(!name||!dist||!date){toast("Fill all fields","err");return;}
-  var r=getActiveRides().slice();
+  var r=getrides().slice();
   r.push({id:"m_"+Date.now(),name:name,distance:dist,date:date,source:"manual"});
   r.sort(function(a,b){return new Date(a.date)-new Date(b.date);});
-  setActiveRides(r);
+  setrides(r);
   await saveAll();
   document.getElementById("rName").value=""; document.getElementById("rDist").value="";
   toast("Ride added","ok"); render();
 }
 
 async function delRide(id){
-  setActiveRides(getActiveRides().filter(function(r){return r.id!==id;}));
+  setrides(getrides().filter(function(r){return r.id!==id;}));
   await saveAll(); render();
 }
 
 async function reWax(){
   if(!confirm("Start a fresh wax cycle for "+getActiveBikeName()+"? Current rides will be archived.")) return;
-  var r=getActiveRides();
+  var r=getrides();
   var totalKm=r.reduce(function(s,x){return s+x.distance;},0);
   var activeCfg=getActiveCfg();
-  var h=getActiveWaxHistory().slice();
-  if(activeCfg.waxDate){
-    h.push({waxDate:activeCfg.waxDate,targetKm:activeCfg.targetKm,totalKm:fmt(totalKm),rideCount:r.length,endDate:new Date().toISOString().split("T")[0]});
+  var h=getwaxHistory().slice();
+  if(cfg.waxDate){
+    h.push({waxDate:cfg.waxDate,targetKm:cfg.targetKm,totalKm:fmt(totalKm),rideCount:r.length,endDate:new Date().toISOString().split("T")[0]});
   }
-  setActiveWaxHistory(h);
-  setActiveCfg({waxDate:new Date().toISOString().split("T")[0],targetKm:activeCfg.targetKm||300});
-  setActiveRides([]);
+  setwaxHistory(h);
+  setActiveCfg({waxDate:new Date().toISOString().split("T")[0],targetKm:cfg.targetKm||300});
+  setrides([]);
   await saveAll(); toast("Chain waxed! Fresh cycle started.","ok"); render();
 }
 
@@ -558,46 +558,43 @@ async function saveCfg(){
 
 // ── RENDER ────────────────────────────────────────────────
 function render(){
-  var activeCfg=getActiveCfg();
-  var activeRides=getActiveRides();
-  var activeWaxHistory=getActiveWaxHistory();
-  var hasWax=!!activeCfg.waxDate;
+var hasWax=!!cfg.waxDate;
 
   document.getElementById("emptyState").classList.toggle("hidden",hasWax);
   document.getElementById("mainDash").classList.toggle("hidden",!hasWax);
-  document.getElementById("cfgDate").value=activeCfg.waxDate||"";
-  document.getElementById("cfgKm").value=activeCfg.targetKm||300;
+  document.getElementById("cfgDate").value=cfg.waxDate||"";
+  document.getElementById("cfgKm").value=cfg.targetKm||300;
 
   renderBikeTabs();
 
-  var totalKm=activeRides.reduce(function(s,r){return s+r.distance;},0);
-  var remaining=Math.max(0,activeCfg.targetKm-totalKm);
-  var pct=activeCfg.targetKm>0?Math.min((totalKm/activeCfg.targetKm)*100,100):0;
-  var overdue=totalKm>=activeCfg.targetKm;
+  var totalKm=rides.reduce(function(s,r){return s+r.distance;},0);
+  var remaining=Math.max(0,cfg.targetKm-totalKm);
+  var pct=cfg.targetKm>0?Math.min((totalKm/cfg.targetKm)*100,100):0;
+  var overdue=totalKm>=cfg.targetKm;
   var circ=2*Math.PI*88, off=circ-(pct/100)*circ;
   var gFg=document.getElementById("gFg");
   var col=pct>85?"var(--danger)":pct>60?"var(--accent)":"var(--success)";
   gFg.style.strokeDashoffset=off; gFg.style.stroke=col; gFg.style.filter="drop-shadow(0 0 8px "+col+")";
   var gVal=document.getElementById("gVal"); gVal.textContent=fmt(remaining);
   gVal.style.color=overdue?"var(--danger)":"var(--text)";
-  document.getElementById("sWax").textContent=hasWax?dateStr(activeCfg.waxDate):"—";
+  document.getElementById("sWax").textContent=hasWax?dateStr(cfg.waxDate):"—";
   document.getElementById("sRid").textContent=fmt(totalKm)+" km";
-  document.getElementById("sTgt").textContent=activeCfg.targetKm+" km";
+  document.getElementById("sTgt").textContent=cfg.targetKm+" km";
   document.getElementById("alertWax").classList.toggle("hidden",!overdue);
 
   var est=document.getElementById("estPill");
-  if(hasWax&&activeRides.length>0&&remaining>0){
-    var days=Math.max(1,(Date.now()-new Date(activeCfg.waxDate).getTime())/86400000);
+  if(hasWax&&rides.length>0&&remaining>0){
+    var days=Math.max(1,(Date.now()-new Date(cfg.waxDate).getTime())/86400000);
     var avg=totalKm/days;
     if(avg>0){var left=Math.ceil(remaining/avg);est.textContent="≈ "+left+" day"+(left!==1?"s":"")+" until re-wax";est.classList.remove("hidden");}
     else est.classList.add("hidden");
   }else est.classList.add("hidden");
 
-  document.getElementById("rCnt").textContent=activeRides.length+" ride"+(activeRides.length!==1?"s":"");
+  document.getElementById("rCnt").textContent=rides.length+" ride"+(rides.length!==1?"s":"");
   var rl=document.getElementById("rList");
-  if(activeRides.length===0){rl.innerHTML='<div class="rempty">No rides yet. Sync Strava or add manually.</div>';}
+  if(rides.length===0){rl.innerHTML='<div class="rempty">No rides yet. Sync Strava or add manually.</div>';}
   else{
-    rl.innerHTML=activeRides.slice().reverse().map(function(r){
+    rl.innerHTML=rides.slice().reverse().map(function(r){
       return '<div class="rrow"><div><div class="rname">'+esc(r.name)+'</div><div class="rdate">'+shortDate(r.date)+'</div></div>'+
         '<div class="rdist">'+fmt(r.distance)+' km</div><div class="rsrc">'+(r.source==="strava"?"Strava":"Manual")+'</div>'+
         '<button class="rdel" onclick="delRide(\''+r.id+'\')" title="Delete">×</button></div>';
@@ -605,9 +602,9 @@ function render(){
   }
 
   var wh=document.getElementById("waxHistory");
-  if(activeWaxHistory.length===0){wh.textContent="No previous wax cycles.";}
+  if(waxHistory.length===0){wh.textContent="No previous wax cycles.";}
   else{
-    wh.innerHTML=activeWaxHistory.slice().reverse().map(function(h){
+    wh.innerHTML=waxHistory.slice().reverse().map(function(h){
       return '<div style="padding:8px 0;border-bottom:1px solid var(--border)"><span style="color:var(--accent)">'+dateStr(h.waxDate)+'</span> → '+dateStr(h.endDate)+
         ' — '+h.totalKm+' km over '+h.rideCount+' ride'+(h.rideCount!==1?'s':'')+'</div>';
     }).join("");
