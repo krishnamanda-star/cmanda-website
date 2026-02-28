@@ -368,7 +368,7 @@ function connectStrava(){
   localStorage.setItem("chainwax_client_secret", STRAVA_CLIENT_SECRET);
   window.location.href = "https://www.strava.com/oauth/authorize?client_id="+STRAVA_CLIENT_ID+
     "&response_type=code&redirect_uri="+encodeURIComponent(CALLBACK)+
-    "&approval_prompt=force&scope=read_all,activity:read_all,profile:read_all";
+    "&approval_prompt=auto&scope=activity:read_all";
 }
 
 function logout(){
@@ -437,22 +437,22 @@ async function fetchBikes(token){
     var r = await fetch("/api/strava",{method:"POST",headers:{"Content-Type":"application/json"},
       body:JSON.stringify({action:"activities",access_token:token,after:0,page:1})});
     var acts = await r.json();
-    console.log("activities:", Array.isArray(acts), acts.length);
     if(!Array.isArray(acts)||acts.length===0) return;
 
+    // Collect unique gear IDs from activities
     var gearIds = [];
     acts.forEach(function(a){
       if(a.gear_id && gearIds.indexOf(a.gear_id)===-1) gearIds.push(a.gear_id);
     });
-    console.log("gearIds:", gearIds);
+    if(!gearIds.length) return;
 
+    // Fetch each gear individually
     var fetched = [];
     for(var i=0;i<gearIds.length;i++){
       try{
         var gr = await fetch("/api/strava",{method:"POST",headers:{"Content-Type":"application/json"},
           body:JSON.stringify({action:"gear",gear_id:gearIds[i],access_token:token})});
         var gd = await gr.json();
-        console.log("gear result:", gd);
         if(gd && gd.id) fetched.push(gd);
       }catch(ge){ console.error("gear fetch failed:",ge); }
     }
@@ -460,7 +460,6 @@ async function fetchBikes(token){
     bikes = fetched.map(function(b){
       return{ id:b.id, name:b.nickname||b.name||"Bike", totalKm:Math.round((b.distance||0)/1000) };
     });
-    console.log("bikes set to:", JSON.stringify(bikes));
 
     if(!activeBikeId||!bikes.find(function(b){return b.id===activeBikeId;})){
       activeBikeId = bikes.length ? bikes[0].id : null;
