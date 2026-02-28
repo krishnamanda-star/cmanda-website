@@ -64,7 +64,12 @@ export async function POST(request) {
       }
     } catch (e) { return Response.json({ error: e.message }, { status: 500 }); }
   }
-
+if (body.action === "athlete") {
+  const res = await fetch("https://www.strava.com/api/v3/athlete", {
+    headers: { Authorization: `Bearer ${body.access_token}` }
+  });
+  return res.json();
+}
   if (action === "load") {
     try {
       if (body.bin_id) {
