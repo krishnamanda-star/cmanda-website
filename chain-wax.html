@@ -1,669 +1,509 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Chain Wax Tracker</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
-<style>
-  :root {
-    --bg: #0a0a0f;
-    --surface: #13131a;
-    --surface2: #1c1c26;
-    --border: rgba(255,255,255,0.07);
-    --border-bright: rgba(255,255,255,0.14);
-    --text: #f0f0f5;
-    --muted: #6b6b80;
-    --accent: #e8ff57;
-    --accent-dim: rgba(232,255,87,0.12);
-    --red: #ff4d4d;
-    --amber: #ffa733;
-    --green: #3ddc84;
-    --strava: #fc4c02;
-  }
-
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-
-  body {
-    font-family: 'DM Sans', sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    min-height: 100vh;
-  }
-
-  .screen { display: none; }
-  .screen.active { display: block; }
-
-  /* LOGIN */
-  #login-screen { min-height: 100vh; display: flex; align-items: center; justify-content: center; }
-  #login-screen.active { display: flex; }
-
-  .login-glow {
-    position: fixed; inset: 0;
-    background: radial-gradient(ellipse at 50% 50%, rgba(232,255,87,0.05) 0%, transparent 65%);
-    pointer-events: none;
-  }
-
-  .login-card {
-    position: relative; text-align: center;
-    padding: 56px 48px; border: 1px solid var(--border-bright);
-    border-radius: 24px; background: var(--surface);
-    max-width: 400px; width: 90%;
-    animation: fadeUp 0.5s ease;
-  }
-
-  .chain-icon { font-size: 44px; display: block; margin-bottom: 20px; }
-
-  .login-title {
-    font-family: 'Syne', sans-serif; font-size: 26px;
-    font-weight: 800; letter-spacing: -0.03em; margin-bottom: 8px;
-  }
-  .login-sub { color: var(--muted); font-size: 14px; line-height: 1.6; margin-bottom: 36px; }
-
-  .strava-btn {
-    display: inline-flex; align-items: center; gap: 10px;
-    background: var(--strava); color: #fff; border: none; border-radius: 12px;
-    padding: 13px 26px; font-family: 'Syne', sans-serif; font-size: 15px;
-    font-weight: 700; cursor: pointer; text-decoration: none;
-    box-shadow: 0 0 32px rgba(252,76,2,0.25);
-    transition: transform 0.15s, box-shadow 0.15s;
-  }
-  .strava-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 40px rgba(252,76,2,0.45); }
-  .strava-btn svg { width: 18px; height: 18px; fill: white; }
-
-  /* HEADER */
-  .header {
-    position: sticky; top: 0; z-index: 100;
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 14px 32px;
-    background: rgba(10,10,15,0.88); backdrop-filter: blur(20px);
-    border-bottom: 1px solid var(--border);
-  }
-  .header-brand {
-    font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 800;
-    letter-spacing: -0.01em; display: flex; align-items: center; gap: 8px;
-  }
-  .brand-dot { width: 7px; height: 7px; background: var(--accent); border-radius: 50%; box-shadow: 0 0 8px var(--accent); }
-  .header-right { display: flex; align-items: center; gap: 10px; }
-  .athlete-pill {
-    display: flex; align-items: center; gap: 7px; padding: 5px 12px;
-    border: 1px solid var(--border); border-radius: 99px; font-size: 13px; color: var(--muted);
-  }
-  .athlete-pill img { width: 22px; height: 22px; border-radius: 50%; object-fit: cover; }
-  .hdr-btn {
-    padding: 6px 13px; border-radius: 8px; border: 1px solid var(--border);
-    background: transparent; color: var(--muted); font-size: 13px; cursor: pointer;
-    font-family: 'DM Sans', sans-serif; transition: all 0.15s;
-  }
-  .hdr-btn:hover { border-color: var(--border-bright); color: var(--text); }
-  .hdr-btn.sync:hover { border-color: var(--accent); color: var(--accent); }
-  .hdr-btn.logout:hover { border-color: var(--red); color: var(--red); }
-
-  /* MAIN */
-  .main { max-width: 1060px; margin: 0 auto; padding: 40px 32px; }
-
-  .page-title {
-    font-family: 'Syne', sans-serif; font-size: 34px;
-    font-weight: 800; letter-spacing: -0.03em; margin-bottom: 4px;
-  }
-  .page-sub { color: var(--muted); font-size: 13px; margin-bottom: 36px; }
-
-  /* ERROR */
-  .error-banner {
-    background: rgba(255,77,77,0.1); border: 1px solid rgba(255,77,77,0.2);
-    border-radius: 12px; padding: 14px 18px; color: var(--red);
-    font-size: 13px; margin-bottom: 24px; display: none;
-  }
-  .error-banner.show { display: block; }
-
-  /* SUMMARY */
-  .summary-row { display: grid; grid-template-columns: repeat(3,1fr); gap: 14px; margin-bottom: 36px; }
-
-  .summary-card {
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: 14px; padding: 18px 22px;
-    animation: fadeUp 0.5s ease both;
-  }
-  .summary-card:nth-child(2) { animation-delay: .06s; }
-  .summary-card:nth-child(3) { animation-delay: .12s; }
-  .summary-card.alert { border-color: rgba(255,167,51,0.3); background: rgba(255,167,51,0.04); }
-
-  .s-label { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
-  .s-value { font-family: 'Syne', sans-serif; font-size: 30px; font-weight: 800; letter-spacing: -0.03em; }
-  .summary-card.alert .s-value { color: var(--amber); }
-
-  /* BIKES GRID */
-  .bikes-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(440px,1fr)); gap: 18px; }
-
-  /* BIKE CARD */
-  .bike-card {
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: 20px; padding: 26px;
-    animation: fadeUp 0.5s ease both;
-    transition: border-color 0.2s, box-shadow 0.2s;
-    position: relative; overflow: hidden;
-  }
-  .bike-card::after {
-    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
-    background: var(--accent); transform: scaleX(0); transform-origin: left;
-    transition: transform 0.3s ease;
-  }
-  .bike-card:hover { border-color: var(--border-bright); }
-  .bike-card:hover::after { transform: scaleX(1); }
-  .bike-card.needs-wax { border-color: rgba(255,167,51,0.25); }
-  .bike-card.wax-now { border-color: rgba(255,77,77,0.3); }
-  .bike-card.wax-now::after { background: var(--red); transform: scaleX(1); }
-
-  .bike-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 18px; }
-  .bike-name-wrap { display: flex; align-items: center; gap: 9px; }
-  .bike-emoji { font-size: 20px; }
-  .bike-name { font-family: 'Syne', sans-serif; font-size: 17px; font-weight: 700; letter-spacing: -0.01em; }
-  .bike-primary {
-    font-size: 9px; font-family: 'DM Mono', monospace; letter-spacing: 0.08em;
-    background: var(--accent-dim); color: var(--accent);
-    padding: 2px 7px; border-radius: 99px;
-  }
-  .bike-brand { font-size: 12px; color: var(--muted); margin-top: 3px; font-family: 'DM Mono', monospace; }
-  .bike-km-block { text-align: right; }
-  .bike-km-val { font-family: 'DM Mono', monospace; font-size: 24px; font-weight: 500; letter-spacing: -0.02em; }
-  .bike-km-unit { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; }
-
-  /* WAX INFO */
-  .wax-row { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-bottom: 16px; }
-  .wax-cell { background: var(--surface2); border-radius: 10px; padding: 10px 12px; }
-  .wax-cell-lbl { font-size: 10px; font-family: 'DM Mono', monospace; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 4px; }
-  .wax-cell-val { font-size: 13px; font-weight: 600; }
-
-  /* HEALTH BAR */
-  .health-wrap { margin-bottom: 18px; }
-  .health-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
-  .health-lbl { font-family: 'DM Mono', monospace; font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
-  .health-status { font-family: 'DM Mono', monospace; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; }
-  .health-track { height: 5px; background: var(--surface2); border-radius: 99px; overflow: hidden; margin-bottom: 5px; }
-  .health-fill { height: 100%; border-radius: 99px; transition: width 0.8s cubic-bezier(0.34,1.56,0.64,1); }
-  .health-detail { font-size: 11px; color: var(--muted); font-family: 'DM Mono', monospace; }
-
-  /* ACTIONS */
-  .bike-actions { display: flex; gap: 8px; }
-  .btn-waxed {
-    flex: 1; padding: 10px; border-radius: 10px; border: none;
-    background: var(--accent); color: #0a0a0f;
-    font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 700;
-    cursor: pointer; letter-spacing: 0.02em;
-    transition: transform 0.15s, box-shadow 0.15s;
-  }
-  .btn-waxed:hover { transform: translateY(-1px); box-shadow: 0 4px 20px rgba(232,255,87,0.28); }
-  .btn-cfg {
-    padding: 10px 14px; border-radius: 10px; border: 1px solid var(--border);
-    background: transparent; color: var(--muted); font-size: 13px; cursor: pointer;
-    font-family: 'DM Sans', sans-serif; transition: all 0.15s;
-  }
-  .btn-cfg:hover { border-color: var(--border-bright); color: var(--text); }
-
-  /* SETTINGS PANEL */
-  .settings-panel {
-    display: none; margin-top: 14px; padding: 18px;
-    background: var(--surface2); border-radius: 14px; border: 1px solid var(--border);
-    animation: fadeUp 0.2s ease;
-  }
-  .settings-panel.open { display: block; }
-  .sp-title { font-family: 'DM Mono', monospace; font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); margin-bottom: 14px; }
-
-  .form-row { margin-bottom: 12px; }
-  .form-row label { display: block; font-size: 10px; font-family: 'DM Mono', monospace; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); margin-bottom: 5px; }
-  .form-row input, .form-row select {
-    width: 100%; background: var(--surface); border: 1px solid var(--border);
-    border-radius: 8px; color: var(--text); padding: 8px 11px;
-    font-size: 13px; font-family: 'DM Sans', sans-serif; outline: none;
-    transition: border-color 0.15s;
-  }
-  .form-row input:focus, .form-row select:focus { border-color: rgba(232,255,87,0.4); }
-  .form-row select option { background: #1c1c26; }
-  .form-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-
-  .sp-actions { display: flex; gap: 8px; margin-top: 14px; }
-  .btn-save {
-    flex: 1; padding: 9px; border-radius: 8px; border: none;
-    background: var(--accent); color: #0a0a0f;
-    font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 700; cursor: pointer;
-  }
-  .btn-cancel {
-    padding: 9px 14px; border-radius: 8px; border: 1px solid var(--border);
-    background: transparent; color: var(--muted); font-size: 13px; cursor: pointer;
-    font-family: 'DM Sans', sans-serif;
-  }
-
-  /* LOADING */
-  .loading-state { display: flex; flex-direction: column; align-items: center; padding: 80px 0; gap: 14px; color: var(--muted); grid-column: 1/-1; }
-  .spinner { width: 28px; height: 28px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.7s linear infinite; }
-
-  /* TOAST */
-  .toast {
-    position: fixed; bottom: 28px; right: 28px;
-    background: var(--accent); color: #0a0a0f;
-    padding: 11px 18px; border-radius: 10px;
-    font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 700;
-    opacity: 0; transform: translateY(60px);
-    transition: all 0.3s cubic-bezier(0.34,1.56,0.64,1);
-    pointer-events: none; z-index: 999;
-  }
-  .toast.show { opacity: 1; transform: translateY(0); }
-
-  @keyframes fadeUp { from { opacity:0; transform:translateY(14px); } to { opacity:1; transform:none; } }
-  @keyframes spin { to { transform: rotate(360deg); } }
-
-  @media (max-width: 680px) {
-    .header { padding: 12px 16px; }
-    .main { padding: 24px 16px; }
-    .summary-row { grid-template-columns: 1fr 1fr; }
-    .summary-row > :last-child { grid-column: span 2; }
-    .bikes-grid { grid-template-columns: 1fr; }
-    .form-2col { grid-template-columns: 1fr; }
-    .wax-row { grid-template-columns: 1fr 1fr; }
-  }
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chain Wax Tracker</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Sora:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root{--bg:#0a0a0b;--bg2:#111113;--card:#16161a;--border:#252530;--border-light:#32323e;--accent:#f0a030;--accent-dim:#c88020;--accent-glow:rgba(240,160,48,0.12);--danger:#f04848;--danger-glow:rgba(240,72,72,0.12);--success:#30d870;--success-glow:rgba(48,216,112,0.12);--text:#eaeaef;--text-dim:#7a7a8a;--text-muted:#4a4a58;--strava:#fc4c02;--font-display:'Sora',sans-serif;--font-mono:'DM Mono',monospace}
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{min-height:100vh;background:var(--bg);color:var(--text);font-family:var(--font-display);-webkit-font-smoothing:antialiased}
+    body::before{content:'';position:fixed;inset:0;opacity:0.025;pointer-events:none;z-index:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+    .app{position:relative;z-index:1;max-width:640px;margin:0 auto;padding:0 20px 60px}
+    .header{padding:28px 0 24px;display:flex;align-items:flex-end;justify-content:space-between;border-bottom:1px solid var(--border);margin-bottom:32px}
+    .header-left{display:flex;align-items:center;gap:14px}
+    .logo{width:44px;height:44px;background:linear-gradient(135deg,var(--accent),var(--accent-dim));border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;box-shadow:0 4px 20px var(--accent-glow)}
+    .header h1{font-size:20px;font-weight:700;letter-spacing:-0.5px;background:linear-gradient(135deg,var(--text),var(--text-dim));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+    .header .subtitle{font-family:var(--font-mono);font-size:11px;color:var(--text-muted);margin-top:2px}
+    .badge{font-family:var(--font-mono);font-size:11px;padding:4px 10px;border-radius:20px;white-space:nowrap}
+    .badge-on{background:var(--success-glow);color:var(--success);border:1px solid rgba(48,216,112,0.2)}
+    .badge-off{background:rgba(122,122,138,0.1);color:var(--text-muted);border:1px solid var(--border)}
+    .nav{display:flex;gap:4px;margin-bottom:28px;background:var(--bg2);border-radius:10px;padding:4px;border:1px solid var(--border)}
+    .nav button{flex:1;padding:9px 10px;border:none;border-radius:8px;font-family:var(--font-mono);font-size:11px;font-weight:500;cursor:pointer;transition:all 0.25s;background:transparent;color:var(--text-muted)}
+    .nav button.active{background:var(--card);color:var(--accent);box-shadow:0 2px 8px rgba(0,0,0,0.3)}
+    .nav button:hover:not(.active){color:var(--text-dim)}
+    .card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:28px;margin-bottom:20px}
+    .card-title{font-family:var(--font-mono);font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-muted);margin-bottom:20px}
+    .gauge-wrap{display:flex;flex-direction:column;align-items:center;padding:12px 0 20px;position:relative}
+    .gauge-svg{transform:rotate(-90deg)}
+    .gauge-bg{fill:none;stroke:var(--border)}
+    .gauge-fg{fill:none;stroke-linecap:round;transition:stroke-dashoffset 1.2s cubic-bezier(0.4,0,0.2,1),stroke 0.5s ease}
+    .gauge-center{position:absolute;text-align:center;top:50%;left:50%;transform:translate(-50%,-50%);font-family:var(--font-mono)}
+    .gauge-val{font-size:36px;font-weight:500;line-height:1}
+    .gauge-lbl{font-size:11px;color:var(--text-muted);margin-top:6px;letter-spacing:1px;text-transform:uppercase}
+    .stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1px;background:var(--border);border-radius:10px;overflow:hidden;margin-top:24px}
+    .stat{background:var(--card);padding:16px;text-align:center}
+    .stat-l{font-family:var(--font-mono);font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px}
+    .stat-v{font-family:var(--font-mono);font-size:15px;font-weight:500}
+    .alert{margin-top:20px;padding:14px 20px;border-radius:10px;font-family:var(--font-mono);font-size:13px;font-weight:500;text-align:center}
+    .alert-danger{background:var(--danger-glow);border:1px solid rgba(240,72,72,0.25);color:var(--danger);animation:pulse 2s infinite}
+    .alert-success{background:var(--success-glow);border:1px solid rgba(48,216,112,0.2);color:var(--success)}
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.8}}
+    .btn-row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px}
+    .btn{padding:10px 20px;border-radius:8px;border:none;font-family:var(--font-mono);font-size:12px;font-weight:500;cursor:pointer;transition:all 0.2s;display:inline-flex;align-items:center;gap:6px}
+    .btn:disabled{opacity:0.4;cursor:not-allowed}
+    .btn-strava{background:var(--strava);color:#fff}
+    .btn-strava:hover:not(:disabled){background:#e04400}
+    .btn-accent{background:var(--accent);color:var(--bg)}
+    .btn-secondary{background:var(--bg2);color:var(--text-dim);border:1px solid var(--border)}
+    .btn-danger{background:transparent;color:var(--danger);border:1px solid rgba(240,72,72,0.3)}
+    .btn-danger:hover:not(:disabled){background:var(--danger-glow)}
+    .rlog{border-radius:12px;overflow:hidden;border:1px solid var(--border);background:var(--card)}
+    .rlog-hdr{padding:14px 20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+    .rlog-hdr span{font-family:var(--font-mono);font-size:11px;text-transform:uppercase;letter-spacing:1px}
+    .rlog-hdr .cnt{color:var(--text-muted)}
+    .rrow{display:grid;grid-template-columns:1fr 80px 70px 32px;align-items:center;padding:11px 16px;gap:8px;font-family:var(--font-mono);font-size:12px;border-bottom:1px solid rgba(37,37,48,0.5)}
+    .rrow:hover{background:var(--bg2)}
+    .rrow:last-child{border-bottom:none}
+    .rname{color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .rdate{color:var(--text-muted);font-size:10px;margin-top:2px}
+    .rdist{color:var(--accent);text-align:right;font-weight:500}
+    .rsrc{color:var(--text-muted);text-align:right;font-size:10px}
+    .rdel{background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:16px;padding:2px 4px;border-radius:4px;text-align:center}
+    .rdel:hover{color:var(--danger);background:var(--danger-glow)}
+    .rempty{padding:40px 20px;text-align:center;color:var(--text-muted);font-family:var(--font-mono);font-size:12px}
+    .rlist{max-height:400px;overflow-y:auto}
+    .fg{margin-bottom:18px}
+    .fl{display:block;font-family:var(--font-mono);font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);margin-bottom:8px}
+    .fi{width:100%;padding:10px 14px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--font-mono);font-size:13px;outline:none}
+    .fi:focus{border-color:var(--accent)}
+    .frow{display:flex;gap:12px}
+    .frow>.fg{flex:1}
+    .fsuf{display:flex;align-items:center;gap:8px}
+    .fsuf .fi{flex:1}
+    .fsuf span{color:var(--text-muted);font-family:var(--font-mono);font-size:12px}
+    .fhint{margin-top:20px;padding:14px 18px;border-radius:10px;background:var(--accent-glow);border:1px solid rgba(240,160,48,0.15);font-size:12px;color:var(--text-dim);line-height:1.6}
+    .fhint strong{color:var(--accent)}
+    .hero{text-align:center;padding:40px 20px}
+    .hero .icon{font-size:48px;margin-bottom:16px}
+    .hero h2{font-size:18px;font-weight:600;margin-bottom:8px}
+    .hero p{color:var(--text-dim);font-size:13px;margin-bottom:24px;line-height:1.6}
+    .estimate{margin-top:16px;font-family:var(--font-mono);font-size:12px;color:var(--text-muted);text-align:center}
+    .toast{position:fixed;top:20px;right:20px;z-index:1000;padding:12px 20px;border-radius:8px;font-family:var(--font-mono);font-size:12px;box-shadow:0 8px 32px rgba(0,0,0,0.5);animation:slideIn 0.3s ease}
+    .toast-ok{background:var(--success);color:#fff}
+    .toast-err{background:var(--danger);color:#fff}
+    .toast-info{background:var(--accent);color:var(--bg)}
+    @keyframes slideIn{from{transform:translateY(-20px);opacity:0}to{transform:translateY(0);opacity:1}}
+    .hidden{display:none !important}
+    @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+    .view{animation:fadeIn 0.35s ease}
+    .loading-overlay{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:999;font-family:var(--font-mono);color:var(--accent);font-size:14px}
+    .spinner{width:24px;height:24px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin 0.8s linear infinite;margin-right:12px}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    @media(max-width:480px){.header{flex-direction:column;align-items:flex-start;gap:12px}.stats{grid-template-columns:1fr}.btn-row{flex-direction:column}.btn{width:100%;justify-content:center}.frow{flex-direction:column;gap:0}}
+    ::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+  </style>
 </head>
 <body>
 
-<!-- ── LOGIN ── -->
-<div id="login-screen" class="screen active">
-  <div class="login-glow"></div>
-  <div class="login-card">
-    <span class="chain-icon">⛓</span>
-    <h1 class="login-title">Chain Wax Tracker</h1>
-    <p class="login-sub">Track wax life across all your bikes.<br>Km synced automatically from Strava.</p>
-    <a id="strava-auth-link" href="#" class="strava-btn">
-      <svg viewBox="0 0 24 24"><path d="M15.387 17.944l-2.089-4.116h-3.065L15.387 24l5.15-10.172h-3.066m-7.008-5.599l2.836 5.598h4.172L10.463 0l-7 13.828h4.169"/></svg>
-      Connect with Strava
-    </a>
+<div class="loading-overlay" id="loadingScreen"><div class="spinner"></div> Loading...</div>
+
+<div class="app" style="display:none" id="appWrap">
+
+  <!-- LOGIN SCREEN -->
+  <div id="loginScreen">
+    <div class="header">
+      <div class="header-left">
+        <div class="logo">⛓</div>
+        <div><h1>Chain Wax Tracker</h1><div class="subtitle">Track your chain wax life</div></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="hero">
+        <div class="icon">🚴</div>
+        <h2>Welcome</h2>
+        <p>Connect your Strava account to track your chain wax life. Your data is saved to the cloud — come back anytime.</p>
+        <button class="btn btn-strava" onclick="connectStrava()">Connect with Strava</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN APP -->
+  <div id="mainApp" class="hidden">
+    <div class="header">
+      <div class="header-left">
+        <div class="logo">⛓</div>
+        <div>
+          <h1>Chain Wax Tracker</h1>
+          <div class="subtitle" id="welcomeMsg">Loading...</div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <div class="badge badge-on">● Strava</div>
+        <button class="btn-danger btn" style="padding:4px 10px;font-size:10px" onclick="logout()">Logout</button>
+      </div>
+    </div>
+
+    <div class="nav">
+      <button class="active" onclick="go('dashboard')">Dashboard</button>
+      <button onclick="go('rides')">Rides</button>
+      <button onclick="go('settings')">Settings</button>
+    </div>
+
+    <!-- DASHBOARD -->
+    <div id="v-dashboard" class="view">
+      <div id="emptyState" class="card hidden">
+        <div class="hero">
+          <div class="icon">🔧</div>
+          <h2>Set Up Your Chain Wax Cycle</h2>
+          <p>Go to Settings to set your wax date and target distance.</p>
+          <button class="btn btn-accent" onclick="go('settings')">Go to Settings</button>
+        </div>
+      </div>
+      <div id="mainDash" class="hidden">
+        <div class="card">
+          <div class="gauge-wrap">
+            <svg class="gauge-svg" width="200" height="200">
+              <circle class="gauge-bg" cx="100" cy="100" r="88" stroke-width="9"/>
+              <circle class="gauge-fg" id="gFg" cx="100" cy="100" r="88" stroke-width="9" stroke-dasharray="553" stroke-dashoffset="553"/>
+            </svg>
+            <div class="gauge-center"><div class="gauge-val" id="gVal">—</div><div class="gauge-lbl">km remaining</div></div>
+          </div>
+          <div id="alertWax" class="alert alert-danger hidden">⚠ TIME TO RE-WAX YOUR CHAIN</div>
+          <div class="stats">
+            <div class="stat"><div class="stat-l">Waxed</div><div class="stat-v" id="sWax">—</div></div>
+            <div class="stat"><div class="stat-l">Ridden</div><div class="stat-v" id="sRid">—</div></div>
+            <div class="stat"><div class="stat-l">Target</div><div class="stat-v" id="sTgt">—</div></div>
+          </div>
+          <div class="estimate hidden" id="estPill"></div>
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-strava" id="bSync" onclick="syncStrava()">↻ Sync Strava</button>
+          <button class="btn btn-secondary" onclick="go('rides')">+ Add Ride</button>
+          <button class="btn btn-danger" onclick="reWax()">🔗 Re-Wax Chain</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIDES -->
+    <div id="v-rides" class="view hidden">
+      <div class="card">
+        <div class="card-title">Add Manual Ride</div>
+        <div class="fg"><label class="fl">Ride Name</label><input class="fi" type="text" id="rName" placeholder="Morning ride"></div>
+        <div class="frow">
+          <div class="fg"><label class="fl">Distance</label><div class="fsuf"><input class="fi" type="number" id="rDist" placeholder="0" min="0" step="0.1"><span>km</span></div></div>
+          <div class="fg"><label class="fl">Date</label><input class="fi" type="date" id="rDateIn"></div>
+        </div>
+        <button class="btn btn-accent" onclick="addRide()">Save Ride</button>
+      </div>
+      <div class="rlog">
+        <div class="rlog-hdr"><span>Ride Log</span><span class="cnt" id="rCnt">0 rides</span></div>
+        <div class="rlist" id="rList"><div class="rempty">No rides yet</div></div>
+      </div>
+    </div>
+
+    <!-- SETTINGS -->
+    <div id="v-settings" class="view hidden">
+      <div class="card">
+        <div class="card-title">Wax Settings</div>
+        <div class="fg"><label class="fl">Last Wax Date</label><input class="fi" type="date" id="cfgDate" onchange="saveCfg()"></div>
+        <div class="fg"><label class="fl">Target Distance Per Wax</label><div class="fsuf"><input class="fi" type="number" id="cfgKm" min="50" step="50" onchange="saveCfg()"><span>km</span></div></div>
+        <div class="fhint"><strong>Tip:</strong> Most chain wax treatments last 200–500 km. Dry = longer. Wet/muddy = re-wax sooner.</div>
+      </div>
+      <div class="card">
+        <div class="card-title">Wax History</div>
+        <div id="waxHistory" style="font-family:var(--font-mono);font-size:12px;color:var(--text-dim)">No previous wax cycles.</div>
+      </div>
+    </div>
   </div>
 </div>
 
-<!-- ── APP ── -->
-<div id="app-screen" class="screen">
-  <header class="header">
-    <div class="header-brand">
-      <div class="brand-dot"></div>
-      Chain Wax Tracker
-    </div>
-    <div class="header-right">
-      <div class="athlete-pill">
-        <img id="athlete-avatar" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" alt="">
-        <span id="athlete-name">Loading…</span>
-      </div>
-      <button class="hdr-btn sync" onclick="syncNow()">↻ Sync</button>
-      <button class="hdr-btn logout" onclick="logout()">Logout</button>
-    </div>
-  </header>
-
-  <main class="main">
-    <div class="page-title">My Bikes</div>
-    <div class="page-sub" id="sync-label">Connecting to Strava…</div>
-    <div class="error-banner" id="error-banner"></div>
-
-    <div class="summary-row">
-      <div class="summary-card"><div class="s-label">Total Bikes</div><div class="s-value" id="stat-bikes">—</div></div>
-      <div class="summary-card"><div class="s-label">Total km (all bikes)</div><div class="s-value" id="stat-km">—</div></div>
-      <div class="summary-card" id="stat-due-card"><div class="s-label">Chains Due / Soon</div><div class="s-value" id="stat-due">—</div></div>
-    </div>
-
-    <div class="bikes-grid" id="bikes-grid">
-      <div class="loading-state"><div class="spinner"></div><div>Loading bikes…</div></div>
-    </div>
-  </main>
-</div>
-
-<div class="toast" id="toast"></div>
-
 <script>
-// ─── CONFIG — fill these in ──────────────────────────────────────────────────
-// If you have a Next.js API route handling OAuth, set USE_API_ROUTE = true
-// and the app will call /api/strava for auth and /api/strava/athlete for data.
-// Otherwise fill in CLIENT_ID to do direct OAuth from the browser.
-const USE_API_ROUTE = true;          // true = use your /api/strava/* routes
-const CLIENT_ID     = '';            // only needed if USE_API_ROUTE = false
-const REDIRECT_URI  = window.location.origin + window.location.pathname;
+// ══════════════════════════════════════════════════════════
+//  *** ENTER YOUR STRAVA CREDENTIALS HERE ***
+// ══════════════════════════════════════════════════════════
+var STRAVA_CLIENT_ID     = "PASTE_YOUR_CLIENT_ID_HERE";
+var STRAVA_CLIENT_SECRET = "PASTE_YOUR_CLIENT_SECRET_HERE";
+// ══════════════════════════════════════════════════════════
 
-// ─── WAX OPTIONS ─────────────────────────────────────────────────────────────
-const WAX = [
-  { id: 'squirt',   name: 'Squirt Lube',      km: 300 },
-  { id: 'silca',    name: 'Silca Hot Melt',   km: 500 },
-  { id: 'msw',      name: 'MSW Hot Melt',     km: 500 },
-  { id: 'paraffin', name: 'Paraffin Wax',     km: 400 },
-  { id: 'absolute', name: 'Absolute Black',   km: 350 },
-  { id: 'custom',   name: 'Custom / Other',   km: 400 },
-];
+var BASE = window.location.origin;
+var CALLBACK = BASE + "/strava-callback.html";
 
-// ─── STATE ────────────────────────────────────────────────────────────────────
-let tokenData = null;
-let bikes     = [];
-let settings  = {};
-const S_KEY   = 'chainwax_v3';
-const T_KEY   = 'strava_token_v3';
+// App state
+var athlete = null;
+var cfg = { waxDate: "", targetKm: 300 };
+var rides = [];
+var strava = null;
+var waxHistory = [];
+var binId = null;  // JSONBin bin ID for this user
 
-// ─── BOOT ─────────────────────────────────────────────────────────────────────
-async function init() {
-  settings = JSON.parse(localStorage.getItem(S_KEY) || '{}');
+// Helpers
+var fmt = function(n){ return Math.round(n*10)/10; };
+var dateStr = function(d){ return new Date(d).toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"}); };
+var shortDate = function(d){ return new Date(d).toLocaleDateString("en-GB",{day:"2-digit",month:"2-digit"}); };
+var esc = function(s){ var d=document.createElement("div"); d.textContent=s; return d.innerHTML; };
 
-  // OAuth callback
-  const params = new URLSearchParams(window.location.search);
-  const code   = params.get('code');
-  if (code) {
-    history.replaceState({}, '', location.pathname);
-    await handleCode(code);
-    return;
-  }
-
-  // Restore session
-  const saved = JSON.parse(localStorage.getItem(T_KEY) || 'null');
-  if (saved?.access_token) {
-    tokenData = saved;
-    showApp();
-    await fetchAthlete();
-  } else {
-    showLogin();
-  }
+function toast(msg,type){
+  var el=document.createElement("div"); el.className="toast toast-"+(type||"info"); el.textContent=msg;
+  document.body.appendChild(el);
+  setTimeout(function(){el.style.opacity="0";el.style.transition="opacity 0.3s";setTimeout(function(){el.remove();},300);},3000);
 }
 
-// ─── AUTH ─────────────────────────────────────────────────────────────────────
-function showLogin() {
-  document.getElementById('login-screen').classList.add('active');
-  document.getElementById('app-screen').classList.remove('active');
+// ═══ SAVE / LOAD (JSONBin via API proxy) ═══
 
-  const link = USE_API_ROUTE
-    ? `/api/strava/auth`  // Your Next.js route redirects to Strava
-    : `https://www.strava.com/oauth/authorize?client_id=${CLIENT_ID}&response_type=code&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&scope=read,activity:read`;
-
-  document.getElementById('strava-auth-link').href = link;
-}
-
-function showApp() {
-  document.getElementById('login-screen').classList.remove('active');
-  document.getElementById('app-screen').classList.add('active');
-}
-
-async function handleCode(code) {
+async function saveToCloud(){
+  var payload = { athlete:athlete, config:cfg, rides:rides, strava:strava, waxHistory:waxHistory };
   try {
-    // Exchange via your API route (keeps client_secret server-side)
-    const res = await fetch(`/api/strava?code=${encodeURIComponent(code)}`);
-    if (!res.ok) throw new Error('Token exchange failed — check /api/strava route');
-    tokenData = await res.json();
-    localStorage.setItem(T_KEY, JSON.stringify(tokenData));
-    showApp();
-    await fetchAthlete();
-  } catch (e) {
-    showError(e.message);
-    showLogin();
-  }
+    var r = await fetch("/api/strava",{
+      method:"POST", headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({ action:"save", bin_id:binId, athlete_id:athlete.id, data:payload })
+    });
+    var d = await r.json();
+    if(d.bin_id && !binId){
+      binId = d.bin_id;
+      localStorage.setItem("chainwax_bin_"+athlete.id, binId);
+    }
+  } catch(e){ console.error("Save failed:",e); }
 }
 
-function logout() {
-  localStorage.removeItem(T_KEY);
-  tokenData = null; bikes = [];
+async function loadFromCloud(aid, bid){
+  try {
+    var r = await fetch("/api/strava",{
+      method:"POST", headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({ action:"load", bin_id:bid })
+    });
+    var d = await r.json();
+    if(d.data){
+      if(d.data.athlete) athlete = d.data.athlete;
+      if(d.data.config) cfg = d.data.config;
+      if(d.data.rides) rides = d.data.rides;
+      if(d.data.strava) strava = d.data.strava;
+      if(d.data.waxHistory) waxHistory = d.data.waxHistory;
+      return true;
+    }
+  } catch(e){ console.error("Load failed:",e); }
+  return false;
+}
+
+// Also keep localStorage as quick cache
+function saveLocal(){
+  try{ localStorage.setItem("chainwax_session", JSON.stringify({athlete:athlete,strava:strava,cfg:cfg,rides:rides,waxHistory:waxHistory,binId:binId})); }catch(e){}
+}
+function loadLocal(){
+  try{
+    var s=localStorage.getItem("chainwax_session");
+    if(s){ var d=JSON.parse(s); athlete=d.athlete; strava=d.strava; cfg=d.cfg||cfg; rides=d.rides||[]; waxHistory=d.waxHistory||[]; binId=d.binId||null; return !!athlete; }
+  }catch(e){}
+  return false;
+}
+
+async function saveAll(){
+  saveLocal();
+  await saveToCloud();
+}
+
+// ═══ AUTH ═══
+
+function connectStrava(){
+  localStorage.setItem("chainwax_client_id", STRAVA_CLIENT_ID);
+  localStorage.setItem("chainwax_client_secret", STRAVA_CLIENT_SECRET);
+  window.location.href = "https://www.strava.com/oauth/authorize?client_id="+STRAVA_CLIENT_ID+
+    "&response_type=code&redirect_uri="+encodeURIComponent(CALLBACK)+
+    "&approval_prompt=auto&scope=activity:read_all";
+}
+
+function logout(){
+  localStorage.removeItem("chainwax_session");
+  athlete=null; strava=null; cfg={waxDate:"",targetKm:300}; rides=[]; waxHistory=[]; binId=null;
   showLogin();
 }
 
-// ─── DATA ─────────────────────────────────────────────────────────────────────
-async function fetchAthlete() {
-  setBikesLoading();
-  try {
-    let data;
+function showLogin(){
+  document.getElementById("loginScreen").classList.remove("hidden");
+  document.getElementById("mainApp").classList.add("hidden");
+}
+function showApp(){
+  document.getElementById("loginScreen").classList.add("hidden");
+  document.getElementById("mainApp").classList.remove("hidden");
+  document.getElementById("welcomeMsg").textContent = athlete ? athlete.firstname+" "+(athlete.lastname||"") : "Welcome";
+  render();
+}
 
-    if (USE_API_ROUTE) {
-      // Use your Next.js API route — it handles auth server-side
-      const res = await fetch('/api/strava/athlete');
-      if (!res.ok) {
-        if (res.status === 401) { logout(); return; }
-        throw new Error(`API error ${res.status}`);
-      }
-      data = await res.json();
-    } else {
-      // Direct Strava API call with browser token
-      const res = await fetch('https://www.strava.com/api/v3/athlete', {
-        headers: { Authorization: `Bearer ${tokenData.access_token}` }
-      });
-      if (res.status === 401) { logout(); return; }
-      if (!res.ok) throw new Error(`Strava error ${res.status}`);
-      data = await res.json();
+// ═══ NAV ═══
+
+function go(name){
+  ["dashboard","rides","settings"].forEach(function(v){ document.getElementById("v-"+v).classList.toggle("hidden",v!==name); });
+  document.querySelectorAll(".nav button").forEach(function(btn,i){ btn.classList.toggle("active",["dashboard","rides","settings"][i]===name); });
+  if(name==="rides") document.getElementById("rDateIn").value=new Date().toISOString().split("T")[0];
+}
+
+// ═══ STRAVA ═══
+
+async function getToken(){
+  if(!strava) return null;
+  var now=Math.floor(Date.now()/1000);
+  if(now<strava.expiresAt-60) return strava.accessToken;
+  try{
+    var resp=await fetch("/api/strava",{ method:"POST", headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({action:"token",client_id:STRAVA_CLIENT_ID,client_secret:STRAVA_CLIENT_SECRET,refresh_token:strava.refreshToken,grant_type:"refresh_token"})});
+    var d=await resp.json();
+    if(d.access_token){ strava.accessToken=d.access_token; strava.refreshToken=d.refresh_token; strava.expiresAt=d.expires_at; await saveAll(); return d.access_token; }
+  }catch(e){console.error(e);}
+  return null;
+}
+
+async function syncStrava(){
+  if(!strava){toast("Not connected","err");return;}
+  if(!cfg.waxDate){toast("Set a wax date first","err");return;}
+  var btn=document.getElementById("bSync"); btn.disabled=true; btn.textContent="⏳ Syncing...";
+  try{
+    var token=await getToken(); if(!token) throw new Error("Token expired. Reconnect.");
+    var after=Math.floor(new Date(cfg.waxDate).getTime()/1000);
+    var pg=1, all=[];
+    while(true){
+      var r=await fetch("/api/strava",{method:"POST",headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({action:"activities",access_token:token,after:after,page:pg})});
+      var acts=await r.json();
+      if(!Array.isArray(acts)||acts.length===0) break;
+      all=all.concat(acts); pg++;
     }
+    var bikeRides=all.filter(function(a){return a.type==="Ride"||a.type==="VirtualRide"||a.type==="EBikeRide";})
+      .map(function(a){return{id:"strava_"+a.id,name:a.name,distance:a.distance/1000,date:a.start_date_local||a.start_date,source:"strava"};});
+    var manual=rides.filter(function(r){return r.source!=="strava";});
+    rides=manual.concat(bikeRides).sort(function(a,b){return new Date(a.date)-new Date(b.date);});
+    await saveAll();
+    toast("Synced "+bikeRides.length+" ride"+(bikeRides.length!==1?"s":""),"ok");
+  }catch(e){toast("Sync failed: "+e.message,"err");}
+  btn.disabled=false; btn.textContent="↻ Sync Strava"; render();
+}
 
-    // Athlete header
-    const name = [data.firstname, data.lastname].filter(Boolean).join(' ');
-    document.getElementById('athlete-name').textContent = name || 'Athlete';
-    if (data.profile_medium) document.getElementById('athlete-avatar').src = data.profile_medium;
+// ═══ RIDES ═══
 
-    // Map bikes — Strava athlete.bikes[]
-    // Fields: id, name, nickname, distance (meters), primary, brand_name, model_name, frame_type
-    bikes = (data.bikes || []).map(b => ({
-      id:        b.id,
-      name:      b.nickname || b.name || 'Unnamed Bike',
-      brand:     b.brand_name || '',
-      model:     b.model_name || '',
-      totalKm:   Math.round((b.distance || 0) / 1000),
-      frameType: b.frame_type, // 1=road 2=mtb 3=road 4=gravel 5=ebike
-      primary:   !!b.primary,
-    }));
+async function addRide(){
+  var name=document.getElementById("rName").value.trim();
+  var dist=parseFloat(document.getElementById("rDist").value);
+  var date=document.getElementById("rDateIn").value;
+  if(!name||!dist||!date){toast("Fill all fields","err");return;}
+  rides.push({id:"m_"+Date.now(),name:name,distance:dist,date:date,source:"manual"});
+  rides.sort(function(a,b){return new Date(a.date)-new Date(b.date);});
+  await saveAll();
+  document.getElementById("rName").value=""; document.getElementById("rDist").value="";
+  toast("Ride added","ok"); render();
+}
 
-    const now = new Date().toLocaleTimeString('en', { hour: '2-digit', minute: '2-digit' });
-    document.getElementById('sync-label').textContent =
-      `Synced from Strava · ${now} · ${bikes.length} bike${bikes.length !== 1 ? 's' : ''}`;
+async function delRide(id){
+  rides=rides.filter(function(r){return r.id!==id;});
+  await saveAll(); render();
+}
 
-    renderAll();
-    clearError();
-  } catch (e) {
-    showError(e.message);
-    setBikesEmpty();
+async function reWax(){
+  if(!confirm("Start a fresh wax cycle? Current rides will be archived.")) return;
+  var totalKm=rides.reduce(function(s,r){return s+r.distance;},0);
+  if(cfg.waxDate){
+    waxHistory.push({waxDate:cfg.waxDate,targetKm:cfg.targetKm,totalKm:fmt(totalKm),rideCount:rides.length,endDate:new Date().toISOString().split("T")[0]});
+  }
+  cfg.waxDate=new Date().toISOString().split("T")[0]; rides=[];
+  await saveAll(); toast("Chain waxed! Fresh cycle started.","ok"); render();
+}
+
+async function saveCfg(){
+  cfg.waxDate=document.getElementById("cfgDate").value;
+  cfg.targetKm=parseInt(document.getElementById("cfgKm").value)||300;
+  await saveAll(); render();
+}
+
+// ═══ RENDER ═══
+
+function render(){
+  var hasWax=!!cfg.waxDate;
+  document.getElementById("emptyState").classList.toggle("hidden",hasWax);
+  document.getElementById("mainDash").classList.toggle("hidden",!hasWax);
+  document.getElementById("cfgDate").value=cfg.waxDate;
+  document.getElementById("cfgKm").value=cfg.targetKm;
+
+  var totalKm=rides.reduce(function(s,r){return s+r.distance;},0);
+  var remaining=Math.max(0,cfg.targetKm-totalKm);
+  var pct=cfg.targetKm>0?Math.min((totalKm/cfg.targetKm)*100,100):0;
+  var overdue=totalKm>=cfg.targetKm;
+  var circ=2*Math.PI*88, off=circ-(pct/100)*circ;
+  var gFg=document.getElementById("gFg");
+  var col=pct>85?"var(--danger)":pct>60?"var(--accent)":"var(--success)";
+  gFg.style.strokeDashoffset=off; gFg.style.stroke=col; gFg.style.filter="drop-shadow(0 0 8px "+col+")";
+  var gVal=document.getElementById("gVal"); gVal.textContent=fmt(remaining);
+  gVal.style.color=overdue?"var(--danger)":"var(--text)";
+  document.getElementById("sWax").textContent=hasWax?dateStr(cfg.waxDate):"—";
+  document.getElementById("sRid").textContent=fmt(totalKm)+" km";
+  document.getElementById("sTgt").textContent=cfg.targetKm+" km";
+  document.getElementById("alertWax").classList.toggle("hidden",!overdue);
+
+  var est=document.getElementById("estPill");
+  if(hasWax&&rides.length>0&&remaining>0){
+    var days=Math.max(1,(Date.now()-new Date(cfg.waxDate).getTime())/86400000);
+    var avg=totalKm/days;
+    if(avg>0){var left=Math.ceil(remaining/avg);est.textContent="≈ "+left+" day"+(left!==1?"s":"")+" until re-wax";est.classList.remove("hidden");}
+    else est.classList.add("hidden");
+  }else est.classList.add("hidden");
+
+  document.getElementById("rCnt").textContent=rides.length+" ride"+(rides.length!==1?"s":"");
+  var rl=document.getElementById("rList");
+  if(rides.length===0){rl.innerHTML='<div class="rempty">No rides yet. Sync Strava or add manually.</div>';}
+  else{
+    rl.innerHTML=rides.slice().reverse().map(function(r){
+      return '<div class="rrow"><div><div class="rname">'+esc(r.name)+'</div><div class="rdate">'+shortDate(r.date)+'</div></div>'+
+        '<div class="rdist">'+fmt(r.distance)+' km</div><div class="rsrc">'+(r.source==="strava"?"Strava":"Manual")+'</div>'+
+        '<button class="rdel" onclick="delRide(\''+r.id+'\')" title="Delete">×</button></div>';
+    }).join("");
+  }
+
+  var wh=document.getElementById("waxHistory");
+  if(waxHistory.length===0){wh.textContent="No previous wax cycles.";}
+  else{
+    wh.innerHTML=waxHistory.slice().reverse().map(function(h){
+      return '<div style="padding:8px 0;border-bottom:1px solid var(--border)"><span style="color:var(--accent)">'+dateStr(h.waxDate)+'</span> → '+dateStr(h.endDate)+
+        ' — '+h.totalKm+' km over '+h.rideCount+' ride'+(h.rideCount!==1?'s':'')+'</div>';
+    }).join("");
   }
 }
 
-async function syncNow() {
-  const btn = document.querySelector('.sync');
-  btn.textContent = '↻ Syncing…'; btn.disabled = true;
-  await fetchAthlete();
-  btn.textContent = '↻ Sync'; btn.disabled = false;
-  toast('Synced ✓');
-}
+// ═══ INIT ═══
 
-// ─── SETTINGS ─────────────────────────────────────────────────────────────────
-function getS(id) {
-  const wax = WAX[0];
-  return settings[id] || { waxId: wax.id, intervalKm: wax.km, kmAtLastWax: null, lastWaxDate: null, notes: '' };
-}
-function saveS(id, s) {
-  settings[id] = s;
-  localStorage.setItem(S_KEY, JSON.stringify(settings));
-}
+(async function(){
+  var loadEl=document.getElementById("loadingScreen");
+  var appEl=document.getElementById("appWrap");
 
-// ─── HEALTH ───────────────────────────────────────────────────────────────────
-function health(bike) {
-  const s        = getS(bike.id);
-  const interval = s.intervalKm || 300;
-  const kmSince  = s.kmAtLastWax != null ? Math.max(0, bike.totalKm - s.kmAtLastWax) : 0;
-  const pct      = Math.min((kmSince / interval) * 100, 100);
-  const rem      = Math.max(0, interval - kmSince);
-  return {
-    pct, kmSince, rem, interval,
-    status: pct >= 100 ? 'WAX NOW' : pct >= 85 ? 'DUE SOON' : 'GOOD',
-    color:  pct >= 100 ? 'var(--red)' : pct >= 85 ? 'var(--amber)' : 'var(--green)',
-  };
-}
+  // Check if returning from Strava OAuth
+  var stravaRaw = localStorage.getItem("chainwax_strava");
+  if(stravaRaw){
+    try{
+      var sd=JSON.parse(stravaRaw);
+      if(sd.accessToken && sd.athlete){
+        athlete=sd.athlete;
+        strava={accessToken:sd.accessToken,refreshToken:sd.refreshToken,expiresAt:sd.expiresAt};
+        localStorage.removeItem("chainwax_strava");
 
-// ─── RENDER ───────────────────────────────────────────────────────────────────
-function emoji(frameType) {
-  if (frameType === 2) return '🚵';
-  if (frameType === 4 || frameType === 5) return '🪨';
-  return '🚴';
-}
+        // Check if this user already has a bin
+        var existingBin = localStorage.getItem("chainwax_bin_"+athlete.id);
+        if(existingBin){
+          binId=existingBin;
+          await loadFromCloud(athlete.id, binId);
+          // Keep fresh tokens
+          strava={accessToken:sd.accessToken,refreshToken:sd.refreshToken,expiresAt:sd.expiresAt};
+        }
+        await saveAll();
+        loadEl.style.display="none"; appEl.style.display="block";
+        showApp();
+        return;
+      }
+    }catch(e){}
+  }
 
-function renderAll() {
-  renderSummary();
-  renderBikes();
-}
+  // Try loading from localStorage cache
+  if(loadLocal() && athlete){
+    // Try refreshing from cloud
+    if(binId){
+      await loadFromCloud(athlete.id, binId);
+    }
+    loadEl.style.display="none"; appEl.style.display="block";
+    showApp();
+    return;
+  }
 
-function renderSummary() {
-  document.getElementById('stat-bikes').textContent = bikes.length;
-  const totalKm = bikes.reduce((s, b) => s + b.totalKm, 0);
-  document.getElementById('stat-km').textContent = totalKm.toLocaleString() + ' km';
-  const due = bikes.filter(b => health(b).pct >= 85).length;
-  document.getElementById('stat-due').textContent = due === 0 ? 'All good ✓' : `${due} bike${due !== 1 ? 's' : ''}`;
-  document.getElementById('stat-due-card').classList.toggle('alert', due > 0);
-}
-
-function renderBikes() {
-  const grid = document.getElementById('bikes-grid');
-  if (!bikes.length) { setBikesEmpty(); return; }
-
-  grid.innerHTML = bikes.map((bike, i) => {
-    const s   = getS(bike.id);
-    const h   = health(bike);
-    const wax = WAX.find(w => w.id === s.waxId) || WAX[0];
-    const cls = h.pct >= 100 ? 'bike-card wax-now' : h.pct >= 85 ? 'bike-card needs-wax' : 'bike-card';
-    const meta = [bike.brand, bike.model].filter(Boolean).join(' · ') || '—';
-
-    return `
-    <div class="${cls}" style="animation-delay:${i * 0.07}s">
-      <div class="bike-top">
-        <div>
-          <div class="bike-name-wrap">
-            <span class="bike-emoji">${emoji(bike.frameType)}</span>
-            <span class="bike-name">${esc(bike.name)}</span>
-            ${bike.primary ? '<span class="bike-primary">PRIMARY</span>' : ''}
-          </div>
-          <div class="bike-brand">${esc(meta)}</div>
-        </div>
-        <div class="bike-km-block">
-          <div class="bike-km-val">${bike.totalKm.toLocaleString()}</div>
-          <div class="bike-km-unit">total km</div>
-        </div>
-      </div>
-
-      <div class="wax-row">
-        <div class="wax-cell">
-          <div class="wax-cell-lbl">Wax</div>
-          <div class="wax-cell-val">${esc(wax.name)}</div>
-        </div>
-        <div class="wax-cell">
-          <div class="wax-cell-lbl">Interval</div>
-          <div class="wax-cell-val">${s.intervalKm || wax.km} km</div>
-        </div>
-        <div class="wax-cell">
-          <div class="wax-cell-lbl">Last Waxed</div>
-          <div class="wax-cell-val">${s.lastWaxDate || '—'}</div>
-        </div>
-      </div>
-
-      <div class="health-wrap">
-        <div class="health-top">
-          <span class="health-lbl">Chain Health</span>
-          <span class="health-status" style="color:${h.color}">${h.status} · ${Math.round(h.pct)}%</span>
-        </div>
-        <div class="health-track">
-          <div class="health-fill" style="width:${h.pct}%;background:${h.color}"></div>
-        </div>
-        <div class="health-detail">${h.kmSince} km since wax · ${h.rem} km remaining</div>
-      </div>
-
-      <div class="bike-actions">
-        <button class="btn-waxed" onclick="waxNow('${bike.id}')">✓ Waxed Today</button>
-        <button class="btn-cfg" onclick="togglePanel('${bike.id}')">⚙ Settings</button>
-      </div>
-
-      <div class="settings-panel" id="sp-${bike.id}">
-        <div class="sp-title">Chain Settings — ${esc(bike.name)}</div>
-        <div class="form-row">
-          <label>Wax Product</label>
-          <select id="f-wax-${bike.id}" onchange="waxChanged('${bike.id}')">
-            ${WAX.map(w => `<option value="${w.id}"${s.waxId === w.id ? ' selected' : ''}>${w.name} (default ${w.km} km)</option>`).join('')}
-          </select>
-        </div>
-        <div class="form-2col">
-          <div class="form-row">
-            <label>Re-wax interval (km)</label>
-            <input type="number" id="f-int-${bike.id}" value="${s.intervalKm || wax.km}" min="50" max="2000">
-          </div>
-          <div class="form-row">
-            <label>Last wax date</label>
-            <input type="date" id="f-date-${bike.id}" value="${s.lastWaxDate || ''}">
-          </div>
-        </div>
-        <div class="form-row">
-          <label>Km at last wax (Strava odometer when you waxed)</label>
-          <input type="number" id="f-km-${bike.id}" value="${s.kmAtLastWax ?? ''}" placeholder="e.g. ${bike.totalKm}">
-        </div>
-        <div class="form-row">
-          <label>Notes (chain model, prep method…)</label>
-          <input type="text" id="f-notes-${bike.id}" value="${esc(s.notes || '')}" placeholder="KMC X12, hot wax strip…">
-        </div>
-        <div class="sp-actions">
-          <button class="btn-save" onclick="saveSettings('${bike.id}')">Save</button>
-          <button class="btn-cancel" onclick="togglePanel('${bike.id}')">Cancel</button>
-        </div>
-      </div>
-    </div>`;
-  }).join('');
-}
-
-function setBikesLoading() {
-  document.getElementById('bikes-grid').innerHTML =
-    '<div class="loading-state"><div class="spinner"></div><div>Loading from Strava…</div></div>';
-}
-function setBikesEmpty() {
-  document.getElementById('bikes-grid').innerHTML =
-    '<div class="loading-state"><div>No bikes found on your Strava account.</div></div>';
-}
-
-// ─── ACTIONS ──────────────────────────────────────────────────────────────────
-function waxNow(id) {
-  const bike = bikes.find(b => b.id === id);
-  if (!bike) return;
-  const s = getS(id);
-  saveS(id, { ...s, kmAtLastWax: bike.totalKm, lastWaxDate: today() });
-  renderAll();
-  toast(`✓ Waxed today — ${bike.name}`);
-}
-
-function togglePanel(id) {
-  document.getElementById(`sp-${id}`)?.classList.toggle('open');
-}
-
-function waxChanged(id) {
-  const waxId = document.getElementById(`f-wax-${id}`).value;
-  const wax   = WAX.find(w => w.id === waxId);
-  if (wax) document.getElementById(`f-int-${id}`).value = wax.km;
-}
-
-function saveSettings(id) {
-  const waxId      = document.getElementById(`f-wax-${id}`).value;
-  const intervalKm = parseInt(document.getElementById(`f-int-${id}`).value) || 300;
-  const lastWaxDate= document.getElementById(`f-date-${id}`).value || null;
-  const kmAtLastWax= parseFloat(document.getElementById(`f-km-${id}`).value) || null;
-  const notes      = document.getElementById(`f-notes-${id}`).value || '';
-  saveS(id, { waxId, intervalKm, lastWaxDate, kmAtLastWax, notes });
-  renderAll();
-  toast('Settings saved ✓');
-}
-
-// ─── UTILS ────────────────────────────────────────────────────────────────────
-function esc(s) { return String(s).replace(/[<>"'&]/g, c => ({'<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;','&':'&amp;'}[c])); }
-function today() { return new Date().toISOString().slice(0, 10); }
-
-function showError(msg) {
-  const el = document.getElementById('error-banner');
-  el.textContent = '⚠ ' + msg;
-  el.classList.add('show');
-}
-function clearError() { document.getElementById('error-banner').classList.remove('show'); }
-
-let toastT;
-function toast(msg) {
-  const el = document.getElementById('toast');
-  el.textContent = msg; el.classList.add('show');
-  clearTimeout(toastT);
-  toastT = setTimeout(() => el.classList.remove('show'), 2600);
-}
-
-init();
+  // Not logged in
+  loadEl.style.display="none"; appEl.style.display="block";
+  showLogin();
+})();
 </script>
 </body>
 </html>
