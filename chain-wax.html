@@ -19,7 +19,6 @@
     .header .subtitle{font-family:var(--font-mono);font-size:11px;color:var(--text-muted);margin-top:2px}
     .badge{font-family:var(--font-mono);font-size:11px;padding:4px 10px;border-radius:20px;white-space:nowrap}
     .badge-on{background:var(--success-glow);color:var(--success);border:1px solid rgba(48,216,112,0.2)}
-    .badge-off{background:rgba(122,122,138,0.1);color:var(--text-muted);border:1px solid var(--border)}
     .nav{display:flex;gap:4px;margin-bottom:28px;background:var(--bg2);border-radius:10px;padding:4px;border:1px solid var(--border)}
     .nav button{flex:1;padding:9px 10px;border:none;border-radius:8px;font-family:var(--font-mono);font-size:11px;font-weight:500;cursor:pointer;transition:all 0.25s;background:transparent;color:var(--text-muted)}
     .nav button.active{background:var(--card);color:var(--accent);box-shadow:0 2px 8px rgba(0,0,0,0.3)}
@@ -39,7 +38,6 @@
     .stat-v{font-family:var(--font-mono);font-size:15px;font-weight:500}
     .alert{margin-top:20px;padding:14px 20px;border-radius:10px;font-family:var(--font-mono);font-size:13px;font-weight:500;text-align:center}
     .alert-danger{background:var(--danger-glow);border:1px solid rgba(240,72,72,0.25);color:var(--danger);animation:pulse 2s infinite}
-    .alert-success{background:var(--success-glow);border:1px solid rgba(48,216,112,0.2);color:var(--success)}
     @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.8}}
     .btn-row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px}
     .btn{padding:10px 20px;border-radius:8px;border:none;font-family:var(--font-mono);font-size:12px;font-weight:500;cursor:pointer;transition:all 0.2s;display:inline-flex;align-items:center;gap:6px}
@@ -92,15 +90,12 @@
     .loading-overlay{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:999;font-family:var(--font-mono);color:var(--accent);font-size:14px}
     .spinner{width:24px;height:24px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin 0.8s linear infinite;margin-right:12px}
     @keyframes spin{to{transform:rotate(360deg)}}
-
-    /* ── BIKE SELECTOR (new) ── */
     .bike-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:20px}
     .bike-tab{padding:7px 14px;border-radius:8px;border:1px solid var(--border);background:var(--bg2);color:var(--text-muted);font-family:var(--font-mono);font-size:11px;cursor:pointer;transition:all 0.2s;white-space:nowrap}
     .bike-tab:hover{border-color:var(--border-light);color:var(--text-dim)}
     .bike-tab.active{background:var(--accent-glow);border-color:rgba(240,160,48,0.4);color:var(--accent)}
-    .bike-km{font-family:var(--font-mono);font-size:10px;color:var(--text-muted);margin-left:4px}
-
-    @media(max-width:480px){.header{flex-direction:column;align-items:flex-start;gap:12px}.stats{grid-template-columns:1fr}.btn-row{flex-direction:column}.btn{width:100%;justify-content:center}.frow{flex-direction:column;gap:0}.bike-tabs{gap:4px}}
+    .bike-tab .bkm{font-size:10px;opacity:0.7;margin-left:4px}
+    @media(max-width:480px){.header{flex-direction:column;align-items:flex-start;gap:12px}.stats{grid-template-columns:1fr}.btn-row{flex-direction:column}.btn{width:100%;justify-content:center}.frow{flex-direction:column;gap:0}}
     ::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
   </style>
 </head>
@@ -152,10 +147,7 @@
 
     <!-- DASHBOARD -->
     <div id="v-dashboard" class="view">
-
-      <!-- BIKE SELECTOR (new) -->
-      <div id="bikeTabs" class="bike-tabs hidden"></div>
-
+      <div id="bikeTabs" class="bike-tabs" style="display:none"></div>
       <div id="emptyState" class="card hidden">
         <div class="hero">
           <div class="icon">🔧</div>
@@ -210,15 +202,14 @@
     <div id="v-settings" class="view hidden">
       <div class="card">
         <div class="card-title">Wax Settings</div>
-        <!-- Bike selector in settings (new) -->
         <div class="fg" id="settingsBikeRow" style="display:none">
           <label class="fl">Bike</label>
           <select class="fi" id="settingsBikeSelect" onchange="switchBike(this.value)"></select>
         </div>
         <div class="fg"><label class="fl">Last Wax Date</label><input class="fi" type="date" id="cfgDate"></div>
         <div class="fg"><label class="fl">Target Distance Per Wax</label><div class="fsuf"><input class="fi" type="number" id="cfgKm" min="50" step="50"><span>km</span></div></div>
-     <div class="fhint"><strong>Tip:</strong> Most chain wax treatments last 200–500 km. Dry = longer. Wet/muddy = re-wax sooner.</div>
-<button class="btn btn-accent" style="margin-top:16px" onclick="saveCfg()">Save Settings</button>
+        <div class="fhint"><strong>Tip:</strong> Most chain wax treatments last 200–500 km. Dry = longer. Wet/muddy = re-wax sooner.</div>
+        <button class="btn btn-accent" style="margin-top:16px" onclick="saveCfg()">Save Settings</button>
       </div>
       <div class="card">
         <div class="card-title">Wax History</div>
@@ -229,37 +220,32 @@
 </div>
 
 <script>
-// ══════════════════════════════════════════════════════════
-//  *** ENTER YOUR STRAVA CREDENTIALS HERE ***
-// ══════════════════════════════════════════════════════════
 var STRAVA_CLIENT_ID     = "202550";
 var STRAVA_CLIENT_SECRET = "28a52c20e5aa595af90ed7477e8cd1443f00de5a";
-// ══════════════════════════════════════════════════════════
 
-var BASE = window.location.origin;
+var BASE     = window.location.origin;
 var CALLBACK = BASE + "/strava-callback.html";
 
-// App state
-var athlete   = null;
-var strava    = null;
-var binId     = null;
-var bikes     = [];          // ← NEW: [{id,name,totalKm,frameType}]
-var activeBikeId = null;     // ← NEW: currently selected bike id
+// ── State ─────────────────────────────────────────────────
+// cfg/rides/waxHistory are always the ACTIVE bike's data.
+// bikeData stores a copy per bike so we can switch between them.
+var athlete      = null;
+var strava       = null;
+var binId        = null;
+var bikes        = [];        // [{id, name, totalKm}]
+var activeBikeId = null;
+var bikeData     = {};        // bikeData[id] = {cfg, rides, waxHistory}
 
-// Per-bike data — keyed by bike id
-// bikeData[id] = { cfg:{waxDate,targetKm}, rides:[], waxHistory:[] }
-var bikeData  = {};
-
-// Legacy single-bike fallback (kept for backward compat on load)
+// These three are what the entire app reads/writes directly — same as original
 var cfg        = { waxDate: "", targetKm: 300 };
 var rides      = [];
 var waxHistory = [];
 
-// ── Helpers ──────────────────────────────────────────────
-var fmt      = function(n){ return Math.round(n*10)/10; };
-var dateStr  = function(d){ return new Date(d).toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"}); };
-var shortDate= function(d){ return new Date(d).toLocaleDateString("en-GB",{day:"2-digit",month:"2-digit"}); };
-var esc      = function(s){ var d=document.createElement("div"); d.textContent=s; return d.innerHTML; };
+// ── Helpers ───────────────────────────────────────────────
+var fmt       = function(n){ return Math.round(n*10)/10; };
+var dateStr   = function(d){ return new Date(d).toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"}); };
+var shortDate = function(d){ return new Date(d).toLocaleDateString("en-GB",{day:"2-digit",month:"2-digit"}); };
+var esc       = function(s){ var d=document.createElement("div"); d.textContent=s; return d.innerHTML; };
 
 function toast(msg,type){
   var el=document.createElement("div"); el.className="toast toast-"+(type||"info"); el.textContent=msg;
@@ -267,90 +253,97 @@ function toast(msg,type){
   setTimeout(function(){el.style.opacity="0";el.style.transition="opacity 0.3s";setTimeout(function(){el.remove();},300);},3000);
 }
 
-// ── Active bike data accessors ────────────────────────────
-function getActiveBikeData(){
-  if(!activeBikeId) return {cfg:cfg, rides:rides, waxHistory:waxHistory};
-  if(!bikeData[activeBikeId]) bikeData[activeBikeId]={cfg:{waxDate:"",targetKm:300},rides:[],waxHistory:[]};
-  return bikeData[activeBikeId];
-}
-function getActiveCfg(){ return getActiveBikeData().cfg; }
-function getrides(){ return getActiveBikeData().rides; }
-function getwaxHistory(){ return getActiveBikeData().waxHistory; }
-
-function setActiveCfg(c){ getActiveBikeData().cfg=c; syncLegacy(); }
-function setrides(r){ getActiveBikeData().rides=r; syncLegacy(); }
-function setwaxHistory(h){ getActiveBikeData().waxHistory=h; syncLegacy(); }
-
-// Keep legacy vars in sync with active bike for any code that still reads them directly
-function syncLegacy(){
-  var d=getActiveBikeData(); cfg=d.cfg; rides=d.rides; waxHistory=d.waxHistory;
+// ── Bike data helpers ─────────────────────────────────────
+// Copy the active bike's saved data into the global cfg/rides/waxHistory
+function loadActiveBike(){
+  if(!activeBikeId) return;
+  if(!bikeData[activeBikeId]){
+    bikeData[activeBikeId] = { cfg:{waxDate:"",targetKm:300}, rides:[], waxHistory:[] };
+  }
+  // Assign directly — these ARE the globals the app uses
+  cfg        = bikeData[activeBikeId].cfg;
+  rides      = bikeData[activeBikeId].rides;
+  waxHistory = bikeData[activeBikeId].waxHistory;
 }
 
-// ── Switch active bike ────────────────────────────────────
+// Copy current globals back into bikeData before switching bikes or saving
+function snapshotActiveBike(){
+  if(!activeBikeId) return;
+  if(!bikeData[activeBikeId]) bikeData[activeBikeId] = {};
+  bikeData[activeBikeId].cfg        = cfg;
+  bikeData[activeBikeId].rides      = rides;
+  bikeData[activeBikeId].waxHistory = waxHistory;
+}
+
+// Switch to a different bike
 function switchBike(id){
+  snapshotActiveBike();   // save current state before leaving
   activeBikeId = id;
-  syncLegacy();
+  loadActiveBike();       // load new bike's data into globals
   renderBikeTabs();
-  // Also sync settings bike select
-  var sel=document.getElementById("settingsBikeSelect");
-  if(sel) sel.value=id;
+  var sel = document.getElementById("settingsBikeSelect");
+  if(sel) sel.value = id;
   render();
 }
 
 // ── SAVE / LOAD ───────────────────────────────────────────
 async function saveToCloud(){
+  snapshotActiveBike();
   var payload = { athlete:athlete, bikeData:bikeData, bikes:bikes, strava:strava,
-                  // legacy fields for old clients
                   config:cfg, rides:rides, waxHistory:waxHistory };
-  try {
-    var r = await fetch("/api/strava",{
-      method:"POST", headers:{"Content-Type":"application/json"},
-      body: JSON.stringify({ action:"save", bin_id:binId, athlete_id:athlete.id, data:payload })
-    });
+  try{
+    var r = await fetch("/api/strava",{method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({action:"save",bin_id:binId,athlete_id:athlete.id,data:payload})});
     var d = await r.json();
-    if(d.bin_id && !binId){
-      binId = d.bin_id;
-      localStorage.setItem("chainwax_bin_"+athlete.id, binId);
-    }
-  } catch(e){ console.error("Save failed:",e); }
+    if(d.bin_id && !binId){ binId=d.bin_id; localStorage.setItem("chainwax_bin_"+athlete.id,binId); }
+  }catch(e){ console.error("Save failed:",e); }
 }
 
-async function loadFromCloud(aid, bid){
-  try {
-    var r = await fetch("/api/strava",{
-      method:"POST", headers:{"Content-Type":"application/json"},
-      body: JSON.stringify({ action:"load", bin_id:bid })
-    });
+async function loadFromCloud(aid,bid){
+  try{
+    var r = await fetch("/api/strava",{method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({action:"load",bin_id:bid})});
     var d = await r.json();
     if(d.data){
-      if(d.data.athlete)    athlete   = d.data.athlete;
-      if(d.data.bikeData)   bikeData  = d.data.bikeData;
-      if(d.data.bikes)      bikes     = d.data.bikes;
-      if(d.data.strava)     strava    = d.data.strava;
-      // legacy fallback
-      if(!d.data.bikeData){
-        if(d.data.config)     cfg       = d.data.config;
-        if(d.data.rides)      rides     = d.data.rides;
-        if(d.data.waxHistory) waxHistory= d.data.waxHistory;
+      if(d.data.athlete)  athlete  = d.data.athlete;
+      if(d.data.bikeData) bikeData = d.data.bikeData;
+      if(d.data.bikes)    bikes    = d.data.bikes;
+      if(d.data.strava)   strava   = d.data.strava;
+      // Legacy: seed bikeData from old flat structure
+      if(!d.data.bikeData && activeBikeId){
+        bikeData[activeBikeId] = {
+          cfg:       d.data.config     || {waxDate:"",targetKm:300},
+          rides:     d.data.rides      || [],
+          waxHistory:d.data.waxHistory || []
+        };
       }
       return true;
     }
-  } catch(e){ console.error("Load failed:",e); }
+  }catch(e){ console.error("Load failed:",e); }
   return false;
 }
 
 function saveLocal(){
-  try{ localStorage.setItem("chainwax_session", JSON.stringify({athlete:athlete,strava:strava,cfg:cfg,rides:rides,waxHistory:waxHistory,binId:binId,bikeData:bikeData,bikes:bikes,activeBikeId:activeBikeId})); }catch(e){}
+  snapshotActiveBike();
+  try{
+    localStorage.setItem("chainwax_session", JSON.stringify({
+      athlete:athlete, strava:strava, binId:binId,
+      bikes:bikes, activeBikeId:activeBikeId, bikeData:bikeData
+    }));
+  }catch(e){}
 }
+
 function loadLocal(){
   try{
-    var s=localStorage.getItem("chainwax_session");
+    var s = localStorage.getItem("chainwax_session");
     if(s){
-      var d=JSON.parse(s);
-      athlete=d.athlete; strava=d.strava;
-      cfg=d.cfg||cfg; rides=d.rides||[]; waxHistory=d.waxHistory||[];
-      binId=d.binId||null;
-      bikeData=d.bikeData||{}; bikes=d.bikes||[]; activeBikeId=d.activeBikeId||null;
+      var d = JSON.parse(s);
+      athlete=d.athlete||null; strava=d.strava||null; binId=d.binId||null;
+      bikes=d.bikes||[]; activeBikeId=d.activeBikeId||null; bikeData=d.bikeData||{};
+      // Legacy migration: old sessions stored cfg/rides/waxHistory at top level
+      if(!d.bikeData && d.cfg && activeBikeId){
+        bikeData[activeBikeId]={ cfg:d.cfg, rides:d.rides||[], waxHistory:d.waxHistory||[] };
+      }
       return !!athlete;
     }
   }catch(e){}
@@ -370,8 +363,9 @@ function connectStrava(){
 
 function logout(){
   localStorage.removeItem("chainwax_session");
-  athlete=null; strava=null; cfg={waxDate:"",targetKm:300};
-  rides=[]; waxHistory=[]; binId=null; bikes=[]; bikeData={}; activeBikeId=null;
+  athlete=null; strava=null; binId=null;
+  bikes=[]; activeBikeId=null; bikeData={};
+  cfg={waxDate:"",targetKm:300}; rides=[]; waxHistory=[];
   showLogin();
 }
 
@@ -395,66 +389,70 @@ function go(name){
     btn.classList.toggle("active",["dashboard","rides","settings"][i]===name);
   });
   if(name==="rides") document.getElementById("rDateIn").value=new Date().toISOString().split("T")[0];
+  if(name==="settings"){
+    // Populate settings inputs with current globals when opening settings
+    document.getElementById("cfgDate").value = cfg.waxDate || "";
+    document.getElementById("cfgKm").value   = cfg.targetKm || 300;
+  }
 }
 
-// ── BIKE TABS RENDER (new) ────────────────────────────────
+// ── BIKE TABS ─────────────────────────────────────────────
 function renderBikeTabs(){
-  var wrap=document.getElementById("bikeTabs");
-  if(!bikes||bikes.length<=1){ wrap.classList.add("hidden"); return; }
-  wrap.classList.remove("hidden");
-  wrap.innerHTML=bikes.map(function(b){
-    var active=b.id===activeBikeId?" active":"";
-    var kmLabel=b.totalKm>0?'<span class="bike-km">'+b.totalKm.toLocaleString()+' km</span>':'';
-    return '<button class="bike-tab'+active+'" onclick="switchBike(\''+b.id+'\')">'+esc(b.name)+kmLabel+'</button>';
+  var wrap = document.getElementById("bikeTabs");
+  var row  = document.getElementById("settingsBikeRow");
+  var sel  = document.getElementById("settingsBikeSelect");
+
+  if(!bikes || bikes.length <= 1){
+    wrap.style.display = "none";
+    row.style.display  = "none";
+    return;
+  }
+
+  wrap.style.display = "flex";
+  wrap.innerHTML = bikes.map(function(b){
+    var active = b.id === activeBikeId ? " active" : "";
+    var km = b.totalKm > 0 ? '<span class="bkm">'+b.totalKm.toLocaleString()+' km</span>' : '';
+    return '<button class="bike-tab'+active+'" onclick="switchBike(\''+b.id+'\')">'+esc(b.name)+km+'</button>';
+  }).join("");
+
+  row.style.display = "block";
+  sel.innerHTML = bikes.map(function(b){
+    return '<option value="'+b.id+'"'+(b.id===activeBikeId?" selected":"")+'>'+esc(b.name)+' ('+b.totalKm.toLocaleString()+' km)</option>';
   }).join("");
 }
 
 // ── FETCH BIKES FROM STRAVA ───────────────────────────────
 async function fetchBikes(token){
   try{
-    var r=await fetch("/api/strava",{method:"POST",headers:{"Content-Type":"application/json"},
+    var r = await fetch("/api/strava",{method:"POST",headers:{"Content-Type":"application/json"},
       body:JSON.stringify({action:"athlete",access_token:token})});
-    var d=await r.json();
+    var d = await r.json();
     if(d.bikes && d.bikes.length){
-      bikes=d.bikes.map(function(b){
-        return{
-          id:b.id,
-          name:b.nickname||b.name||"Bike",
-          totalKm:Math.round((b.distance||0)/1000),
-          frameType:b.frame_type
-        };
+      bikes = d.bikes.map(function(b){
+        return{ id:b.id, name:b.nickname||b.name||"Bike", totalKm:Math.round((b.distance||0)/1000) };
       });
-      // Set active bike if not set or if current id no longer exists
-      if(!activeBikeId||!bikes.find(function(b){return b.id===activeBikeId;})){
-        activeBikeId=bikes[0].id;
+      if(!activeBikeId || !bikes.find(function(b){return b.id===activeBikeId;})){
+        activeBikeId = bikes[0].id;
       }
-      syncLegacy();
-      // Build settings bike select
-      renderSettingsBikeSelect();
+      loadActiveBike();
     }
   }catch(e){ console.error("fetchBikes failed:",e); }
-}
-
-function renderSettingsBikeSelect(){
-  var row=document.getElementById("settingsBikeRow");
-  var sel=document.getElementById("settingsBikeSelect");
-  if(!bikes||bikes.length<=1){ row.style.display="none"; return; }
-  row.style.display="block";
-  sel.innerHTML=bikes.map(function(b){
-    return '<option value="'+b.id+'"'+(b.id===activeBikeId?" selected":"")+'>'+esc(b.name)+' ('+b.totalKm.toLocaleString()+' km total)</option>';
-  }).join("");
 }
 
 // ── TOKEN ─────────────────────────────────────────────────
 async function getToken(){
   if(!strava) return null;
-  var now=Math.floor(Date.now()/1000);
-  if(now<strava.expiresAt-60) return strava.accessToken;
+  var now = Math.floor(Date.now()/1000);
+  if(now < strava.expiresAt-60) return strava.accessToken;
   try{
-    var resp=await fetch("/api/strava",{ method:"POST", headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({action:"token",client_id:STRAVA_CLIENT_ID,client_secret:STRAVA_CLIENT_SECRET,refresh_token:strava.refreshToken,grant_type:"refresh_token"})});
-    var d=await resp.json();
-    if(d.access_token){ strava.accessToken=d.access_token; strava.refreshToken=d.refresh_token; strava.expiresAt=d.expires_at; await saveAll(); return d.access_token; }
+    var resp = await fetch("/api/strava",{method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({action:"token",client_id:STRAVA_CLIENT_ID,client_secret:STRAVA_CLIENT_SECRET,
+        refresh_token:strava.refreshToken,grant_type:"refresh_token"})});
+    var d = await resp.json();
+    if(d.access_token){
+      strava.accessToken=d.access_token; strava.refreshToken=d.refresh_token; strava.expiresAt=d.expires_at;
+      await saveAll(); return d.access_token;
+    }
   }catch(e){console.error(e);}
   return null;
 }
@@ -462,50 +460,37 @@ async function getToken(){
 // ── SYNC STRAVA ───────────────────────────────────────────
 async function syncStrava(){
   if(!strava){toast("Not connected","err");return;}
-  var activeCfg=getActiveCfg();
   if(!cfg.waxDate){toast("Set a wax date first in Settings","err");return;}
   var btn=document.getElementById("bSync"); btn.disabled=true; btn.textContent="⏳ Syncing...";
   try{
-    var token=await getToken(); if(!token) throw new Error("Token expired. Reconnect.");
-
-    // Refresh bike totals while we have a token
+    var token = await getToken(); if(!token) throw new Error("Token expired. Please reconnect.");
     await fetchBikes(token);
-
-    var after=Math.floor(new Date(cfg.waxDate).getTime()/1000);
+    var after = Math.floor(new Date(cfg.waxDate).getTime()/1000);
     var pg=1, all=[];
     while(true){
-      var r=await fetch("/api/strava",{method:"POST",headers:{"Content-Type":"application/json"},
+      var r = await fetch("/api/strava",{method:"POST",headers:{"Content-Type":"application/json"},
         body:JSON.stringify({action:"activities",access_token:token,after:after,page:pg})});
-      var acts=await r.json();
+      var acts = await r.json();
       if(!Array.isArray(acts)||acts.length===0) break;
       all=all.concat(acts); pg++;
     }
-
-    // Filter rides for the active bike if possible (gear_id matches)
-    var bikeRides=all.filter(function(a){
-      var isRide=a.type==="Ride"||a.type==="VirtualRide"||a.type==="EBikeRide";
+    var bikeRides = all.filter(function(a){
+      var isRide = a.type==="Ride"||a.type==="VirtualRide"||a.type==="EBikeRide";
       if(!isRide) return false;
-      // If we know the active bike, filter by gear_id
       if(activeBikeId && a.gear_id) return a.gear_id===activeBikeId;
-      return true; // no gear data, include all
+      return true;
     }).map(function(a){
-      return{id:"strava_"+a.id,name:a.name,distance:a.distance/1000,date:a.start_date_local||a.start_date,source:"strava"};
+      return{id:"strava_"+a.id,name:a.name,distance:a.distance/1000,
+             date:a.start_date_local||a.start_date,source:"strava"};
     });
-
-    var manual=getrides().filter(function(r){return r.source!=="strava";});
-    setrides(manual.concat(bikeRides).sort(function(a,b){return new Date(a.date)-new Date(b.date);}));
+    var manual = rides.filter(function(r){return r.source!=="strava";});
+    rides = manual.concat(bikeRides).sort(function(a,b){return new Date(a.date)-new Date(b.date);});
+    var bname = activeBikeId ? (bikes.find(function(b){return b.id===activeBikeId;})||{name:"bike"}).name : "bike";
     await saveAll();
-    toast("Synced "+bikeRides.length+" ride"+(bikeRides.length!==1?"s":"")+" for "+getActiveBikeName(),"ok");
+    toast("Synced "+bikeRides.length+" ride"+(bikeRides.length!==1?"s":"")+" for "+bname,"ok");
   }catch(e){toast("Sync failed: "+e.message,"err");}
   btn.disabled=false; btn.textContent="↻ Sync Strava";
-  renderBikeTabs();
-  render();
-}
-
-function getActiveBikeName(){
-  if(!activeBikeId||!bikes.length) return "your bike";
-  var b=bikes.find(function(b){return b.id===activeBikeId;});
-  return b?b.name:"your bike";
+  renderBikeTabs(); render();
 }
 
 // ── RIDES ─────────────────────────────────────────────────
@@ -514,76 +499,70 @@ async function addRide(){
   var dist=parseFloat(document.getElementById("rDist").value);
   var date=document.getElementById("rDateIn").value;
   if(!name||!dist||!date){toast("Fill all fields","err");return;}
-  var r=getrides().slice();
-  r.push({id:"m_"+Date.now(),name:name,distance:dist,date:date,source:"manual"});
-  r.sort(function(a,b){return new Date(a.date)-new Date(b.date);});
-  setrides(r);
+  rides.push({id:"m_"+Date.now(),name:name,distance:dist,date:date,source:"manual"});
+  rides.sort(function(a,b){return new Date(a.date)-new Date(b.date);});
   await saveAll();
   document.getElementById("rName").value=""; document.getElementById("rDist").value="";
   toast("Ride added","ok"); render();
 }
 
 async function delRide(id){
-  setrides(getrides().filter(function(r){return r.id!==id;}));
+  rides=rides.filter(function(r){return r.id!==id;});
   await saveAll(); render();
 }
 
 async function reWax(){
-  if(!confirm("Start a fresh wax cycle for "+getActiveBikeName()+"? Current rides will be archived.")) return;
-  var r=getrides();
-  var totalKm=r.reduce(function(s,x){return s+x.distance;},0);
-  var activeCfg=getActiveCfg();
-  var h=getwaxHistory().slice();
+  var bname = activeBikeId ? (bikes.find(function(b){return b.id===activeBikeId;})||{name:"your bike"}).name : "your bike";
+  if(!confirm("Start a fresh wax cycle for "+bname+"? Current rides will be archived.")) return;
+  var totalKm=rides.reduce(function(s,r){return s+r.distance;},0);
   if(cfg.waxDate){
-    h.push({waxDate:cfg.waxDate,targetKm:cfg.targetKm,totalKm:fmt(totalKm),rideCount:r.length,endDate:new Date().toISOString().split("T")[0]});
+    waxHistory.push({waxDate:cfg.waxDate,targetKm:cfg.targetKm,totalKm:fmt(totalKm),
+      rideCount:rides.length,endDate:new Date().toISOString().split("T")[0]});
   }
-  setwaxHistory(h);
-  setActiveCfg({waxDate:new Date().toISOString().split("T")[0],targetKm:cfg.targetKm||300});
-  setrides([]);
+  cfg.waxDate=new Date().toISOString().split("T")[0]; rides=[];
   await saveAll(); toast("Chain waxed! Fresh cycle started.","ok"); render();
 }
 
+// saveCfg reads from inputs, writes directly to globals, then saves.
+// render() does NOT touch the settings inputs — they are only written here.
 async function saveCfg(){
   var dateVal = document.getElementById("cfgDate").value;
-  var kmVal = parseInt(document.getElementById("cfgKm").value)||300;
+  var kmVal   = parseInt(document.getElementById("cfgKm").value)||300;
   if(!dateVal){ toast("Please select a date","err"); return; }
-  setActiveCfg({ waxDate: dateVal, targetKm: kmVal });
+  cfg.waxDate  = dateVal;
+  cfg.targetKm = kmVal;
   await saveAll();
-  // Re-set the input explicitly after render to prevent browser reset
-  render();
-  document.getElementById("cfgDate").value = dateVal;
-  document.getElementById("cfgKm").value = kmVal;
   toast("Settings saved","ok");
+  render();
 }
 
 // ── RENDER ────────────────────────────────────────────────
+// IMPORTANT: render() never touches cfgDate or cfgKm inputs.
+// Those are only written by go('settings') and saveCfg().
 function render(){
-var hasWax=!!cfg.waxDate;
-
-  document.getElementById("emptyState").classList.toggle("hidden",hasWax);
-  document.getElementById("mainDash").classList.toggle("hidden",!hasWax);
-  document.getElementById("cfgDate").value=cfg.waxDate||"";
-  document.getElementById("cfgKm").value=cfg.targetKm||300;
-
+  var hasWax = !!cfg.waxDate;
+  document.getElementById("emptyState").classList.toggle("hidden", hasWax);
+  document.getElementById("mainDash").classList.toggle("hidden", !hasWax);
   renderBikeTabs();
+  if(!hasWax) return;
 
-  var totalKm=rides.reduce(function(s,r){return s+r.distance;},0);
-  var remaining=Math.max(0,cfg.targetKm-totalKm);
-  var pct=cfg.targetKm>0?Math.min((totalKm/cfg.targetKm)*100,100):0;
-  var overdue=totalKm>=cfg.targetKm;
+  var totalKm   = rides.reduce(function(s,r){return s+r.distance;},0);
+  var remaining = Math.max(0, cfg.targetKm - totalKm);
+  var pct       = cfg.targetKm>0 ? Math.min((totalKm/cfg.targetKm)*100,100) : 0;
+  var overdue   = totalKm >= cfg.targetKm;
   var circ=2*Math.PI*88, off=circ-(pct/100)*circ;
   var gFg=document.getElementById("gFg");
   var col=pct>85?"var(--danger)":pct>60?"var(--accent)":"var(--success)";
   gFg.style.strokeDashoffset=off; gFg.style.stroke=col; gFg.style.filter="drop-shadow(0 0 8px "+col+")";
-  var gVal=document.getElementById("gVal"); gVal.textContent=fmt(remaining);
-  gVal.style.color=overdue?"var(--danger)":"var(--text)";
-  document.getElementById("sWax").textContent=hasWax?dateStr(cfg.waxDate):"—";
+  document.getElementById("gVal").textContent=fmt(remaining);
+  document.getElementById("gVal").style.color=overdue?"var(--danger)":"var(--text)";
+  document.getElementById("sWax").textContent=dateStr(cfg.waxDate);
   document.getElementById("sRid").textContent=fmt(totalKm)+" km";
   document.getElementById("sTgt").textContent=cfg.targetKm+" km";
   document.getElementById("alertWax").classList.toggle("hidden",!overdue);
 
   var est=document.getElementById("estPill");
-  if(hasWax&&rides.length>0&&remaining>0){
+  if(rides.length>0&&remaining>0){
     var days=Math.max(1,(Date.now()-new Date(cfg.waxDate).getTime())/86400000);
     var avg=totalKm/days;
     if(avg>0){var left=Math.ceil(remaining/avg);est.textContent="≈ "+left+" day"+(left!==1?"s":"")+" until re-wax";est.classList.remove("hidden");}
@@ -605,8 +584,9 @@ var hasWax=!!cfg.waxDate;
   if(waxHistory.length===0){wh.textContent="No previous wax cycles.";}
   else{
     wh.innerHTML=waxHistory.slice().reverse().map(function(h){
-      return '<div style="padding:8px 0;border-bottom:1px solid var(--border)"><span style="color:var(--accent)">'+dateStr(h.waxDate)+'</span> → '+dateStr(h.endDate)+
-        ' — '+h.totalKm+' km over '+h.rideCount+' ride'+(h.rideCount!==1?'s':'')+'</div>';
+      return '<div style="padding:8px 0;border-bottom:1px solid var(--border)"><span style="color:var(--accent)">'+
+        dateStr(h.waxDate)+'</span> → '+dateStr(h.endDate)+' — '+h.totalKm+' km over '+h.rideCount+
+        ' ride'+(h.rideCount!==1?'s':'')+'</div>';
     }).join("");
   }
 }
@@ -616,8 +596,8 @@ var hasWax=!!cfg.waxDate;
   var loadEl=document.getElementById("loadingScreen");
   var appEl=document.getElementById("appWrap");
 
-  // Check if returning from Strava OAuth
-  var stravaRaw = localStorage.getItem("chainwax_strava");
+  // Returning from Strava OAuth callback
+  var stravaRaw=localStorage.getItem("chainwax_strava");
   if(stravaRaw){
     try{
       var sd=JSON.parse(stravaRaw);
@@ -625,37 +605,31 @@ var hasWax=!!cfg.waxDate;
         athlete=sd.athlete;
         strava={accessToken:sd.accessToken,refreshToken:sd.refreshToken,expiresAt:sd.expiresAt};
         localStorage.removeItem("chainwax_strava");
-
-        var existingBin = localStorage.getItem("chainwax_bin_"+athlete.id);
-        if(existingBin){
-          binId=existingBin;
-          await loadFromCloud(athlete.id, binId);
-          strava={accessToken:sd.accessToken,refreshToken:sd.refreshToken,expiresAt:sd.expiresAt};
-        }
-
-        // Fetch bikes on first login
+        var existingBin=localStorage.getItem("chainwax_bin_"+athlete.id);
+        if(existingBin){ binId=existingBin; await loadFromCloud(athlete.id,binId); }
+        // Keep fresh tokens after cloud load
+        strava={accessToken:sd.accessToken,refreshToken:sd.refreshToken,expiresAt:sd.expiresAt};
         await fetchBikes(sd.accessToken);
         await saveAll();
         loadEl.style.display="none"; appEl.style.display="block";
-        showApp();
-        return;
+        showApp(); return;
       }
-    }catch(e){}
+    }catch(e){ console.error(e); }
   }
 
-  // Try loading from localStorage cache
+  // Restore from local cache
   if(loadLocal() && athlete){
-    if(binId) await loadFromCloud(athlete.id, binId);
-    // If we have a token, refresh bike totals silently
-    if(strava){
-      getToken().then(function(tok){ if(tok) fetchBikes(tok).then(function(){ renderBikeTabs(); renderSettingsBikeSelect(); saveLocal(); }); });
-    }
-    // Set active bike if not set
+    if(binId) await loadFromCloud(athlete.id,binId);
     if(!activeBikeId && bikes.length) activeBikeId=bikes[0].id;
-    syncLegacy();
+    loadActiveBike();
+    // Silently refresh bike km totals in background
+    if(strava){
+      getToken().then(function(tok){
+        if(tok) fetchBikes(tok).then(function(){ renderBikeTabs(); saveLocal(); });
+      });
+    }
     loadEl.style.display="none"; appEl.style.display="block";
-    showApp();
-    return;
+    showApp(); return;
   }
 
   // Not logged in
