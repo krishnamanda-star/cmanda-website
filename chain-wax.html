@@ -434,18 +434,32 @@ function renderBikeTabs(){
 // ── FETCH BIKES FROM STRAVA ───────────────────────────────
 async function fetchBikes(token){
   try{
+    // Get gear IDs from recent activities
     var r = await fetch("/api/strava",{method:"POST",headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({action:"athlete",access_token:token})});
-    var d = await r.json();
-    if(d.bikes && d.bikes.length){
-      bikes = d.bikes.map(function(b){
-        return{ id:b.id, name:b.nickname||b.name||"Bike", totalKm:Math.round((b.distance||0)/1000) };
-      });
-      if(!activeBikeId || !bikes.find(function(b){return b.id===activeBikeId;})){
-        activeBikeId = bikes[0].id;
-      }
-      loadActiveBike();
+      body:JSON.stringify({action:"activities",access_token:token,after:0,page:1})});
+    var acts = await r.json();
+    if(!Array.isArray(acts)) return;
+
+    // Collect unique gear IDs
+    var gearIds = [];
+    acts.forEach(function(a){
+      if(a.gear_id && gearIds.indexOf(a.gear_id) === -1) gearIds.push(a.gear_id);
+    });
+
+    // Fetch each gear
+    var fetched = await Promise.all(gearIds.map(function(gid){
+      return fetch("/api/strava",{method:"POST",headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({action:"gear",gear_id:gid,access_token:token})}).then(function(r){return r.json();});
+    }));
+
+    bikes = fetched.filter(function(b){return b && b.id;}).map(function(b){
+      return{ id:b.id, name:b.nickname||b.name||"Bike", totalKm:Math.round((b.distance||0)/1000) };
+    });
+
+    if(!activeBikeId || !bikes.find(function(b){return b.id===activeBikeId;})){
+      activeBikeId = bikes[0] ? bikes[0].id : null;
     }
+    loadActiveBike();
   }catch(e){ console.error("fetchBikes failed:",e); }
 }
 
