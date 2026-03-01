@@ -1368,9 +1368,11 @@ async function syncStrava(){
 
     // If bikeData is empty (new device), try loading existing service history from cloud
     // before saving — prevents wiping Mac data with empty iPhone state
-    var bikeDataEmpty=Object.keys(bikeData).length===0||
-      Object.values(bikeData).every(function(bd){ return Object.keys(bd.items||{}).length===0; });
-    if(bikeDataEmpty&&athlete){
+    // Check if any item has actual service history recorded
+    var hasAnyHistory=Object.values(bikeData).some(function(bd){
+      return Object.values(bd.items||{}).some(function(it){ return it.lastDate!=null; });
+    });
+    if(!hasAnyHistory&&athlete){
       dbg("bikeData empty — loading cloud history before save...","warn");
       try{
         var cr=await fetch("/api/strava",{method:"POST",headers:{"Content-Type":"application/json"},
