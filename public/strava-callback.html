@@ -1,189 +1,30 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Connecting to Strava…</title>
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Strava Callback</title></head>
+<body><div id="msg">Loading...</div>
+<script>
+(function() {
+  var params = new URLSearchParams(window.location.search);
+  var code = params.get('code');
+  var clientId = localStorage.getItem('chainwax_client_id') || '';
+  var clientSecret = localStorage.getItem('chainwax_client_secret') || '';
+  document.getElementById('msg').textContent = 'code=' + (code ? code.substr(0,10) : 'NONE') + ' clientId=' + (clientId || 'MISSING');
 
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      background: #f8f9fa;
-      display: flex;
-      align-items: center;f
-      justify-content: center;
-      min-height: 100vh;
+  if (!code || !clientId) { document.getElementById('msg').textContent += ' — MISSING DATA'; return; }
+
+  fetch('/api/strava', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action: 'token', code: code, client_id: clientId, client_secret: clientSecret, grant_type: 'authorization_code' })
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    document.getElementById('msg').textContent = JSON.stringify(data).substr(0, 300);
+    if (data.access_token) {
+      localStorage.setItem('chainwax_strava', JSON.stringify({ accessToken: data.access_token, refreshToken: data.refresh_token, expiresAt: data.expires_at, athlete: data.athlete }));
+      var returnTo = localStorage.getItem('strava_return_to') || '/chain-wax.html';
+      localStorage.removeItem('strava_return_to');
+      setTimeout(function() { window.location.href = returnTo; }, 1500);
     }
-
-    .card {
-      background: #fff;
-      border-radius: 16px;
-      box-shadow: 0 4px 24px rgba(0,0,0,0.10);
-      padding: 48px 40px;
-      text-align: center;
-      max-width: 380px;
-      width: 90%;
-    }
-
-    .logo {
-      width: 56px;
-      height: 56px;
-      margin: 0 auto 24px;
-    }
-
-    h1 {
-      font-size: 20px;
-      font-weight: 700;
-      color: #1a1a1a;
-      margin-bottom: 10px;
-    }
-
-    p {
-      font-size: 14px;
-      color: #666;
-      line-height: 1.5;
-    }
-
-    .spinner {
-      width: 36px;
-      height: 36px;
-      border: 3px solid #e8e8e8;
-      border-top-color: #fc4c02;
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-      margin: 24px auto 0;
-    }
-
-    @keyframes spin { to { transform: rotate(360deg); } }
-
-    .error {
-      background: #fff5f5;
-      border: 1px solid #fed7d7;
-      border-radius: 8px;
-      padding: 16px;
-      margin-top: 20px;
-      font-size: 13px;
-      color: #c53030;
-      text-align: left;
-      display: none;
-    }
-
-    .success-icon {
-      font-size: 48px;
-      display: none;
-      margin-bottom: 16px;
-    }
-  </style>
-</head>
-<body>
-  <div class="card">
-    <svg class="logo" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <circle cx="32" cy="32" r="32" fill="#FC4C02"/>
-      <path d="M28 44l8-16 8 16" fill="none" stroke="#fff" stroke-width="4" stroke-linejoin="round"/>
-      <path d="M20 44l8-16" fill="none" stroke="#fff" stroke-width="4" stroke-linejoin="round" opacity="0.6"/>
-    </svg>
-
-    <div class="success-icon" id="successIcon">✓</div>
-
-    <h1 id="title">Connecting to Strava…</h1>
-    <p id="subtitle">Exchanging authorization code for access token. This only takes a moment.</p>
-
-    <div class="spinner" id="spinner"></div>
-    <div class="error" id="errorBox"></div>
-  </div>
-
-  <script>
-    (async function () {
-      const params      = new URLSearchParams(window.location.search);
-      const code        = params.get("code");
-      const errorParam  = params.get("error");
-
-      const titleEl     = document.getElementById("title");
-      const subtitleEl  = document.getElementById("subtitle");
-      const spinnerEl   = document.getElementById("spinner");
-      const errorBox    = document.getElementById("errorBox");
-      const successIcon = document.getElementById("successIcon");
-
-      function showError(msg) {
-        spinnerEl.style.display = "none";
-        errorBox.style.display  = "block";
-        errorBox.textContent    = msg;
-        titleEl.textContent     = "Connection failed";
-        subtitleEl.textContent  = "Please close this page and try connecting again.";
-      }
-
-      function showSuccess() {
-        spinnerEl.style.display   = "none";
-        successIcon.style.display = "block";
-        titleEl.textContent       = "Connected!";
-        subtitleEl.textContent    = "Strava connected successfully. Redirecting you back…";
-      }
-
-      if (errorParam) {
-        showError(`Strava returned an error: ${errorParam}. Please try again.`);
-        return;
-      }
-
-      if (!code) {
-        showError("No authorization code received from Strava. Please try again.");
-        return;
-      }
-
-      try {
-        const res = await fetch("/api/strava", {
-          method:  "POST",
-          headers: { "Content-Type": "application/json" },
-const clientId     = localStorage.getItem("chainwax_client_id");
-const clientSecret = localStorage.getItem("chainwax_client_secret");
-
-const res = await fetch("/api/strava", {
-  method:  "POST",
-  headers: { "Content-Type": "application/json" },
-  body:    JSON.stringify({
-    action:        "token",
-    code:          code,
-    client_id:     clientId,
-    client_secret: clientSecret,
-    grant_type:    "authorization_code",
-  }),
-});
-        });
-
-        if (!res.ok) {
-          const text = await res.text();
-          throw new Error(`Server error ${res.status}: ${text}`);
-        }
-
-        const data = await res.json();
-
-        if (data.error) {
-          throw new Error(data.error);
-        }
-
-        // camelCase keys — matches what bike-maintenance.html and chain-wax.html both read
-        localStorage.setItem("chainwax_strava", JSON.stringify({
-          accessToken:  data.access_token,
-          refreshToken: data.refresh_token,
-          expiresAt:    data.expires_at,
-          athlete:      data.athlete,
-        }));
-
-        // Return to whichever page started the OAuth flow, fallback to chain-wax
-        const returnTo = localStorage.getItem("strava_return_to") || "/chain-wax.html";
-        localStorage.removeItem("strava_return_to");
-
-        showSuccess();
-
-        setTimeout(() => {
-          window.location.href = returnTo;
-        }, 900);
-
-      } catch (err) {
-        console.error("[strava-callback] Token exchange failed:", err);
-        showError(err.message || "An unexpected error occurred. Please try again.");
-      }
-    })();
-  </script>
-</body>
-</html>
+  })
+  .catch(function(e) { document.getElementById('msg').textContent = 'ERROR: ' + e.message; });
+})();
+</script></body></html>
