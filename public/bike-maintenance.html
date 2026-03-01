@@ -1399,6 +1399,28 @@ async function syncStrava(){
 // ── Persistence ───────────────────────────────────────────────────────────────
 async function saveToCloud(){
   if(!athlete) return;
+  // If we don't have a binId yet, check the lookup first before creating a new bin
+  // This prevents a new device from creating a duplicate bin and overwriting the lookup
+  if(!binId){
+    try{
+      var lr=await fetch("/api/strava",{method:"POST",headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({action:"load",athlete_id:athlete.id})});
+      var ld=await lr.json();
+      if(ld.bin_id){
+        binId=ld.bin_id;
+        localStorage.setItem("bikemaint_bin_"+athlete.id,binId);
+        // Also merge any existing bikeData from cloud with current (prefer cloud history)
+        if(ld.data&&ld.data.bikeData){
+          Object.keys(ld.data.bikeData).forEach(function(bk){
+            if(!bikeData[bk]||Object.keys(bikeData[bk].items||{}).every(function(ik){ return !(bikeData[bk].items[ik].history||[]).length; })){
+              bikeData[bk]=ld.data.bikeData[bk];
+            }
+          });
+        }
+        dbg("saveToCloud: found existing bin "+binId+" — using it instead of creating new","label");
+      }
+    }catch(e){ dbg("saveToCloud lookup failed: "+e.message,"warn"); }
+  }
   var payload={athlete:athlete,strava:strava,bikes:bikes,activeBikeId:activeBikeId,bikeData:bikeData,lastSyncTs:lastSyncTs};
   try{
     var r=await fetch("/api/strava",{method:"POST",headers:{"Content-Type":"application/json"},
