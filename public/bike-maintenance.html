@@ -8,125 +8,172 @@
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Sora:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root {
-  --bg:#0a0a0b; --bg2:#111113; --card:#16161a; --border:#252530; --border-l:#32323e;
-  --accent:#f0a030; --accent-dim:#c88020; --accent-glow:rgba(240,160,48,0.12);
-  --danger:#f04848; --danger-glow:rgba(240,72,72,0.12);
-  --warn:#f5a623; --warn-glow:rgba(245,166,35,0.12);
-  --success:#30d870; --success-glow:rgba(48,216,112,0.12);
-  --text:#eaeaef; --text-dim:#7a7a8a; --text-muted:#4a4a58;
+  --bg:#0f0f12; --bg2:#17171d; --card:#1e1e26; --border:#2a2a38; --border-l:#3a3a50;
+  --accent:#f0a030; --accent-dim:#c88020; --accent-glow:rgba(240,160,48,0.15);
+  --danger:#ff5555; --danger-glow:rgba(255,85,85,0.15);
+  --warn:#f5a623; --warn-glow:rgba(245,166,35,0.15);
+  --success:#3ddc84; --success-glow:rgba(61,220,132,0.15);
+  --text:#f0f0f8; --text-dim:#a0a0b8; --text-muted:#606078;
   --strava:#fc4c02;
-  --good:#30d870; --warn-c:#f5a623; --danger-c:#f04848;
+  --good:#3ddc84; --warn-c:#f5a623; --danger-c:#ff5555;
   --ff-display:'Sora',sans-serif; --ff-mono:'DM Mono',monospace;
 }
 *{margin:0;padding:0;box-sizing:border-box}
 html{font-size:16px}
 body{min-height:100vh;background:var(--bg);color:var(--text);font-family:var(--ff-display);-webkit-font-smoothing:antialiased;overscroll-behavior:none}
-.app{max-width:640px;margin:0 auto;padding:0 0 80px}
-.header{padding:20px 20px 16px;background:var(--bg2);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:50;backdrop-filter:blur(10px)}
+.app{max-width:640px;margin:0 auto;padding:0 0 100px}
+
+/* ── Header ── */
+.header{padding:16px 20px 14px;background:var(--bg2);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:50;backdrop-filter:blur(12px)}
 .header-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
 .header-left{display:flex;align-items:center;gap:12px}
 .logo{width:38px;height:38px;background:linear-gradient(135deg,var(--accent),var(--accent-dim));border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
-.app-title{font-size:17px;font-weight:700;letter-spacing:-0.3px}
-.app-sub{font-family:var(--ff-mono);font-size:10px;color:var(--text-dim);margin-top:1px}
+.app-title{font-size:17px;font-weight:700;letter-spacing:-0.3px;color:var(--text)}
+.app-sub{font-family:var(--ff-mono);font-size:11px;color:var(--text-dim);margin-top:1px}
 .header-actions{display:flex;align-items:center;gap:8px}
-.badge-strava{font-family:var(--ff-mono);font-size:10px;padding:3px 8px;border-radius:20px;background:rgba(252,76,2,0.15);color:var(--strava);border:1px solid rgba(252,76,2,0.25)}
-.btn-logout{background:none;border:1px solid var(--border-l);color:var(--text-dim);font-family:var(--ff-mono);font-size:10px;padding:4px 8px;border-radius:6px;cursor:pointer}
-.btn-logout:hover{color:var(--danger);border-color:rgba(240,72,72,0.4)}
+.badge-strava{font-family:var(--ff-mono);font-size:10px;padding:3px 8px;border-radius:20px;background:rgba(252,76,2,0.2);color:#ff7744;border:1px solid rgba(252,76,2,0.35);font-weight:500}
+.btn-logout{background:none;border:1px solid var(--border-l);color:var(--text-dim);font-family:var(--ff-mono);font-size:10px;padding:4px 10px;border-radius:6px;cursor:pointer;transition:all 0.2s}
+.btn-logout:hover{color:var(--danger-c);border-color:rgba(255,85,85,0.5)}
+
+/* ── Bike tabs ── */
 .bike-tabs{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
 .bike-tabs::-webkit-scrollbar{display:none}
 .bike-tab{flex-shrink:0;padding:6px 14px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--text-dim);font-family:var(--ff-mono);font-size:11px;cursor:pointer;transition:all 0.2s;white-space:nowrap}
-.bike-tab.active{background:var(--accent-glow);border-color:rgba(240,160,48,0.35);color:var(--accent);font-weight:500}
-.bike-tab .bkm{font-size:10px;opacity:0.7;margin-left:4px}
+.bike-tab.active{background:var(--accent-glow);border-color:rgba(240,160,48,0.5);color:var(--accent);font-weight:600}
+.bike-tab .bkm{font-size:10px;opacity:0.75;margin-left:4px}
 .bike-total-bar{display:flex;align-items:center;justify-content:space-between;margin-top:10px}
-.bike-total-val{font-family:var(--ff-mono);font-size:13px;color:var(--accent);font-weight:500}
+.bike-total-val{font-family:var(--ff-mono);font-size:13px;color:var(--accent);font-weight:600}
 .last-sync{font-family:var(--ff-mono);font-size:10px;color:var(--text-muted)}
+
+/* ── Bike info card ── */
+.bike-info-card{margin:14px 20px 0;background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px 16px;display:flex;align-items:center;gap:14px}
+.bike-icon{font-size:28px;flex-shrink:0}
+.bike-details{flex:1}
+.bike-details-name{font-size:15px;font-weight:700;color:var(--text);letter-spacing:-0.2px}
+.bike-details-brand{font-family:var(--ff-mono);font-size:11px;color:var(--text-dim);margin-top:2px}
+.bike-details-stats{display:flex;gap:16px;margin-top:8px}
+.bike-stat{text-align:center}
+.bike-stat-val{font-family:var(--ff-mono);font-size:14px;font-weight:600;color:var(--accent)}
+.bike-stat-label{font-family:var(--ff-mono);font-size:9px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.8px;margin-top:1px}
+
+/* ── Sync bar ── */
 .sync-bar{padding:12px 20px;display:flex;gap:8px;align-items:center;border-bottom:1px solid var(--border)}
-.btn-sync{flex:1;padding:11px 16px;background:var(--strava);color:#fff;border:none;border-radius:10px;font-family:var(--ff-mono);font-size:12px;font-weight:500;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:background 0.2s}
+.btn-sync{flex:1;padding:11px 16px;background:var(--strava);color:#fff;border:none;border-radius:10px;font-family:var(--ff-mono);font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:background 0.2s}
 .btn-sync:hover:not(:disabled){background:#e04400}
 .btn-sync:disabled{opacity:0.5;cursor:not-allowed}
+
+/* ── Categories ── */
 .category{padding:20px 20px 0}
-.cat-label{font-family:var(--ff-mono);font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-muted);margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.cat-label{font-family:var(--ff-mono);font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1.8px;color:var(--text-dim);margin-bottom:10px;display:flex;align-items:center;gap:8px}
 .cat-label::after{content:'';flex:1;height:1px;background:var(--border)}
+
+/* ── Item card ── */
 .item-card{background:var(--card);border:1px solid var(--border);border-radius:14px;margin-bottom:10px;overflow:hidden;transition:border-color 0.2s}
 .item-card:hover{border-color:var(--border-l)}
 .item-card.status-warn{border-left:3px solid var(--warn-c)}
 .item-card.status-danger{border-left:3px solid var(--danger-c);animation:pulseCard 3s infinite}
-@keyframes pulseCard{0%,100%{box-shadow:none}50%{box-shadow:0 0 0 1px rgba(240,72,72,0.15)}}
+@keyframes pulseCard{0%,100%{box-shadow:none}50%{box-shadow:0 0 0 2px rgba(255,85,85,0.12)}}
 .item-top{display:flex;align-items:flex-start;padding:14px 16px 10px;gap:12px}
 .item-emoji{font-size:22px;line-height:1;flex-shrink:0;margin-top:1px}
 .item-info{flex:1;min-width:0}
-.item-name{font-size:14px;font-weight:600;letter-spacing:-0.2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.item-meta{font-family:var(--ff-mono);font-size:10px;color:var(--text-dim);margin-top:3px}
-.item-status{flex-shrink:0;font-family:var(--ff-mono);font-size:9px;font-weight:600;padding:3px 8px;border-radius:10px;text-transform:uppercase;letter-spacing:0.5px;align-self:flex-start}
-.status-good-badge{background:var(--success-glow);color:var(--good);border:1px solid rgba(48,216,112,0.2)}
-.status-warn-badge{background:var(--warn-glow);color:var(--warn-c);border:1px solid rgba(245,166,35,0.2)}
-.status-danger-badge{background:var(--danger-glow);color:var(--danger-c);border:1px solid rgba(240,72,72,0.2)}
-.status-none-badge{background:rgba(255,255,255,0.04);color:var(--text-muted);border:1px solid var(--border)}
+.item-name{font-size:14px;font-weight:600;letter-spacing:-0.2px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.item-meta{font-family:var(--ff-mono);font-size:10px;color:var(--text-dim);margin-top:3px;line-height:1.5}
+.item-status{flex-shrink:0;font-family:var(--ff-mono);font-size:9px;font-weight:700;padding:3px 9px;border-radius:10px;text-transform:uppercase;letter-spacing:0.6px;align-self:flex-start}
+.status-good-badge{background:var(--success-glow);color:var(--good);border:1px solid rgba(61,220,132,0.3)}
+.status-warn-badge{background:var(--warn-glow);color:var(--warn-c);border:1px solid rgba(245,166,35,0.3)}
+.status-danger-badge{background:var(--danger-glow);color:var(--danger-c);border:1px solid rgba(255,85,85,0.3)}
+.status-none-badge{background:rgba(255,255,255,0.06);color:var(--text-dim);border:1px solid var(--border)}
+
+/* ── Progress bar ── */
 .item-bar-wrap{padding:0 16px 10px}
 .item-bar-bg{height:5px;background:var(--border);border-radius:99px;overflow:hidden}
 .item-bar-fill{height:100%;border-radius:99px;transition:width 0.8s cubic-bezier(0.4,0,0.2,1)}
 .bar-good{background:var(--good)}
 .bar-warn{background:var(--warn-c)}
 .bar-danger{background:var(--danger-c)}
-.item-bar-labels{display:flex;justify-content:space-between;margin-top:5px;font-family:var(--ff-mono);font-size:9px;color:var(--text-muted)}
+.item-bar-labels{display:flex;justify-content:space-between;margin-top:5px;font-family:var(--ff-mono);font-size:9px;color:var(--text-dim)}
+
+/* ── Insight ── */
 .item-insight{padding:0 16px 10px;font-family:var(--ff-mono);font-size:10px;color:var(--text-dim);line-height:1.5}
 .insight-good{color:var(--good)}
 .insight-warn{color:var(--warn-c)}
 .insight-danger{color:var(--danger-c)}
-.item-actions{display:flex;padding:0 16px 14px;gap:8px;border-top:1px solid var(--border);padding-top:12px}
-.btn-log{flex:1;padding:9px;background:var(--accent);color:var(--bg);border:none;border-radius:8px;font-family:var(--ff-mono);font-size:11px;font-weight:600;cursor:pointer;transition:background 0.2s}
-.btn-log:hover{background:var(--accent-dim)}
-.btn-history{padding:9px 16px;background:var(--bg);border:1px solid var(--border);color:var(--text-dim);border-radius:8px;font-family:var(--ff-mono);font-size:11px;cursor:pointer;transition:all 0.2s}
+
+/* ── Actions ── */
+.item-actions{display:flex;padding:10px 16px 14px;gap:8px;border-top:1px solid var(--border)}
+.btn-new-service{flex:1;padding:9px;background:var(--accent);color:#0f0f12;border:none;border-radius:8px;font-family:var(--ff-mono);font-size:11px;font-weight:700;cursor:pointer;transition:background 0.2s}
+.btn-new-service:hover{background:var(--accent-dim)}
+.btn-edit-service{padding:9px 13px;background:var(--bg);border:1px solid var(--border-l);color:var(--text-dim);border-radius:8px;font-family:var(--ff-mono);font-size:11px;cursor:pointer;transition:all 0.2s}
+.btn-edit-service:hover{border-color:var(--accent);color:var(--accent)}
+.btn-history{padding:9px 13px;background:var(--bg);border:1px solid var(--border);color:var(--text-dim);border-radius:8px;font-family:var(--ff-mono);font-size:11px;cursor:pointer;transition:all 0.2s}
 .btn-history:hover{border-color:var(--border-l);color:var(--text)}
+
+/* ── Login ── */
 .login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
 .login-card{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:40px 32px;max-width:380px;width:100%;text-align:center}
 .login-icon{font-size:52px;margin-bottom:20px}
-.login-title{font-size:22px;font-weight:700;margin-bottom:10px}
+.login-title{font-size:22px;font-weight:700;margin-bottom:10px;color:var(--text)}
 .login-desc{color:var(--text-dim);font-size:14px;line-height:1.6;margin-bottom:28px}
-.btn-strava-big{width:100%;padding:14px;background:var(--strava);color:#fff;border:none;border-radius:12px;font-family:var(--ff-mono);font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;transition:background 0.2s}
+.btn-strava-big{width:100%;padding:14px;background:var(--strava);color:#fff;border:none;border-radius:12px;font-family:var(--ff-mono);font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;transition:background 0.2s}
 .btn-strava-big:hover{background:#e04400}
-.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:100;display:flex;align-items:flex-end;justify-content:center;animation:fadeOverlay 0.2s ease}
+
+/* ── Modals ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:100;display:flex;align-items:flex-end;justify-content:center;animation:fadeOverlay 0.2s ease}
 @keyframes fadeOverlay{from{opacity:0}to{opacity:1}}
-.modal-sheet{background:var(--bg2);border:1px solid var(--border);border-radius:20px 20px 0 0;width:100%;max-width:640px;padding:0 0 env(safe-area-inset-bottom,20px);animation:slideUp 0.3s cubic-bezier(0.34,1.56,0.64,1)}
+.modal-sheet{background:var(--bg2);border:1px solid var(--border);border-radius:20px 20px 0 0;width:100%;max-width:640px;padding:0 0 env(safe-area-inset-bottom,20px);animation:slideUp 0.3s cubic-bezier(0.34,1.56,0.64,1);max-height:90vh;display:flex;flex-direction:column}
 @keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
-.modal-handle{width:36px;height:4px;background:var(--border-l);border-radius:99px;margin:12px auto 0}
-.modal-header{display:flex;align-items:center;justify-content:space-between;padding:16px 20px 12px}
-.modal-title{font-size:16px;font-weight:700}
-.modal-close{background:none;border:none;color:var(--text-muted);font-size:22px;cursor:pointer;line-height:1;padding:0 4px}
+.modal-handle{width:36px;height:4px;background:var(--border-l);border-radius:99px;margin:12px auto 0;flex-shrink:0}
+.modal-header{display:flex;align-items:center;justify-content:space-between;padding:14px 20px 12px;flex-shrink:0;border-bottom:1px solid var(--border)}
+.modal-title{font-size:16px;font-weight:700;color:var(--text)}
+.modal-close{background:none;border:none;color:var(--text-dim);font-size:24px;cursor:pointer;line-height:1;padding:0 4px;transition:color 0.2s}
 .modal-close:hover{color:var(--text)}
-.modal-body{padding:0 20px 20px}
+.modal-body{padding:16px 20px 20px;overflow-y:auto}
 .form-group{margin-bottom:16px}
-.form-label{display:block;font-family:var(--ff-mono);font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--text-dim);margin-bottom:8px}
-.form-input{width:100%;padding:11px 14px;background:var(--bg);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:var(--ff-mono);font-size:13px;outline:none;transition:border-color 0.2s}
+.form-label{display:block;font-family:var(--ff-mono);font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--text-dim);margin-bottom:8px;font-weight:500}
+.form-input{width:100%;padding:11px 14px;background:var(--bg);border:1px solid var(--border-l);border-radius:10px;color:var(--text);font-family:var(--ff-mono);font-size:13px;outline:none;transition:border-color 0.2s}
 .form-input:focus{border-color:var(--accent)}
-.modal-summary{background:var(--card);border-radius:10px;padding:14px 16px;margin-bottom:16px}
-.modal-summary .row{display:flex;justify-content:space-between;font-family:var(--ff-mono);font-size:12px;padding:3px 0}
-.modal-summary .row .label{color:var(--text-dim)}
+.modal-summary{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:16px}
+.modal-summary .row{display:flex;justify-content:space-between;font-family:var(--ff-mono);font-size:12px;padding:4px 0;border-bottom:1px solid var(--border)}
+.modal-summary .row:last-child{border-bottom:none}
+.modal-summary .row .lbl{color:var(--text-dim)}
 .modal-summary .row .val{color:var(--text);font-weight:500}
 .modal-summary .row .val.accent{color:var(--accent)}
-.btn-confirm{width:100%;padding:13px;background:var(--accent);color:var(--bg);border:none;border-radius:10px;font-family:var(--ff-mono);font-size:13px;font-weight:600;cursor:pointer;transition:background 0.2s;margin-top:4px}
+.btn-confirm{width:100%;padding:13px;background:var(--accent);color:#0f0f12;border:none;border-radius:10px;font-family:var(--ff-mono);font-size:13px;font-weight:700;cursor:pointer;transition:background 0.2s;margin-top:4px}
 .btn-confirm:hover:not(:disabled){background:var(--accent-dim)}
-.btn-confirm:disabled{opacity:0.6;cursor:not-allowed}
-.history-list{max-height:60vh;overflow-y:auto;padding-right:2px}
-.history-item{padding:14px 0;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:flex-start}
+.btn-confirm:disabled{opacity:0.5;cursor:not-allowed}
+.mode-tabs{display:flex;gap:6px;margin-bottom:16px}
+.mode-tab{flex:1;padding:8px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text-dim);font-family:var(--ff-mono);font-size:11px;cursor:pointer;transition:all 0.2s;font-weight:500}
+.mode-tab.active{background:var(--accent-glow);border-color:rgba(240,160,48,0.4);color:var(--accent)}
+
+/* ── History list ── */
+.history-list{max-height:50vh;overflow-y:auto}
+.history-item{padding:12px 0;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
 .history-item:last-child{border-bottom:none}
-.history-date{font-family:var(--ff-mono);font-size:12px;font-weight:500;color:var(--text)}
+.history-item-left{flex:1}
+.history-date{font-family:var(--ff-mono);font-size:12px;font-weight:600;color:var(--text)}
 .history-km{font-family:var(--ff-mono);font-size:11px;color:var(--accent);margin-top:3px}
 .history-note{font-family:var(--ff-mono);font-size:10px;color:var(--text-dim);margin-top:2px;font-style:italic}
-.history-tag{font-family:var(--ff-mono);font-size:9px;padding:2px 7px;border-radius:10px;background:var(--success-glow);color:var(--good);border:1px solid rgba(48,216,112,0.2)}
-.history-ai-box{background:var(--accent-glow);border:1px solid rgba(240,160,48,0.15);border-radius:10px;padding:14px 16px;margin-bottom:16px;font-family:var(--ff-mono);font-size:11px;color:var(--text-dim);line-height:1.7}
-.history-ai-box strong{color:var(--accent);display:block;margin-bottom:6px}
+.history-tag{font-family:var(--ff-mono);font-size:9px;padding:2px 7px;border-radius:10px;background:var(--success-glow);color:var(--good);border:1px solid rgba(61,220,132,0.25);margin-left:6px;font-weight:600}
+.history-del{background:none;border:1px solid var(--border);color:var(--text-muted);font-size:14px;width:28px;height:28px;border-radius:6px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all 0.2s}
+.history-del:hover{border-color:rgba(255,85,85,0.5);color:var(--danger-c);background:var(--danger-glow)}
+.history-ai-box{background:var(--accent-glow);border:1px solid rgba(240,160,48,0.2);border-radius:10px;padding:12px 14px;margin-bottom:14px;font-family:var(--ff-mono);font-size:11px;color:var(--text-dim);line-height:1.7}
+.history-ai-box strong{color:var(--accent);display:block;margin-bottom:6px;font-size:12px}
 .history-empty{padding:28px 0;text-align:center;font-family:var(--ff-mono);font-size:11px;color:var(--text-muted)}
-.toast{position:fixed;top:20px;right:20px;z-index:200;padding:11px 18px;border-radius:10px;font-family:var(--ff-mono);font-size:12px;box-shadow:0 8px 32px rgba(0,0,0,0.6);animation:slideIn 0.3s ease}
-.toast-ok{background:var(--success);color:#fff}
-.toast-err{background:var(--danger);color:#fff}
-.toast-info{background:var(--accent);color:var(--bg)}
-@keyframes slideIn{from{transform:translateY(-20px);opacity:0}to{transform:translateY(0);opacity:1}}
-.loading-overlay{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:999;font-family:var(--ff-mono);color:var(--accent);font-size:13px}
+
+/* ── Toast ── */
+.toast{position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:200;padding:11px 20px;border-radius:10px;font-family:var(--ff-mono);font-size:12px;box-shadow:0 8px 32px rgba(0,0,0,0.6);animation:toastIn 0.3s ease;white-space:nowrap;font-weight:500}
+.toast-ok{background:#1a3d2a;color:var(--good);border:1px solid rgba(61,220,132,0.3)}
+.toast-err{background:#3d1a1a;color:var(--danger-c);border:1px solid rgba(255,85,85,0.3)}
+.toast-info{background:#2d2510;color:var(--accent);border:1px solid rgba(240,160,48,0.3)}
+@keyframes toastIn{from{transform:translateX(-50%) translateY(-10px);opacity:0}to{transform:translateX(-50%) translateY(0);opacity:1}}
+
+/* ── Loading ── */
+.loading-overlay{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:999;font-family:var(--ff-mono);color:var(--accent);font-size:13px;font-weight:500}
 .spinner{width:22px;height:22px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin 0.8s linear infinite;margin-right:10px}
 @keyframes spin{to{transform:rotate(360deg)}}
 .hidden{display:none!important}
 .spin-inline{display:inline-block;animation:spin 0.8s linear infinite;margin-right:6px}
+.section-note{font-family:var(--ff-mono);font-size:10px;color:var(--text-muted);padding:4px 20px 0;line-height:1.5}
 </style>
 </head>
 <body>
@@ -138,7 +185,7 @@ body{min-height:100vh;background:var(--bg);color:var(--text);font-family:var(--f
     <div class="login-card">
       <div class="login-icon">🚴</div>
       <div class="login-title">Bike Maintenance</div>
-      <div class="login-desc">Connect your Strava account to track maintenance for all your bikes. Service history, AI-powered intervals, and Strava-synced km tracking.</div>
+      <div class="login-desc">Connect your Strava account to automatically track maintenance across all your bikes with km-based service intervals.</div>
       <button class="btn-strava-big" onclick="connectStrava()"><span style="font-size:18px">⚡</span> Connect with Strava</button>
     </div>
   </div>
@@ -168,6 +215,7 @@ body{min-height:100vh;background:var(--bg);color:var(--text);font-family:var(--f
         </div>
       </div>
     </div>
+    <div id="bikeInfoCard"></div>
     <div class="sync-bar">
       <button class="btn-sync" id="btnSync" onclick="syncStrava()">↻ Sync Strava</button>
     </div>
@@ -175,7 +223,7 @@ body{min-height:100vh;background:var(--bg);color:var(--text);font-family:var(--f
   </div>
 </div>
 
-<!-- LOG SERVICE MODAL -->
+<!-- ══ LOG / EDIT SERVICE MODAL ══ -->
 <div class="modal-overlay hidden" id="logModal" onclick="closeModal(event,'logModal')">
   <div class="modal-sheet" onclick="event.stopPropagation()">
     <div class="modal-handle"></div>
@@ -184,9 +232,13 @@ body{min-height:100vh;background:var(--bg);color:var(--text);font-family:var(--f
       <button class="modal-close" onclick="closeModalId('logModal')">×</button>
     </div>
     <div class="modal-body">
+      <div class="mode-tabs" id="logModeTabs">
+        <button class="mode-tab active" id="modeTabNew" onclick="switchLogMode('new')">＋ New Service</button>
+        <button class="mode-tab" id="modeTabEdit" onclick="switchLogMode('edit')">✎ Edit Last Service</button>
+      </div>
       <div class="modal-summary" id="logSummary"></div>
       <div class="form-group">
-        <label class="form-label">Service Date</label>
+        <label class="form-label" id="logDateLabel">Service Date</label>
         <input class="form-input" type="date" id="logDate">
       </div>
       <div class="form-group">
@@ -198,7 +250,7 @@ body{min-height:100vh;background:var(--bg);color:var(--text);font-family:var(--f
   </div>
 </div>
 
-<!-- HISTORY MODAL -->
+<!-- ══ HISTORY MODAL ══ -->
 <div class="modal-overlay hidden" id="historyModal" onclick="closeModal(event,'historyModal')">
   <div class="modal-sheet" onclick="event.stopPropagation()">
     <div class="modal-handle"></div>
@@ -218,54 +270,52 @@ var STRAVA_CLIENT_ID     = "202550";
 var STRAVA_CLIENT_SECRET = "28a52c20e5aa595af90ed7477e8cd1443f00de5a";
 var CALLBACK             = window.location.origin + "/strava-callback.html";
 
+// intervalKm: km interval | intervalDays: day interval | both = whichever hits first
+// batteryKm: estimated km per battery (for electronics tracked by km instead of days)
 var ITEMS = [
-  { id:"chain_wax",       name:"Chain Wax",                  emoji:"⛓️", category:"Drivetrain",  intervalKm:400,   intervalDays:null },
-  { id:"di2_charge",      name:"Di2 Battery Charge",         emoji:"⚡", category:"Drivetrain",  intervalKm:1200,  intervalDays:null },
-  { id:"bearings_hubs",   name:"Wheel Hub Bearings",         emoji:"🔩", category:"Bearings",    intervalKm:15000, intervalDays:730  },
-  { id:"bearings_bb",     name:"Bottom Bracket Bearings",    emoji:"🔩", category:"Bearings",    intervalKm:8000,  intervalDays:365  },
-  { id:"bearings_headset",name:"Headset Bearings",           emoji:"🔩", category:"Bearings",    intervalKm:15000, intervalDays:730  },
-  { id:"wahoo_cadence",   name:"Wahoo Cadence Battery",      emoji:"🔋", category:"Electronics", intervalKm:null,  intervalDays:365  },
-  { id:"power_left",      name:"Left Crank Power Meter",     emoji:"🔋", category:"Electronics", intervalKm:null,  intervalDays:240  },
-  { id:"power_right",     name:"Right Crank Power Meter",    emoji:"🔋", category:"Electronics", intervalKm:null,  intervalDays:240  },
-  { id:"hrm",             name:"Heart Rate Monitor Battery", emoji:"❤️", category:"Electronics", intervalKm:null,  intervalDays:365  },
-  { id:"brake_pads",      name:"Brake Pads",                 emoji:"🛑", category:"Wear Items",  intervalKm:3000,  intervalDays:null },
-  { id:"tires",           name:"Tires",                      emoji:"🚲", category:"Wear Items",  intervalKm:4000,  intervalDays:null },
-  { id:"overhaul",        name:"Full Overhaul",              emoji:"🔧", category:"General",     intervalKm:12000, intervalDays:365  },
+  { id:"chain_wax",        name:"Chain Wax",                   emoji:"⛓️",  category:"Drivetrain",  intervalKm:400,   intervalDays:null, batteryKm:null  },
+  { id:"di2_charge",       name:"Di2 Battery Charge",          emoji:"⚡",  category:"Drivetrain",  intervalKm:1200,  intervalDays:null, batteryKm:null  },
+  { id:"bearings_hubs",    name:"Wheel Hub Bearings",          emoji:"🔩",  category:"Bearings",    intervalKm:15000, intervalDays:730,  batteryKm:null  },
+  { id:"bearings_bb",      name:"Bottom Bracket Bearings",     emoji:"🔩",  category:"Bearings",    intervalKm:8000,  intervalDays:365,  batteryKm:null  },
+  { id:"bearings_headset", name:"Headset Bearings",            emoji:"🔩",  category:"Bearings",    intervalKm:15000, intervalDays:730,  batteryKm:null  },
+  { id:"wahoo_cadence",    name:"Wahoo Cadence Battery",       emoji:"🔋",  category:"Electronics", intervalKm:8000,  intervalDays:null, batteryKm:8000  },
+  { id:"power_left",       name:"Left Crank Power Meter",      emoji:"🔋",  category:"Electronics", intervalKm:6000,  intervalDays:null, batteryKm:6000  },
+  { id:"power_right",      name:"Right Crank Power Meter",     emoji:"🔋",  category:"Electronics", intervalKm:6000,  intervalDays:null, batteryKm:6000  },
+  { id:"hrm",              name:"Heart Rate Monitor Battery",  emoji:"❤️",  category:"Electronics", intervalKm:null,  intervalDays:365,  batteryKm:null  },
+  { id:"brake_pads",       name:"Brake Pads",                  emoji:"🛑",  category:"Wear Items",  intervalKm:3000,  intervalDays:null, batteryKm:null  },
+  { id:"tires",            name:"Tires",                       emoji:"🚲",  category:"Wear Items",  intervalKm:4000,  intervalDays:null, batteryKm:null  },
+  { id:"overhaul",         name:"Full Overhaul",               emoji:"🔧",  category:"General",     intervalKm:12000, intervalDays:365,  batteryKm:null  },
 ];
 
 var CATEGORIES = ["Drivetrain","Bearings","Electronics","Wear Items","General"];
 
-var athlete    = null;
-var strava     = null;
-var binId      = null;
-var bikes      = [];
+var athlete      = null;
+var strava       = null;
+var binId        = null;
+var bikes        = [];      // [{id, name, brand, model, totalKm, frameType}]
 var activeBikeId = null;
-var bikeData   = {};
-var lastSyncTs = null;
-var _logItemId = null;
+var bikeData     = {};      // bikeData[bikeId].items[itemId] = {lastDate, lastKmTotal, history[]}
+var lastSyncTs   = null;
+var _logItemId   = null;
+var _logMode     = "new";   // "new" | "edit"
 
-function fmtDate(d){
-  if(!d) return "—";
-  return new Date(d+"T00:00:00").toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"});
-}
-function fmtDateShort(d){
-  if(!d) return "—";
-  return new Date(d+"T00:00:00").toLocaleDateString("en-GB",{day:"numeric",month:"short"});
-}
+// ── Helpers ──────────────────────────────────────────────────────────────────
+function fmtDate(d){ if(!d) return "—"; return new Date(d+"T00:00:00").toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"}); }
+function fmtDateShort(d){ if(!d) return "—"; return new Date(d+"T00:00:00").toLocaleDateString("en-GB",{day:"numeric",month:"short"}); }
 function todayStr(){ return new Date().toISOString().split("T")[0]; }
-function daysSince(dateStr){
-  if(!dateStr) return null;
-  return Math.max(0, Math.round((Date.now() - new Date(dateStr+"T00:00:00").getTime())/86400000));
-}
+function daysSince(dateStr){ if(!dateStr) return null; return Math.max(0,Math.round((Date.now()-new Date(dateStr+"T00:00:00").getTime())/86400000)); }
 function esc(s){ var d=document.createElement("div"); d.textContent=s; return d.innerHTML; }
+
 function toast(msg,type){
-  var el=document.createElement("div"); el.className="toast toast-"+(type||"info");
-  el.textContent=msg; document.body.appendChild(el);
-  setTimeout(function(){ el.style.opacity="0"; el.style.transition="opacity 0.3s"; setTimeout(function(){ el.remove(); },300); },3000);
+  var el=document.createElement("div");
+  el.className="toast toast-"+(type||"info");
+  el.textContent=msg;
+  document.body.appendChild(el);
+  setTimeout(function(){ el.style.opacity="0"; el.style.transition="opacity 0.4s"; setTimeout(function(){ el.remove(); },400); },3200);
 }
 
 function getActiveBikeData(){
-  if(!activeBikeId) return {};
+  if(!activeBikeId) return {items:{}};
   if(!bikeData[activeBikeId]) bikeData[activeBikeId]={items:{}};
   return bikeData[activeBikeId];
 }
@@ -275,14 +325,13 @@ function getItemData(itemId){
   if(!d.items[itemId]) d.items[itemId]={lastDate:null,lastKmTotal:null,history:[]};
   return d.items[itemId];
 }
-function getActiveBikeTotalKm(){
-  var b=bikes.find(function(x){ return x.id===activeBikeId; });
-  return b ? (b.totalKm||0) : 0;
-}
+function getActiveBike(){ return bikes.find(function(x){ return x.id===activeBikeId; })||null; }
+function getActiveBikeTotalKm(){ var b=getActiveBike(); return b?(b.totalKm||0):0; }
+
 function getKmSinceService(itemId){
   var it=getItemData(itemId);
-  if(!it.lastDate || it.lastKmTotal==null) return null;
-  return Math.max(0, getActiveBikeTotalKm() - it.lastKmTotal);
+  if(!it.lastDate||it.lastKmTotal==null) return null;
+  return Math.max(0,getActiveBikeTotalKm()-it.lastKmTotal);
 }
 function getDaysSinceService(itemId){
   var it=getItemData(itemId);
@@ -292,7 +341,7 @@ function getDaysSinceService(itemId){
 function getEffectiveIntervalKm(item){
   var it=getItemData(item.id);
   var history=it.history||[];
-  if(history.length>=2){
+  if(history.length>=3){
     var kmVals=history.map(function(h){ return h.kmRidden||0; }).filter(function(v){ return v>50; });
     if(kmVals.length>=2){
       var avg=kmVals.reduce(function(s,v){ return s+v; },0)/kmVals.length;
@@ -311,7 +360,7 @@ function getStatus(item){
   if(iKm!=null){ var km=getKmSinceService(item.id); if(km!=null) kmPct=km/iKm; }
   if(iDays!=null){ var days=getDaysSinceService(item.id); if(days!=null) dayPct=days/iDays; }
   var pct=null;
-  if(kmPct!=null && dayPct!=null) pct=Math.max(kmPct,dayPct);
+  if(kmPct!=null&&dayPct!=null) pct=Math.max(kmPct,dayPct);
   else if(kmPct!=null) pct=kmPct;
   else if(dayPct!=null) pct=dayPct;
   if(pct===null) return "good";
@@ -331,15 +380,19 @@ function buildInsight(item){
       var rem=iKm-km;
       if(rem>0){
         var days=getDaysSinceService(item.id)||1;
-        var avgDailyKm=days>0 ? km/days : 0;
-        var daysEst=avgDailyKm>0 ? Math.ceil(rem/avgDailyKm) : null;
-        var estStr=daysEst ? " (~"+daysEst+" day"+(daysEst!==1?"s":"")+")" : "";
-        lines.push(km+" / "+iKm+" km used"+estStr);
+        var avgDailyKm=days>0?km/days:0;
+        var daysEst=avgDailyKm>0?Math.ceil(rem/avgDailyKm):null;
+        var estStr=daysEst?" (~"+daysEst+" day"+(daysEst!==1?"s":"")+")":" ";
+        if(item.batteryKm){
+          lines.push(km+" / "+iKm+" km battery used"+estStr);
+        } else {
+          lines.push(km+" / "+iKm+" km used"+estStr);
+        }
       } else {
         lines.push("Overdue by "+Math.abs(rem)+" km — service needed");
       }
-      if((it.history||[]).length>=2 && iKm!==item.intervalKm){
-        lines.push("Personalized interval: "+iKm+" km (based on your history)");
+      if((it.history||[]).length>=3&&iKm!==item.intervalKm){
+        lines.push("Personalized interval: "+iKm+" km");
       }
     }
   }
@@ -347,18 +400,20 @@ function buildInsight(item){
     var days=getDaysSinceService(item.id);
     if(days!=null){
       var remDays=item.intervalDays-days;
-      if(remDays>0) lines.push(days+" / "+item.intervalDays+" days used (~"+remDays+" days left)");
-      else lines.push("Overdue by "+Math.abs(remDays)+" days — replace battery/service");
+      if(remDays>0) lines.push(days+" / "+item.intervalDays+" days (~"+remDays+" left)");
+      else lines.push("Overdue by "+Math.abs(remDays)+" days");
     }
   }
-  return lines.length ? lines.join(" · ") : null;
+  return lines.length?lines.join(" · "):null;
 }
 
+// ── Render ────────────────────────────────────────────────────────────────────
 function render(){
   renderBikeTabs();
+  renderBikeInfoCard();
   var totalKm=getActiveBikeTotalKm();
   document.getElementById("bikeTotalKm").textContent=totalKm>0?(totalKm.toLocaleString()+" km total"):"—";
-  document.getElementById("lastSyncLabel").textContent=lastSyncTs ? "Synced "+timeSince(lastSyncTs) : "Never synced";
+  document.getElementById("lastSyncLabel").textContent=lastSyncTs?"Synced "+timeSince(lastSyncTs):"Never synced";
   renderDashboard();
 }
 
@@ -376,9 +431,29 @@ function renderBikeTabs(){
   if(!bikes||bikes.length<=1){ el.innerHTML=""; return; }
   el.innerHTML=bikes.map(function(b){
     var act=b.id===activeBikeId?" active":"";
-    var km=b.totalKm>0?'<span class="bkm">'+b.totalKm.toLocaleString()+' km</span>':'';
-    return '<button class="bike-tab'+act+'" onclick="switchBike(\''+esc(b.id)+'\')">'+esc(b.name)+km+'</button>';
+    var km=b.totalKm>0?'<span class="bkm">'+b.totalKm.toLocaleString()+'km</span>':'';
+    return '<button class="bike-tab'+act+'" onclick="switchBike(\''+b.id.replace(/'/g,"\\'")+'\')">'+(b.name||"Bike")+km+'</button>';
   }).join("");
+}
+
+function renderBikeInfoCard(){
+  var el=document.getElementById("bikeInfoCard");
+  var b=getActiveBike();
+  if(!b){ el.innerHTML=""; return; }
+  var frameIcon = b.frameType===1?"🚴":b.frameType===2?"🏃":b.frameType===5?"🏔️":"🚵";
+  var brandStr = [b.brand, b.model].filter(Boolean).join(" ");
+  el.innerHTML='<div class="bike-info-card">'+
+    '<div class="bike-icon">'+frameIcon+'</div>'+
+    '<div class="bike-details">'+
+      '<div class="bike-details-name">'+esc(b.name||"My Bike")+'</div>'+
+      (brandStr?'<div class="bike-details-brand">'+esc(brandStr)+'</div>':'')+
+      '<div class="bike-details-stats">'+
+        '<div class="bike-stat"><div class="bike-stat-val">'+b.totalKm.toLocaleString()+'</div><div class="bike-stat-label">Total km</div></div>'+
+        (b.totalRides?'<div class="bike-stat"><div class="bike-stat-val">'+b.totalRides.toLocaleString()+'</div><div class="bike-stat-label">Rides</div></div>':'')+
+        (b.totalElevation?'<div class="bike-stat"><div class="bike-stat-val">'+Math.round(b.totalElevation/1000)+'k</div><div class="bike-stat-label">Elev. m</div></div>':'')+
+      '</div>'+
+    '</div>'+
+  '</div>';
 }
 
 function renderDashboard(){
@@ -400,6 +475,7 @@ function renderItemCard(item){
   var insight=buildInsight(item);
   var km=getKmSinceService(item.id);
   var days=getDaysSinceService(item.id);
+  var hasService=!!it.lastDate;
 
   var cardClass="item-card"+(status==="warn"?" status-warn":status==="danger"?" status-danger":"");
   var badgeClass="item-status status-none-badge"; var badgeText="Not Set";
@@ -409,18 +485,22 @@ function renderItemCard(item){
 
   var metaParts=[];
   if(it.lastDate) metaParts.push("Last: "+fmtDateShort(it.lastDate));
-  if(km!=null) metaParts.push(km.toLocaleString()+" km ridden");
-  else if(days!=null && !iKm) metaParts.push(days+" days ago");
-  var meta=metaParts.length ? metaParts.join(" · ") : "Tap 'Log Service' to start tracking";
+  if(km!=null){
+    metaParts.push(km.toLocaleString()+" km"+(item.batteryKm?" on battery":"" ));
+  } else if(days!=null&&!iKm){
+    metaParts.push(days+" days ago");
+  }
+  if(item.batteryKm&&iKm) metaParts.push("~"+iKm.toLocaleString()+" km per CR2032");
+  var meta=metaParts.length?metaParts.join(" · "):"Tap 'New Service' to start tracking";
 
   var barHtml="";
   var pct=null;
-  if(it.lastDate && iKm!=null && km!=null) pct=Math.min(100,Math.round((km/iKm)*100));
-  else if(it.lastDate && item.intervalDays!=null && days!=null) pct=Math.min(100,Math.round((days/item.intervalDays)*100));
+  if(it.lastDate&&iKm!=null&&km!=null) pct=Math.min(100,Math.round((km/iKm)*100));
+  else if(it.lastDate&&item.intervalDays!=null&&days!=null) pct=Math.min(100,Math.round((days/item.intervalDays)*100));
   if(pct!==null){
     var barClass=pct>=100?"bar-danger":pct>=80?"bar-warn":"bar-good";
     var leftLabel=iKm!=null?(km+" km"):(days+" days");
-    var rightLabel=iKm!=null?(iKm+" km interval"):(item.intervalDays+" days interval");
+    var rightLabel=iKm!=null?(iKm+" km"):( item.intervalDays+" days");
     barHtml='<div class="item-bar-wrap"><div class="item-bar-bg"><div class="item-bar-fill '+barClass+'" style="width:'+pct+'%"></div></div><div class="item-bar-labels"><span>'+leftLabel+'</span><span>'+rightLabel+'</span></div></div>';
   }
 
@@ -433,6 +513,9 @@ function renderItemCard(item){
   var histCount=(it.history||[]).length;
   var histLabel="History"+(histCount>0?" ("+histCount+")":"");
 
+  // Edit service button only if there's an existing service
+  var editBtn=hasService?'<button class="btn-edit-service" onclick="openLogModal(\''+item.id+'\',\'edit\')">✎ Edit</button>':'';
+
   return '<div class="'+cardClass+'">'+
     '<div class="item-top">'+
       '<div class="item-emoji">'+item.emoji+'</div>'+
@@ -441,13 +524,231 @@ function renderItemCard(item){
     '</div>'+
     barHtml+insightHtml+
     '<div class="item-actions">'+
-      '<button class="btn-log" onclick="openLogModal(\''+item.id+'\')">✓ Log Service</button>'+
+      '<button class="btn-new-service" onclick="openLogModal(\''+item.id+'\',\'new\')">＋ New Service</button>'+
+      editBtn+
       '<button class="btn-history" onclick="openHistoryModal(\''+item.id+'\')">'+esc(histLabel)+'</button>'+
     '</div>'+
   '</div>';
 }
 
-// ── Fetch km ridden on active bike since a given date from Strava activities ──
+// ── Log / Edit Modal ──────────────────────────────────────────────────────────
+function openLogModal(itemId, mode){
+  _logItemId=itemId;
+  _logMode=mode||"new";
+  var item=ITEMS.find(function(x){ return x.id===itemId; });
+  var it=getItemData(itemId);
+  var km=getKmSinceService(itemId);
+
+  document.getElementById("logModalTitle").textContent=item.name;
+  document.getElementById("logNote").value="";
+  document.getElementById("btnConfirmLog").disabled=false;
+  document.getElementById("modeTabNew").classList.toggle("active",_logMode==="new");
+  document.getElementById("modeTabEdit").classList.toggle("active",_logMode==="edit");
+  // Hide edit tab if no existing service
+  document.getElementById("modeTabEdit").style.display=it.lastDate?"":"none";
+
+  if(_logMode==="edit"&&it.lastDate){
+    document.getElementById("logDate").value=it.lastDate;
+    document.getElementById("logNote").value=(it.history&&it.history[0]?it.history[0].note||"":"");
+    document.getElementById("btnConfirmLog").textContent="✓ Save Edit";
+  } else {
+    document.getElementById("logDate").value=todayStr();
+    document.getElementById("btnConfirmLog").textContent="✓ Record Service";
+  }
+
+  buildLogSummary(itemId);
+  document.getElementById("logModal").classList.remove("hidden");
+}
+
+function switchLogMode(mode){
+  _logMode=mode;
+  var item=ITEMS.find(function(x){ return x.id===_logItemId; });
+  var it=getItemData(_logItemId);
+  document.getElementById("modeTabNew").classList.toggle("active",mode==="new");
+  document.getElementById("modeTabEdit").classList.toggle("active",mode==="edit");
+  if(mode==="edit"&&it.lastDate){
+    document.getElementById("logDate").value=it.lastDate;
+    document.getElementById("logNote").value=(it.history&&it.history[0]?it.history[0].note||"":"");
+    document.getElementById("btnConfirmLog").textContent="✓ Save Edit";
+  } else {
+    document.getElementById("logDate").value=todayStr();
+    document.getElementById("btnConfirmLog").textContent="✓ Record Service";
+  }
+  buildLogSummary(_logItemId);
+}
+
+function buildLogSummary(itemId){
+  var it=getItemData(itemId);
+  var km=getKmSinceService(itemId);
+  var rows="";
+  if(it.lastDate) rows+='<div class="row"><span class="lbl">Last service</span><span class="val">'+fmtDate(it.lastDate)+'</span></div>';
+  if(km!=null) rows+='<div class="row"><span class="lbl">Km since last</span><span class="val accent">'+km.toLocaleString()+" km"+'</span></div>';
+  else rows+='<div class="row"><span class="lbl">Status</span><span class="val" style="color:var(--text-muted)">First record — km fetched from Strava</span></div>';
+  rows+='<div class="row"><span class="lbl">Bike total km</span><span class="val">'+getActiveBikeTotalKm().toLocaleString()+" km"+'</span></div>';
+  document.getElementById("logSummary").innerHTML=rows;
+}
+
+async function confirmLogService(){
+  var itemId=_logItemId;
+  var item=ITEMS.find(function(x){ return x.id===itemId; });
+  var it=getItemData(itemId);
+  var serviceDate=document.getElementById("logDate").value;
+  var note=document.getElementById("logNote").value.trim();
+  if(!serviceDate){ toast("Please select a date","err"); return; }
+
+  var btn=document.getElementById("btnConfirmLog");
+  btn.disabled=true;
+  var totalKm=getActiveBikeTotalKm();
+
+  if(_logMode==="edit"){
+    // ── Edit existing service: update date & note, re-fetch km if date changed ──
+    btn.textContent="Saving...";
+    var oldDate=it.lastDate;
+    var dateChanged=(oldDate!==serviceDate);
+    var kmRidden=0;
+    if(dateChanged){
+      btn.textContent="Fetching km from Strava...";
+      var fetched=await fetchKmSinceDate(serviceDate);
+      if(fetched!=null&&fetched>0){
+        kmRidden=fetched;
+        it.lastKmTotal=totalKm-fetched;
+      } else {
+        it.lastKmTotal=totalKm;
+      }
+    } else {
+      kmRidden=getKmSinceService(itemId)||0;
+    }
+    it.lastDate=serviceDate;
+    // Update the most recent history entry
+    if(!it.history) it.history=[];
+    if(it.history.length>0){
+      it.history[0].date=serviceDate;
+      it.history[0].kmRidden=kmRidden;
+      it.history[0].note=note;
+      it.history[0].kmAtService=totalKm;
+    } else {
+      it.history=[{date:serviceDate,kmAtService:totalKm,kmRidden:kmRidden,note:note}];
+    }
+    btn.disabled=false; btn.textContent="✓ Save Edit";
+    closeModalId("logModal");
+    saveAll();
+    toast(item.name+" service updated!","ok");
+    render();
+
+  } else {
+    // ── New service ──
+    var kmRidden=null;
+    if(it.lastDate&&it.lastKmTotal!=null){
+      kmRidden=Math.max(0,totalKm-it.lastKmTotal);
+      btn.textContent="Recording...";
+    } else {
+      btn.textContent="Fetching km from Strava...";
+      var fetchedKm=await fetchKmSinceDate(serviceDate);
+      if(fetchedKm!=null&&fetchedKm>0){
+        kmRidden=fetchedKm;
+        it.lastKmTotal=totalKm-fetchedKm;
+      } else {
+        kmRidden=0;
+        it.lastKmTotal=totalKm;
+        toast(fetchedKm===0?"No rides found since "+fmtDateShort(serviceDate):"Strava fetch failed — km set to 0","info");
+      }
+    }
+    // Push old service to history, then update current
+    if(!it.history) it.history=[];
+    it.history.unshift({
+      date:serviceDate,
+      kmAtService:totalKm,
+      kmRidden:kmRidden,
+      note:note
+    });
+    it.lastDate=serviceDate;
+    if(it.lastKmTotal==null) it.lastKmTotal=totalKm;
+
+    btn.disabled=false; btn.textContent="✓ Record Service";
+    closeModalId("logModal");
+    saveAll();
+    toast(item.name+" recorded! ("+kmRidden+" km)","ok");
+    render();
+  }
+}
+
+// ── History Modal ─────────────────────────────────────────────────────────────
+function openHistoryModal(itemId){
+  var item=ITEMS.find(function(x){ return x.id===itemId; });
+  var it=getItemData(itemId);
+  var history=it.history||[];
+  document.getElementById("historyModalTitle").textContent=item.name+" History";
+
+  var aiBox=document.getElementById("historyAI");
+  if(history.length>=2){
+    var kmVals=history.map(function(h){ return h.kmRidden; }).filter(function(v){ return v!=null&&v>0; });
+    if(kmVals.length>=2){
+      var avg=Math.round(kmVals.reduce(function(s,v){ return s+v; },0)/kmVals.length);
+      var min=Math.min.apply(null,kmVals); var max=Math.max.apply(null,kmVals);
+      var txt="Based on "+kmVals.length+" services, you typically service this every <strong style='color:var(--accent)'>"+avg+" km</strong> (range: "+min+"–"+max+" km).";
+      if(item.intervalKm){ txt+=avg<item.intervalKm?" Pattern suggests you could stretch to "+item.intervalKm+" km.":" You're using the full interval well."; }
+      txt+=" Intervals personalise after 3+ services.";
+      aiBox.innerHTML="<strong>🤖 Pattern Analysis</strong>"+txt;
+      aiBox.classList.remove("hidden");
+    } else { aiBox.classList.add("hidden"); }
+  } else { aiBox.classList.add("hidden"); }
+
+  renderHistoryList(itemId);
+  document.getElementById("historyModal").classList.remove("hidden");
+}
+
+function renderHistoryList(itemId){
+  var it=getItemData(itemId);
+  var history=it.history||[];
+  var listEl=document.getElementById("historyList");
+  if(history.length===0){
+    listEl.innerHTML='<div class="history-empty">No service history yet.<br>Log a service to start building history.</div>';
+    return;
+  }
+  listEl.innerHTML=history.map(function(h,idx){
+    var kmStr=h.kmRidden!=null?h.kmRidden.toLocaleString()+" km since prev service":"First record";
+    var tag=idx===0?'<span class="history-tag">Latest</span>':'';
+    return '<div class="history-item">'+
+      '<div class="history-item-left">'+
+        '<div class="history-date">'+fmtDate(h.date)+tag+'</div>'+
+        '<div class="history-km">'+kmStr+'</div>'+
+        (h.note?'<div class="history-note">'+esc(h.note)+'</div>':'')+
+      '</div>'+
+      '<button class="history-del" onclick="deleteHistoryEntry(\''+itemId+'\','+idx+')" title="Delete entry">×</button>'+
+    '</div>';
+  }).join("");
+}
+
+function deleteHistoryEntry(itemId,idx){
+  var it=getItemData(itemId);
+  if(!it.history||!it.history[idx]) return;
+  var h=it.history[idx];
+  if(!confirm("Delete service entry from "+fmtDate(h.date)+"?")) return;
+
+  it.history.splice(idx,1);
+
+  // If we deleted the latest (idx 0), update lastDate/lastKmTotal from new [0]
+  if(idx===0){
+    if(it.history.length>0){
+      it.lastDate=it.history[0].date;
+      it.lastKmTotal=it.history[0].kmAtService - (it.history[0].kmRidden||0);
+    } else {
+      it.lastDate=null;
+      it.lastKmTotal=null;
+    }
+  }
+
+  saveAll();
+  toast("Entry deleted","info");
+  renderHistoryList(itemId);
+  // refresh AI box
+  var aiBox=document.getElementById("historyAI");
+  var history=it.history||[];
+  if(history.length<2) aiBox.classList.add("hidden");
+  render();
+}
+
+// ── Strava km fetch ───────────────────────────────────────────────────────────
 async function fetchKmSinceDate(dateStr){
   if(!strava) return null;
   try{
@@ -461,138 +762,20 @@ async function fetchKmSinceDate(dateStr){
         body:JSON.stringify({action:"activities",access_token:token,after:afterTs,page:page})});
       var acts=await r.json();
       if(!Array.isArray(acts)||acts.length===0) break;
-      acts.forEach(function(a){
-        if(a.gear_id===activeBikeId && a.distance) totalMeters+=a.distance;
-      });
+      acts.forEach(function(a){ if(a.gear_id===activeBikeId&&a.distance) totalMeters+=a.distance; });
       if(acts.length<30) break;
       page++;
     }
     return Math.round(totalMeters/1000);
-  }catch(e){
-    console.error("fetchKmSinceDate failed:",e);
-    return null;
-  }
+  }catch(e){ console.error("fetchKmSinceDate failed:",e); return null; }
 }
 
-// ── Log Service Modal ──
-function openLogModal(itemId){
-  _logItemId=itemId;
-  var item=ITEMS.find(function(x){ return x.id===itemId; });
-  var it=getItemData(itemId);
-  var km=getKmSinceService(itemId);
-
-  document.getElementById("logModalTitle").textContent="Log Service: "+item.name;
-  document.getElementById("logDate").value=todayStr();
-  document.getElementById("logNote").value="";
-  document.getElementById("btnConfirmLog").disabled=false;
-  document.getElementById("btnConfirmLog").textContent="✓ Record Service";
-
-  var rows="";
-  if(it.lastDate) rows+='<div class="row"><span class="label">Last service</span><span class="val">'+fmtDate(it.lastDate)+'</span></div>';
-  if(km!=null) rows+='<div class="row"><span class="label">Km ridden since</span><span class="val accent">'+km.toLocaleString()+' km</span></div>';
-  else rows+='<div class="row"><span class="label">First record</span><span class="val" style="color:var(--text-muted)">Km will be fetched from Strava</span></div>';
-  rows+='<div class="row"><span class="label">Bike total km</span><span class="val">'+getActiveBikeTotalKm().toLocaleString()+' km</span></div>';
-  document.getElementById("logSummary").innerHTML=rows;
-
-  document.getElementById("logModal").classList.remove("hidden");
-}
-
-async function confirmLogService(){
-  var itemId=_logItemId;
-  var item=ITEMS.find(function(x){ return x.id===itemId; });
-  var it=getItemData(itemId);
-  var serviceDate=document.getElementById("logDate").value;
-  var note=document.getElementById("logNote").value.trim();
-
-  if(!serviceDate){ toast("Please select a date","err"); return; }
-
-  var btn=document.getElementById("btnConfirmLog");
-  btn.disabled=true;
-
-  var totalKm=getActiveBikeTotalKm();
-  var kmRidden=null;
-
-  if(it.lastDate && it.lastKmTotal!=null){
-    // ── Not first time: km since service = difference in bike totals ──
-    kmRidden=Math.max(0, totalKm - it.lastKmTotal);
-    btn.textContent="Recording...";
-  } else {
-    // ── First time logging this item: fetch actual rides from Strava since service date ──
-    btn.textContent="Fetching km from Strava...";
-    var fetchedKm=await fetchKmSinceDate(serviceDate);
-    if(fetchedKm!=null && fetchedKm>0){
-      kmRidden=fetchedKm;
-      // Back-calculate lastKmTotal so future syncs compute correctly
-      it.lastKmTotal=totalKm - fetchedKm;
-      toast("Fetched "+fetchedKm+" km from Strava since "+fmtDateShort(serviceDate),"ok");
-    } else {
-      // Strava returned 0 or failed — set baseline to current total (0 km since service)
-      kmRidden=0;
-      it.lastKmTotal=totalKm;
-      if(fetchedKm===0) toast("No rides found on this bike since "+fmtDateShort(serviceDate),"info");
-      else toast("Strava fetch failed — km set to 0","info");
-    }
-  }
-
-  // Save history entry
-  if(!it.history) it.history=[];
-  it.history.unshift({
-    date:       serviceDate,
-    kmAtService:totalKm,
-    kmRidden:   kmRidden,
-    note:       note
-  });
-
-  // Update state
-  it.lastDate=serviceDate;
-  if(it.lastKmTotal==null) it.lastKmTotal=totalKm;
-
-  btn.disabled=false;
-  btn.textContent="✓ Record Service";
-  closeModalId("logModal");
-  saveAll();
-  toast(item.name+" service recorded! ("+kmRidden+" km since service date)","ok");
-  render();
-}
-
-// ── History Modal ──
-function openHistoryModal(itemId){
-  var item=ITEMS.find(function(x){ return x.id===itemId; });
-  var it=getItemData(itemId);
-  var history=it.history||[];
-  document.getElementById("historyModalTitle").textContent=item.name+" History";
-
-  var aiBox=document.getElementById("historyAI");
-  if(history.length>=2){
-    var kmVals=history.map(function(h){ return h.kmRidden; }).filter(function(v){ return v!=null&&v>0; });
-    if(kmVals.length>=2){
-      var avg=Math.round(kmVals.reduce(function(s,v){ return s+v; },0)/kmVals.length);
-      var min=Math.min.apply(null,kmVals); var max=Math.max.apply(null,kmVals);
-      var insight="Based on "+kmVals.length+" services, you typically service this every <strong style='color:var(--accent)'>"+avg+" km</strong> (range: "+min+"–"+max+" km).";
-      if(item.intervalKm){ insight+=avg<item.intervalKm ? " Your pattern suggests you could extend to "+item.intervalKm+" km." : " You're using the full recommended interval well."; }
-      insight+=" Dashboard intervals are now personalized to your pattern.";
-      aiBox.innerHTML="<strong>🤖 AI Trend Analysis</strong>"+insight;
-      aiBox.classList.remove("hidden");
-    } else { aiBox.classList.add("hidden"); }
-  } else { aiBox.classList.add("hidden"); }
-
-  var listEl=document.getElementById("historyList");
-  if(history.length===0){
-    listEl.innerHTML='<div class="history-empty">No service history yet.<br>Log a service to start building history.</div>';
-  } else {
-    listEl.innerHTML=history.map(function(h,idx){
-      var kmStr=h.kmRidden!=null ? h.kmRidden.toLocaleString()+" km since previous service" : "First service record";
-      var tag=idx===0?'<span class="history-tag">Latest</span>':'';
-      return '<div class="history-item"><div><div class="history-date">'+fmtDate(h.date)+' '+tag+'</div><div class="history-km">'+kmStr+'</div>'+(h.note?'<div class="history-note">'+esc(h.note)+'</div>':'')+'</div></div>';
-    }).join("");
-  }
-  document.getElementById("historyModal").classList.remove("hidden");
-}
-
+// ── Modal helpers ─────────────────────────────────────────────────────────────
 function closeModal(e,id){ if(e.target===document.getElementById(id)) closeModalId(id); }
 function closeModalId(id){ document.getElementById(id).classList.add("hidden"); }
 function switchBike(id){ activeBikeId=id; render(); }
 
+// ── Strava auth ───────────────────────────────────────────────────────────────
 function connectStrava(){
   localStorage.setItem("chainwax_client_id",    STRAVA_CLIENT_ID);
   localStorage.setItem("chainwax_client_secret", STRAVA_CLIENT_SECRET);
@@ -603,7 +786,7 @@ function connectStrava(){
 }
 
 function logout(){
-  if(!confirm("Logout? Local session cleared.")) return;
+  if(!confirm("Logout? Local session will be cleared.")) return;
   localStorage.removeItem("bikemaint_session");
   athlete=null; strava=null; binId=null;
   bikes=[]; activeBikeId=null; bikeData={}; lastSyncTs=null;
@@ -614,7 +797,7 @@ function logout(){
 async function getToken(){
   if(!strava) return null;
   var now=Math.floor(Date.now()/1000);
-  if(now < strava.expiresAt-60) return strava.accessToken;
+  if(now<strava.expiresAt-60) return strava.accessToken;
   try{
     var resp=await fetch("/api/strava",{method:"POST",headers:{"Content-Type":"application/json"},
       body:JSON.stringify({action:"token",client_id:STRAVA_CLIENT_ID,client_secret:STRAVA_CLIENT_SECRET,
@@ -628,14 +811,16 @@ async function getToken(){
   return null;
 }
 
+// ── Sync Strava ───────────────────────────────────────────────────────────────
 async function syncStrava(){
-  if(!strava){ toast("Not connected","err"); return; }
+  if(!strava){ toast("Not connected to Strava","err"); return; }
   var btn=document.getElementById("btnSync");
   btn.disabled=true; btn.innerHTML='<span class="spin-inline">↻</span> Syncing...';
   try{
     var token=await getToken();
     if(!token) throw new Error("Session expired — please reconnect Strava.");
 
+    // Collect gear IDs from recent activities
     var gearIds=[];
     var pg=1;
     while(pg<=3){
@@ -648,10 +833,11 @@ async function syncStrava(){
     }
 
     if(!gearIds.length){
-      toast("No bikes found in your recent Strava activities","info");
+      toast("No bikes found in recent Strava activities","info");
       btn.disabled=false; btn.innerHTML="↻ Sync Strava"; return;
     }
 
+    // Fetch full gear data (includes brand, model, totalRides, totalElevation)
     var fetched=[];
     for(var i=0;i<gearIds.length;i++){
       try{
@@ -663,11 +849,20 @@ async function syncStrava(){
     }
 
     bikes=fetched.map(function(b){
-      return{ id:b.id, name:b.nickname||b.name||"Bike", totalKm:Math.round((b.distance||0)/1000) };
+      return{
+        id:            b.id,
+        name:          b.nickname||b.name||"Bike",
+        brand:         b.brand_name||"",
+        model:         b.model_name||"",
+        frameType:     b.frame_type||0,
+        totalKm:       Math.round((b.distance||0)/1000),
+        totalRides:    b.athlete_count||null,
+        totalElevation:b.elevation_sum||null
+      };
     });
 
     if(!activeBikeId||!bikes.find(function(b){ return b.id===activeBikeId; })){
-      activeBikeId=bikes.length ? bikes[0].id : null;
+      activeBikeId=bikes.length?bikes[0].id:null;
     }
 
     lastSyncTs=new Date().toISOString();
@@ -678,9 +873,10 @@ async function syncStrava(){
   render();
 }
 
+// ── Persistence ───────────────────────────────────────────────────────────────
 async function saveToCloud(){
   if(!athlete) return;
-  var payload={ athlete:athlete, strava:strava, bikes:bikes, activeBikeId:activeBikeId, bikeData:bikeData, lastSyncTs:lastSyncTs };
+  var payload={athlete:athlete,strava:strava,bikes:bikes,activeBikeId:activeBikeId,bikeData:bikeData,lastSyncTs:lastSyncTs};
   try{
     var r=await fetch("/api/strava",{method:"POST",headers:{"Content-Type":"application/json"},
       body:JSON.stringify({action:"save",bin_id:binId,athlete_id:athlete.id,data:payload})});
@@ -711,8 +907,8 @@ async function loadFromCloud(aid,bid){
 function saveLocal(){
   try{
     localStorage.setItem("bikemaint_session",JSON.stringify({
-      athlete:athlete, strava:strava, binId:binId, bikes:bikes,
-      activeBikeId:activeBikeId, bikeData:bikeData, lastSyncTs:lastSyncTs
+      athlete:athlete,strava:strava,binId:binId,bikes:bikes,
+      activeBikeId:activeBikeId,bikeData:bikeData,lastSyncTs:lastSyncTs
     }));
   }catch(e){}
 }
@@ -733,6 +929,7 @@ function loadLocal(){
 
 async function saveAll(){ saveLocal(); await saveToCloud(); }
 
+// ── Init ──────────────────────────────────────────────────────────────────────
 (async function(){
   var loadEl=document.getElementById("loadingScreen");
   var loginEl=document.getElementById("loginScreen");
@@ -740,18 +937,18 @@ async function saveAll(){ saveLocal(); await saveToCloud(); }
 
   function showApp(){
     loginEl.classList.add("hidden"); appEl.classList.remove("hidden");
-    document.getElementById("athleteName").textContent=athlete ? (athlete.firstname||"")+" "+(athlete.lastname||"") : "";
+    document.getElementById("athleteName").textContent=athlete?(athlete.firstname||"")+" "+(athlete.lastname||""):"";
     render();
   }
 
-  // ── Check for Strava callback token ──
+  // Check for post-OAuth token
   var stravaRaw=localStorage.getItem("chainwax_strava");
   if(stravaRaw){
     try{
       var sd=JSON.parse(stravaRaw);
-      var accessToken  = sd.accessToken  || sd.access_token;
-      var refreshToken = sd.refreshToken || sd.refresh_token;
-      var expiresAt    = sd.expiresAt    || sd.expires_at;
+      var accessToken  = sd.accessToken||sd.access_token;
+      var refreshToken = sd.refreshToken||sd.refresh_token;
+      var expiresAt    = sd.expiresAt||sd.expires_at;
       var sdAthlete    = sd.athlete;
       if(accessToken){
         if(sdAthlete) athlete=sdAthlete;
@@ -769,17 +966,16 @@ async function saveAll(){ saveLocal(); await saveToCloud(); }
         var existingBin=localStorage.getItem("bikemaint_bin_"+(athlete.id||""))||
                         localStorage.getItem("chainwax_bin_"+(athlete.id||""));
         if(existingBin){ binId=existingBin; await loadFromCloud(athlete.id,binId); }
-        // Show app immediately, then sync in background
         saveLocal();
         loadEl.style.display="none";
         showApp();
         syncStrava().catch(function(e){ console.error("Background sync failed:",e); });
         return;
       }
-    }catch(e){ console.error("OAuth callback parse error:",e); }
+    }catch(e){ console.error("OAuth parse error:",e); }
   }
 
-  // ── Restore from localStorage ──
+  // Restore from localStorage
   if(loadLocal()&&athlete){
     if(binId) await loadFromCloud(athlete.id,binId);
     if(!activeBikeId&&bikes.length) activeBikeId=bikes[0].id;
@@ -787,7 +983,7 @@ async function saveAll(){ saveLocal(); await saveToCloud(); }
     showApp(); return;
   }
 
-  // ── Not authenticated ──
+  // Not authenticated
   loadEl.style.display="none";
   loginEl.classList.remove("hidden");
 })();
