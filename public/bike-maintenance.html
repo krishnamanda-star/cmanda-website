@@ -939,6 +939,8 @@ async function confirmLogService(){
 
     if(!it.history) it.history=[];
     btn.textContent="Fetching km from Strava...";
+    // Auto-open debug panel so fetch progress/errors are visible
+    if(!_debugOpen){ _debugOpen=true; document.getElementById("debugPanel").classList.remove("hidden"); }
 
     // Fetch rides on serviceDate itself (e.g. today's 51 km)
     var newKmRidden=0;
@@ -1068,21 +1070,78 @@ async function fetchKmSinceDate(dateStr){
   if(!strava) return null;
   try{
     var token=await getToken();
-    if(!token) return null;
-    var afterTs=Math.floor(new Date(dateStr+"T00:00:00").getTime()/1000);
+    if(!token){ dbg("fetchKmSinceDate: no token","err"); return null; }
+
+    // Use midnight UTC for the after timestamp to avoid timezone issues
+    // (dateStr is YYYY-MM-DD; treating as UTC midnight avoids JST offset problems)
+    var afterTs=Math.floor(new Date(dateStr+"T00:00:00Z").getTime()/1000);
+    dbg("fetchKmSinceDate: after="+dateStr+" (ts="+afterTs+") bike="+activeBikeId);
+
     var totalMeters=0;
     var page=1;
+    var proxyWorked=false;
+
     while(true){
-      var r=await fetch("/api/strava",{method:"POST",headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({action:"activities",access_token:token,after:afterTs,page:page})});
-      var acts=await r.json();
-      if(!Array.isArray(acts)||acts.length===0) break;
-      acts.forEach(function(a){ if(a.gear_id===activeBikeId&&a.distance) totalMeters+=a.distance; });
-      if(acts.length<30) break;
+      var acts=null;
+
+      // Try proxy first
+      try{
+        var r=await fetch("/api/strava",{method:"POST",headers:{"Content-Type":"application/json"},
+          body:JSON.stringify({action:"activities",access_token:token,after:afterTs,per_page:100,page:page})});
+        var parsed=await r.json();
+        if(Array.isArray(parsed)){
+          acts=parsed;
+          proxyWorked=true;
+          dbg("  proxy page "+page+": "+acts.length+" activities");
+        } else {
+          dbg("  proxy returned non-array: "+JSON.stringify(parsed).substring(0,120),"warn");
+        }
+      }catch(pe){ dbg("  proxy error page "+page+": "+pe.message,"warn"); }
+
+      // Fall back to direct Strava API if proxy failed
+      if(!acts){
+        try{
+          dbg("  trying direct Strava API page "+page);
+          var dr=await fetch(
+            "https://www.strava.com/api/v3/athlete/activities?after="+afterTs+"&per_page=100&page="+page,
+            {headers:{"Authorization":"Bearer "+token}}
+          );
+          acts=await dr.json();
+          if(!Array.isArray(acts)){
+            dbg("  direct Strava returned non-array: "+JSON.stringify(acts).substring(0,120),"err");
+            break;
+          }
+          dbg("  direct Strava page "+page+": "+acts.length+" activities");
+        }catch(de){
+          dbg("  direct Strava error: "+de.message,"err");
+          break;
+        }
+      }
+
+      if(!acts||acts.length===0) break;
+
+      var pageMeters=0;
+      acts.forEach(function(a){
+        if(a.gear_id===activeBikeId&&a.distance){
+          pageMeters+=a.distance;
+          dbg("    activity: "+a.name+" "+Math.round(a.distance/1000)+"km gear="+a.gear_id);
+        }
+      });
+      totalMeters+=pageMeters;
+      dbg("  page "+page+" bike meters: "+Math.round(pageMeters/1000)+"km, running total: "+Math.round(totalMeters/1000)+"km");
+
+      if(acts.length<100) break;
       page++;
     }
-    return Math.round(totalMeters/1000);
-  }catch(e){ console.error("fetchKmSinceDate failed:",e); return null; }
+
+    var result=Math.round(totalMeters/1000);
+    dbg("fetchKmSinceDate result: "+result+" km","label");
+    return result;
+  }catch(e){
+    dbg("fetchKmSinceDate FAILED: "+e.message,"err");
+    console.error("fetchKmSinceDate failed:",e);
+    return null;
+  }
 }
 
 // ── Modal helpers ─────────────────────────────────────────────────────────────
