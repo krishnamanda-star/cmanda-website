@@ -1363,7 +1363,22 @@ async function syncStrava(){
         }
       });
     });
-
+// Always load cloud data before saving — prevents empty local state wiping history on fresh devices
+    try{
+      var cloudBody=binId
+        ?{action:"load",bin_id:binId,athlete_id:String(athlete.id)}
+        :{action:"load",athlete_id:String(athlete.id)};
+      var cr=await fetch("/api/strava",{method:"POST",headers:{"Content-Type":"application/json"},
+        body:JSON.stringify(cloudBody)});
+      var cd=await cr.json();
+      if(cd.bin_id&&!binId){
+        binId=cd.bin_id;
+        localStorage.setItem("bikemaint_bin_"+athlete.id,binId);
+      }
+      if(cd.data&&cd.data.bikeData){
+        mergeCloudBikeData(cd.data.bikeData);
+      }
+    }catch(ce){ console.error("Pre-sync cloud load failed:",ce); }
     lastSyncTs=new Date().toISOString();
 
     // If bikeData is empty (new device), try loading existing service history from cloud
@@ -1398,71 +1413,79 @@ async function syncStrava(){
   render();
 }
 
-// ── Persistence ───────────────────────────────────────────────────────────────
+// ── Persistence ────────────────────────────────────────────────────────────────
+
+// Merge cloud bikeData into local state, preferring cloud where local is empty or has less history.
+function mergeCloudBikeData(cloudBikeData){
+  if(!cloudBikeData) return;
+  Object.keys(cloudBikeData).forEach(function(bikeId){
+    var cloudBike=cloudBikeData[bikeId];
+    if(!bikeData[bikeId]) bikeData[bikeId]={items:{}};
+    if(!bikeData[bikeId].items) bikeData[bikeId].items={};
+    if(!cloudBike||!cloudBike.items) return;
+    Object.keys(cloudBike.items).forEach(function(itemId){
+      var cloudItem=cloudBike.items[itemId];
+      var localItem=bikeData[bikeId].items[itemId];
+      var localHistory=(localItem&&localItem.history)?localItem.history.length:0;
+      var cloudHistory=(cloudItem&&cloudItem.history)?cloudItem.history.length:0;
+      if(!localItem||!localItem.lastDate||cloudHistory>localHistory){
+        bikeData[bikeId].items[itemId]=cloudItem;
+      }
+    });
+  });
+}
+
 async function saveToCloud(){
   if(!athlete) return;
-  // If we don't have a binId yet, check the lookup first before creating a new bin
-  // This prevents a new device from creating a duplicate bin and overwriting the lookup
+  // Before creating a new bin, check the lookup for an existing one for this athlete.
   if(!binId){
     try{
       var lr=await fetch("/api/strava",{method:"POST",headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({action:"load",athlete_id:athlete.id})});
+        body:JSON.stringify({action:"load",athlete_id:String(athlete.id)})});
       var ld=await lr.json();
       if(ld.bin_id){
         binId=ld.bin_id;
         localStorage.setItem("bikemaint_bin_"+athlete.id,binId);
-        // Also merge any existing bikeData from cloud with current (prefer cloud history)
-        if(ld.data&&ld.data.bikeData){
-          Object.keys(ld.data.bikeData).forEach(function(bk){
-            if(!bikeData[bk]||Object.keys(bikeData[bk].items||{}).every(function(ik){ return !(bikeData[bk].items[ik].history||[]).length; })){
-              bikeData[bk]=ld.data.bikeData[bk];
-            }
-          });
-        }
-        dbg("saveToCloud: found existing bin "+binId+" — using it instead of creating new","label");
       }
-    }catch(e){ dbg("saveToCloud lookup failed: "+e.message,"warn"); }
+    }catch(e){ console.error("Bin lookup before save failed:",e); }
   }
-  var payload={athlete:athlete,strava:strava,bikes:bikes,activeBikeId:activeBikeId,bikeData:bikeData,lastSyncTs:lastSyncTs};
+  var payload={athlete,strava,bikes,activeBikeId,bikeData,lastSyncTs};
   try{
     var r=await fetch("/api/strava",{method:"POST",headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({action:"save",bin_id:binId,athlete_id:athlete.id,data:payload})});
+      body:JSON.stringify({action:"save",bin_id:binId,athlete_id:String(athlete.id),data:payload})});
     var d=await r.json();
-    if(d.bin_id&&!binId){ binId=d.bin_id; localStorage.setItem("bikemaint_bin_"+athlete.id,binId); }
+    if(d.bin_id&&!binId){
+      binId=d.bin_id;
+      localStorage.setItem("bikemaint_bin_"+athlete.id,binId);
+    }
   }catch(e){ console.error("Cloud save failed:",e); }
 }
 
-async function loadFromCloud(aid,bid,keepTokens){
+async function loadFromCloud(aid,bid){
   try{
-    dbg("loadFromCloud: aid="+aid+" bid="+(bid||"null")+" keepTokens="+keepTokens);
+    var body=bid
+      ?{action:"load",bin_id:bid,athlete_id:String(aid)}
+      :{action:"load",athlete_id:String(aid)};
     var r=await fetch("/api/strava",{method:"POST",headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({action:"load",bin_id:bid,athlete_id:aid})});
+      body:JSON.stringify(body)});
     var d=await r.json();
-    dbg("loadFromCloud response: bin_id="+(d.bin_id||"null")+" has_data="+(!!d.data)+" error="+(d.error||"none"));
+    if(d.bin_id&&!binId){
+      binId=d.bin_id;
+      localStorage.setItem("bikemaint_bin_"+aid,binId);
+    }
     if(d.data){
       var s=d.data;
-      // keepTokens=true: preserve fresh OAuth tokens (called right after login)
-      if(!keepTokens&&s.athlete) athlete=s.athlete;
-      if(!keepTokens&&s.strava)  strava=s.strava;
+      if(s.athlete)      athlete=s.athlete;
+      if(s.strava)       strava=s.strava;
       if(s.bikes)        bikes=s.bikes;
       if(s.activeBikeId) activeBikeId=s.activeBikeId;
       if(s.bikeData)     bikeData=s.bikeData;
       if(s.lastSyncTs)   lastSyncTs=s.lastSyncTs;
-      if(d.bin_id&&!binId){ binId=d.bin_id; localStorage.setItem("bikemaint_bin_"+aid,binId); }
-      dbg("loadFromCloud: loaded "+((s.bikes||[]).length)+" bikes, binId="+binId,"label");
-      toast("Cloud: loaded "+(s.bikes||[]).length+" bikes from bin "+(d.bin_id||binId||"?"),"ok");
       return true;
-    } else {
-      dbg("loadFromCloud: no data returned (bin_id="+(d.bin_id||"null")+")","warn");
-      toast("Cloud: no data found for athlete "+aid,"err");
     }
-  }catch(e){
-    dbg("loadFromCloud FAILED: "+e.message,"err");
-    toast("Cloud load error: "+e.message,"err");
-  }
+  }catch(e){ console.error("Cloud load failed:",e); }
   return false;
-}
-
+}  
 function saveLocal(){
   try{
     localStorage.setItem("bikemaint_session",JSON.stringify({
