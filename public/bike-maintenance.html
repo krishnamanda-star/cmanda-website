@@ -1468,7 +1468,22 @@ async function saveAll(){ saveLocal(); await saveToCloud(); }
         if(!athlete) athlete={id:"unknown",firstname:"Strava",lastname:"User"};
         var existingBin=localStorage.getItem("bikemaint_bin_"+(athlete.id||""))||
                         localStorage.getItem("chainwax_bin_"+(athlete.id||""));
-        if(existingBin){ binId=existingBin; await loadFromCloud(athlete.id,binId); }
+        if(existingBin){
+          binId=existingBin;
+          await loadFromCloud(athlete.id,binId);
+        } else {
+          // New device — try to find existing cloud data by athlete ID
+          try{
+            var fr=await fetch("/api/strava",{method:"POST",headers:{"Content-Type":"application/json"},
+              body:JSON.stringify({action:"find_bin",athlete_id:athlete.id})});
+            var fd=await fr.json();
+            if(fd.bin_id){
+              binId=fd.bin_id;
+              localStorage.setItem("bikemaint_bin_"+athlete.id, binId);
+              await loadFromCloud(athlete.id,binId);
+            }
+          }catch(e){ console.warn("find_bin not supported, starting fresh:",e); }
+        }
         saveLocal();
         loadEl.style.display="none";
         showApp();
@@ -1480,7 +1495,17 @@ async function saveAll(){ saveLocal(); await saveToCloud(); }
 
   // Restore from localStorage
   if(loadLocal()&&athlete){
-    if(binId) await loadFromCloud(athlete.id,binId);
+    if(binId){
+      await loadFromCloud(athlete.id,binId);
+    } else {
+      // Has local session but no binId — try finding cloud data
+      try{
+        var fr=await fetch("/api/strava",{method:"POST",headers:{"Content-Type":"application/json"},
+          body:JSON.stringify({action:"find_bin",athlete_id:athlete.id})});
+        var fd=await fr.json();
+        if(fd.bin_id){ binId=fd.bin_id; localStorage.setItem("bikemaint_bin_"+athlete.id,binId); await loadFromCloud(athlete.id,binId); }
+      }catch(e){}
+    }
     if(!activeBikeId&&bikes.length) activeBikeId=bikes[0].id;
     loadEl.style.display="none";
     showApp(); return;
