@@ -1072,14 +1072,12 @@ async function fetchKmSinceDate(dateStr){
     var token=await getToken();
     if(!token){ dbg("fetchKmSinceDate: no token","err"); return null; }
 
-    // Use midnight UTC for the after timestamp to avoid timezone issues
-    // (dateStr is YYYY-MM-DD; treating as UTC midnight avoids JST offset problems)
     var afterTs=Math.floor(new Date(dateStr+"T00:00:00Z").getTime()/1000);
     dbg("fetchKmSinceDate: after="+dateStr+" (ts="+afterTs+") bike="+activeBikeId);
 
     var totalMeters=0;
     var page=1;
-    var proxyWorked=false;
+    var fetchSucceeded=false;  // track whether ANY successful API call was made
 
     while(true){
       var acts=null;
@@ -1091,7 +1089,7 @@ async function fetchKmSinceDate(dateStr){
         var parsed=await r.json();
         if(Array.isArray(parsed)){
           acts=parsed;
-          proxyWorked=true;
+          fetchSucceeded=true;
           dbg("  proxy page "+page+": "+acts.length+" activities");
         } else {
           dbg("  proxy returned non-array: "+JSON.stringify(parsed).substring(0,120),"warn");
@@ -1109,11 +1107,16 @@ async function fetchKmSinceDate(dateStr){
           acts=await dr.json();
           if(!Array.isArray(acts)){
             dbg("  direct Strava returned non-array: "+JSON.stringify(acts).substring(0,120),"err");
+            // Both failed on this page — if we got data on prev pages, use what we have
+            // If this is page 1, truly failed → return null
+            if(page===1){ dbg("Page 1 failed on both sources — returning null","err"); return null; }
             break;
           }
+          fetchSucceeded=true;
           dbg("  direct Strava page "+page+": "+acts.length+" activities");
         }catch(de){
           dbg("  direct Strava error: "+de.message,"err");
+          if(page===1){ dbg("Page 1 exception — returning null","err"); return null; }
           break;
         }
       }
@@ -1124,22 +1127,23 @@ async function fetchKmSinceDate(dateStr){
       acts.forEach(function(a){
         if(a.gear_id===activeBikeId&&a.distance){
           pageMeters+=a.distance;
-          dbg("    activity: "+a.name+" "+Math.round(a.distance/1000)+"km gear="+a.gear_id);
+          dbg("    ✓ "+a.name+" "+Math.round(a.distance/1000)+"km (gear="+a.gear_id+")");
         }
       });
       totalMeters+=pageMeters;
-      dbg("  page "+page+" bike meters: "+Math.round(pageMeters/1000)+"km, running total: "+Math.round(totalMeters/1000)+"km");
+      dbg("  page "+page+": +"+Math.round(pageMeters/1000)+"km → total "+Math.round(totalMeters/1000)+"km");
 
       if(acts.length<100) break;
       page++;
     }
+
+    if(!fetchSucceeded){ dbg("No successful fetch — returning null","err"); return null; }
 
     var result=Math.round(totalMeters/1000);
     dbg("fetchKmSinceDate result: "+result+" km","label");
     return result;
   }catch(e){
     dbg("fetchKmSinceDate FAILED: "+e.message,"err");
-    console.error("fetchKmSinceDate failed:",e);
     return null;
   }
 }
@@ -1333,6 +1337,21 @@ async function syncStrava(){
     if(!activeBikeId||!bikes.find(function(b){ return b.id===activeBikeId; })){
       activeBikeId=bikes[0].id;
     }
+
+    // ── Reconcile: if a bike's totalKm moved backwards vs stored lastKmTotal
+    // (e.g. data was saved with a stale totalKm), cap lastKmTotal to new totalKm
+    // so getKmSinceService never returns a negative number
+    bikes.forEach(function(bike){
+      if(!bikeData[bike.id]) return;
+      var items=bikeData[bike.id].items||{};
+      Object.keys(items).forEach(function(itemId){
+        var it=items[itemId];
+        if(it.lastKmTotal!=null && it.lastKmTotal > bike.totalKm){
+          dbg("  Reconcile "+itemId+": lastKmTotal "+it.lastKmTotal+" > totalKm "+bike.totalKm+" → capping","warn");
+          it.lastKmTotal=bike.totalKm;
+        }
+      });
+    });
 
     lastSyncTs=new Date().toISOString();
     await saveAll();
