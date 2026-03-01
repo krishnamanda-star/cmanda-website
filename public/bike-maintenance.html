@@ -61,6 +61,14 @@ body{min-height:100vh;background:var(--bg);color:var(--text);font-family:var(--f
 .btn-sync{flex:1;padding:11px 16px;background:var(--strava);color:#fff;border:none;border-radius:10px;font-family:var(--ff-mono);font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:background 0.2s}
 .btn-sync:hover:not(:disabled){background:#e04400}
 .btn-sync:disabled{opacity:0.5;cursor:not-allowed}
+.btn-debug{padding:11px 14px;background:var(--card);border:1px solid var(--border-l);color:var(--text-dim);border-radius:10px;cursor:pointer;font-size:14px;transition:all 0.2s;flex-shrink:0}
+.btn-debug:hover{border-color:var(--accent);color:var(--accent)}
+.debug-panel{margin:0;border-bottom:1px solid var(--border);background:#0a0a10}
+.debug-header{display:flex;justify-content:space-between;align-items:center;padding:8px 16px 4px;font-family:var(--ff-mono);font-size:10px;color:var(--text-muted);border-bottom:1px solid var(--border)}
+.debug-log{padding:8px 16px 12px;font-family:var(--ff-mono);font-size:10px;color:#7aff7a;max-height:240px;overflow-y:auto;line-height:1.7;white-space:pre-wrap;word-break:break-all}
+.debug-log .err{color:#ff7a7a}
+.debug-log .warn{color:#ffbb44}
+.debug-log .label{color:#7ad4ff;font-weight:600}
 
 /* ── Categories ── */
 .category{padding:20px 20px 0}
@@ -218,6 +226,14 @@ body{min-height:100vh;background:var(--bg);color:var(--text);font-family:var(--f
     <div id="bikeInfoCard"></div>
     <div class="sync-bar">
       <button class="btn-sync" id="btnSync" onclick="syncStrava()">↻ Sync Strava</button>
+      <button class="btn-debug" id="btnDebug" onclick="toggleDebug()" title="Debug API responses">🔍</button>
+    </div>
+    <div id="debugPanel" class="debug-panel hidden">
+      <div class="debug-header">
+        <span>API Debug Output</span>
+        <button onclick="clearDebug()" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-family:var(--ff-mono);font-size:10px;">Clear</button>
+      </div>
+      <div id="debugLog" class="debug-log"></div>
     </div>
     <div id="dashboard"></div>
   </div>
@@ -454,7 +470,7 @@ function renderBikeInfoCard(){
       (brandStr?'<div class="bike-details-brand">'+esc(brandStr)+'</div>':'')+
       '<div class="bike-details-stats">'+
         '<div class="bike-stat"><div class="bike-stat-val">'+b.totalKm.toLocaleString()+'</div><div class="bike-stat-label">Total km</div></div>'+
-        (b.totalRides?'<div class="bike-stat"><div class="bike-stat-val">'+b.totalRides.toLocaleString()+'</div><div class="bike-stat-label">Rides</div></div>':'')+
+        
         (b.totalElevation?'<div class="bike-stat"><div class="bike-stat-val">'+Math.round(b.totalElevation/1000)+'k</div><div class="bike-stat-label">Elev. m</div></div>':'')+
       '</div>'+
     '</div>'+
@@ -816,6 +832,21 @@ async function getToken(){
   return null;
 }
 
+// ── Debug helpers ─────────────────────────────────────────────────────────────
+var _debugOpen=false;
+function toggleDebug(){ _debugOpen=!_debugOpen; document.getElementById("debugPanel").classList.toggle("hidden",!_debugOpen); }
+function clearDebug(){ document.getElementById("debugLog").innerHTML=""; }
+function dbg(msg,cls){
+  var el=document.getElementById("debugLog");
+  if(!el) return;
+  var line=document.createElement("div");
+  if(cls) line.className=cls;
+  line.textContent="["+new Date().toLocaleTimeString()+"] "+msg;
+  el.appendChild(line);
+  el.scrollTop=el.scrollHeight;
+  console.log(msg);
+}
+
 // ── Sync Strava ───────────────────────────────────────────────────────────────
 async function syncStrava(){
   if(!strava){ toast("Not connected to Strava","err"); return; }
@@ -824,80 +855,140 @@ async function syncStrava(){
   try{
     var token=await getToken();
     if(!token) throw new Error("Session expired — please reconnect Strava.");
-
-    // ── Step 1: Get athlete profile which contains ALL bikes in athlete.bikes[] ──
-    var athleteResp=await fetch("/api/strava",{method:"POST",headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({action:"athlete",access_token:token})});
-    var athleteData=await athleteResp.json();
+    dbg("Token OK","label");
 
     var gearIds=[];
 
-    // athlete.bikes is an array of summary gear objects
-    if(athleteData&&Array.isArray(athleteData.bikes)&&athleteData.bikes.length>0){
-      athleteData.bikes.forEach(function(b){ if(b.id) gearIds.push(b.id); });
-      // Also update athlete profile
-      if(athleteData.id) athlete=athleteData;
+    // ── Strategy 1: Athlete endpoint — returns bikes[] array ──
+    try{
+      dbg("Fetching athlete profile...");
+      var athleteResp=await fetch("/api/strava",{method:"POST",headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({action:"athlete",access_token:token})});
+      var athleteData=await athleteResp.json();
+      dbg("Athlete response keys: "+Object.keys(athleteData||{}).join(", "));
+      if(athleteData&&Array.isArray(athleteData.bikes)){
+        dbg("athlete.bikes count: "+athleteData.bikes.length,"label");
+        athleteData.bikes.forEach(function(b){
+          dbg("  bike from profile: id="+b.id+" name="+b.name+" dist="+b.distance);
+          if(b.id&&gearIds.indexOf(b.id)===-1) gearIds.push(b.id);
+        });
+        if(athleteData.id) athlete=athleteData;
+      } else {
+        dbg("No bikes[] array in athlete response — server may be filtering it","warn");
+        // Try raw Strava API directly with the token
+        try{
+          dbg("Trying direct Strava API /athlete...");
+          var rawResp=await fetch("https://www.strava.com/api/v3/athlete",{
+            headers:{"Authorization":"Bearer "+token}});
+          var rawData=await rawResp.json();
+          dbg("Direct Strava keys: "+Object.keys(rawData||{}).join(", "));
+          if(rawData&&Array.isArray(rawData.bikes)){
+            dbg("Direct Strava athlete.bikes count: "+rawData.bikes.length,"label");
+            rawData.bikes.forEach(function(b){
+              dbg("  bike: id="+b.id+" name="+b.name);
+              if(b.id&&gearIds.indexOf(b.id)===-1) gearIds.push(b.id);
+            });
+            if(rawData.id) athlete=rawData;
+          }
+        }catch(directErr){ dbg("Direct Strava call failed: "+directErr.message,"err"); }
+      }
+    }catch(ae){ dbg("Athlete fetch error: "+ae.message,"err"); }
+
+    // ── Strategy 2: Scan activities for gear_id values ──
+    dbg("Scanning activities for gear IDs...");
+    var pg=1;
+    while(pg<=5){
+      try{
+        var r=await fetch("/api/strava",{method:"POST",headers:{"Content-Type":"application/json"},
+          body:JSON.stringify({action:"activities",access_token:token,after:0,page:pg})});
+        var acts=await r.json();
+        if(!Array.isArray(acts)||acts.length===0){ dbg("Activities page "+pg+": empty, stopping"); break; }
+        var pageGearIds=[];
+        acts.forEach(function(a){
+          if(a.gear_id&&gearIds.indexOf(a.gear_id)===-1){
+            gearIds.push(a.gear_id);
+            pageGearIds.push(a.gear_id);
+          }
+        });
+        dbg("Activities page "+pg+": "+acts.length+" acts, new gear IDs: ["+pageGearIds.join(",")+"]");
+        if(acts.length<30) break;
+        pg++;
+      }catch(pe){ dbg("Activities page "+pg+" error: "+pe.message,"err"); break; }
     }
 
-    // ── Step 2: Fallback — also scan recent activities for any gear not in profile ──
-    var pg=1;
-    while(pg<=3){
-      var r=await fetch("/api/strava",{method:"POST",headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({action:"activities",access_token:token,after:0,page:pg})});
-      var acts=await r.json();
-      if(!Array.isArray(acts)||acts.length===0) break;
-      acts.forEach(function(a){
-        if(a.gear_id&&gearIds.indexOf(a.gear_id)===-1) gearIds.push(a.gear_id);
-      });
-      pg++;
-    }
+    dbg("Total unique gear IDs found: "+gearIds.length+" → ["+gearIds.join(",")+"]","label");
 
     if(!gearIds.length){
-      toast("No bikes found on your Strava account","info");
-      btn.disabled=false; btn.innerHTML="↻ Sync Strava"; return;
+      toast("No bikes found. Tap 🔍 to see debug output","err");
+      dbg("FAILED: No gear IDs discovered from any source","err");
+      btn.disabled=false; btn.innerHTML="↻ Sync Strava"; render(); return;
     }
 
-    // ── Step 3: Fetch full gear detail for each bike (brand, model, totals) ──
+    // ── Strategy 3: Fetch full gear detail for each ID ──
     var fetched=[];
     for(var i=0;i<gearIds.length;i++){
+      var gid=gearIds[i];
+      dbg("Fetching gear detail: "+gid);
+      // Try via server proxy first
+      var gd=null;
       try{
         var gr=await fetch("/api/strava",{method:"POST",headers:{"Content-Type":"application/json"},
-          body:JSON.stringify({action:"gear",gear_id:gearIds[i],access_token:token})});
-        var gd=await gr.json();
-        if(gd&&gd.id) fetched.push(gd);
-      }catch(ge){ console.error("gear fetch:",ge); }
+          body:JSON.stringify({action:"gear",gear_id:gid,access_token:token})});
+        gd=await gr.json();
+        dbg("  gear via proxy: id="+gd.id+" name="+(gd.nickname||gd.name)+" dist="+gd.distance);
+      }catch(ge){ dbg("  proxy gear fetch failed: "+ge.message,"warn"); }
+
+      // If proxy failed or returned nothing useful, try direct
+      if(!gd||!gd.id){
+        try{
+          dbg("  trying direct Strava /gear/"+gid);
+          var dgr=await fetch("https://www.strava.com/api/v3/gear/"+gid,{
+            headers:{"Authorization":"Bearer "+token}});
+          gd=await dgr.json();
+          dbg("  direct gear: id="+gd.id+" name="+(gd.nickname||gd.name));
+        }catch(dge){ dbg("  direct gear failed: "+dge.message,"err"); }
+      }
+
+      if(gd&&gd.id) fetched.push(gd);
+      else dbg("  SKIPPED gear "+gid+" — no valid response","err");
     }
 
+    dbg("Gear details fetched: "+fetched.length+"/"+gearIds.length,"label");
+
     if(!fetched.length){
-      toast("Could not load bike details from Strava","err");
-      btn.disabled=false; btn.innerHTML="↻ Sync Strava"; return;
+      toast("Could not load bike details. Tap 🔍 for debug","err");
+      btn.disabled=false; btn.innerHTML="↻ Sync Strava"; render(); return;
     }
 
     bikes=fetched.map(function(b){
+      var name=b.nickname||b.name||"Bike";
+      dbg("  Mapped bike: "+name+" ("+b.id+") → "+Math.round((b.distance||0)/1000)+"km");
       return{
         id:            b.id,
-        name:          b.nickname||b.name||"Bike",
+        name:          name,
         brand:         b.brand_name||"",
         model:         b.model_name||"",
         frameType:     b.frame_type||0,
         totalKm:       Math.round((b.distance||0)/1000),
-        totalRides:    b.converted_distance||null,
+        
         totalElevation:b.elevation_sum||null
       };
     });
 
-    // Sort by total km descending (primary bike first)
     bikes.sort(function(a,b){ return b.totalKm-a.totalKm; });
 
-    // Preserve active bike selection if still valid, else pick first
     if(!activeBikeId||!bikes.find(function(b){ return b.id===activeBikeId; })){
       activeBikeId=bikes[0].id;
     }
 
     lastSyncTs=new Date().toISOString();
     await saveAll();
+    dbg("Sync complete! "+bikes.length+" bike(s) loaded","label");
     toast("Synced "+bikes.length+" bike"+(bikes.length!==1?"s":"")+"!","ok");
-  }catch(e){ toast("Sync failed: "+e.message,"err"); }
+  }catch(e){
+    dbg("SYNC ERROR: "+e.message,"err");
+    toast("Sync failed: "+e.message,"err");
+  }
   btn.disabled=false; btn.innerHTML="↻ Sync Strava";
   render();
 }
