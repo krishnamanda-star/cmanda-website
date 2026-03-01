@@ -720,7 +720,7 @@ function switchBike(id){
 function connectStrava(){
   localStorage.setItem("chainwax_client_id",     STRAVA_CLIENT_ID);
   localStorage.setItem("chainwax_client_secret",  STRAVA_CLIENT_SECRET);
-  localStorage.setItem("strava_return_to",        "/cycling");  // ← tells callback where to return
+  localStorage.setItem("strava_return_to",        "/bike-maintenance.html");  // ← tells callback where to return
   window.location.href="https://www.strava.com/oauth/authorize?client_id="+STRAVA_CLIENT_ID+
     "&response_type=code&redirect_uri="+encodeURIComponent(CALLBACK)+
     "&approval_prompt=auto&scope=activity:read_all";
