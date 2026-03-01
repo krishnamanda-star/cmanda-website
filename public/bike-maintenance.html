@@ -1472,17 +1472,23 @@ async function saveAll(){ saveLocal(); await saveToCloud(); }
           binId=existingBin;
           await loadFromCloud(athlete.id,binId);
         } else {
-          // New device — try to find existing cloud data by athlete ID
+          // New device — look up existing cloud data by athlete ID
           try{
             var fr=await fetch("/api/strava",{method:"POST",headers:{"Content-Type":"application/json"},
-              body:JSON.stringify({action:"find_bin",athlete_id:athlete.id})});
+              body:JSON.stringify({action:"load",athlete_id:athlete.id})});
             var fd=await fr.json();
-            if(fd.bin_id){
+            if(fd.bin_id&&fd.data){
               binId=fd.bin_id;
               localStorage.setItem("bikemaint_bin_"+athlete.id, binId);
-              await loadFromCloud(athlete.id,binId);
+              var s=fd.data;
+              if(s.athlete)      athlete=s.athlete;
+              if(s.strava)       strava=s.strava;
+              if(s.bikes)        bikes=s.bikes;
+              if(s.activeBikeId) activeBikeId=s.activeBikeId;
+              if(s.bikeData)     bikeData=s.bikeData;
+              if(s.lastSyncTs)   lastSyncTs=s.lastSyncTs;
             }
-          }catch(e){ console.warn("find_bin not supported, starting fresh:",e); }
+          }catch(e){ console.warn("Cloud lookup failed, starting fresh:",e); }
         }
         saveLocal();
         loadEl.style.display="none";
@@ -1498,12 +1504,12 @@ async function saveAll(){ saveLocal(); await saveToCloud(); }
     if(binId){
       await loadFromCloud(athlete.id,binId);
     } else {
-      // Has local session but no binId — try finding cloud data
+      // Has local session but no binId — look up by athlete ID
       try{
         var fr=await fetch("/api/strava",{method:"POST",headers:{"Content-Type":"application/json"},
-          body:JSON.stringify({action:"find_bin",athlete_id:athlete.id})});
+          body:JSON.stringify({action:"load",athlete_id:athlete.id})});
         var fd=await fr.json();
-        if(fd.bin_id){ binId=fd.bin_id; localStorage.setItem("bikemaint_bin_"+athlete.id,binId); await loadFromCloud(athlete.id,binId); }
+        if(fd.bin_id&&fd.data){ binId=fd.bin_id; localStorage.setItem("bikemaint_bin_"+athlete.id,binId); await loadFromCloud(athlete.id,binId); }
       }catch(e){}
     }
     if(!activeBikeId&&bikes.length) activeBikeId=bikes[0].id;
