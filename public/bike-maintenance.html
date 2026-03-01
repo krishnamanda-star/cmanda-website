@@ -622,7 +622,8 @@ function getEffectiveIntervalKm(item){
   var it=getItemData(item.id);
   var history=it.history||[];
   if(history.length>=3){
-    var kmVals=history.map(function(h){ return h.kmRidden||0; }).filter(function(v){ return v>50; });
+    // Skip history[0] (active/in-progress interval) — only use completed intervals
+    var kmVals=history.slice(1).map(function(h){ return h.kmRidden||0; }).filter(function(v){ return v>50; });
     if(kmVals.length>=2){
       var avg=kmVals.reduce(function(s,v){ return s+v; },0)/kmVals.length;
       return Math.round(avg);
@@ -923,104 +924,66 @@ async function confirmLogService(){
   } else {
     // ── New service ──
     //
-    // CORRECT MODEL:
-    //   You waxed chain this morning (today = serviceDate).
-    //   Then rode 51 km today on fresh wax.
-    //   Previous wax (Jan 18) survived: 471 total − 51 post-wax rides = 420 km.
+    // UNIFIED MODEL — history[0] is always the current active service:
     //
-    //   history[0] = Jan 18 → kmRidden = 420  (finalised, closed out)
-    //   "active"   = Today  → NOT in history yet, just live counter from lastKmTotal
+    //   history = [
+    //     {date:"2026-03-01", kmRidden:51,  note:"Molten Speed Wax"},  ← active (current)
+    //     {date:"2026-01-18", kmRidden:420, note:""},                   ← completed
+    //   ]
     //
-    //   When NEXT service is logged, today's entry gets added to history with its km.
+    // When a NEW service is logged:
+    //   1. Fetch post-wax km from Strava since serviceDate (e.g. 51km today)
+    //   2. Finalise history[0].kmRidden = prevIntervalKm = (totalKm - postWaxKm) - lastKmTotal
+    //      e.g. (13131 - 51) - 12660 = 420  → Jan 18 entry gets 420km ✓
+    //   3. Unshift new entry: {date:today, kmRidden:postWaxKm}  → Mar 1 gets 51km ✓
+    //   4. lastKmTotal = totalKm - postWaxKm  → live counter ticks up from 51km ✓
     //
-    // LOGIC:
-    //   1. Fetch km from Strava since serviceDate (today's post-wax 51 km)
-    //   2. prevIntervalKm = (totalKm - postWaxKm) - lastKmTotal = 420
-    //   3. Finalise history[0] (Jan 18) with 420 km — do NOT add today to history
-    //   4. Set lastDate = today, lastKmTotal = totalKm - postWaxKm
-    //      so getKmSinceService() = totalKm - (totalKm - 51) = 51 ✓
-    //   5. Today's entry enters history only when the NEXT service is logged
+    // First ever service: no history[0] to finalise, just unshift the new entry.
+    // kmRidden for first entry = fetched km since that date (historical rides on that wax).
 
     if(!it.history) it.history=[];
 
-    if(it.lastDate && it.lastKmTotal != null){
-      // ── Subsequent service: fetch post-wax km from Strava ──
-      btn.textContent="Fetching km from Strava...";
-      if(!_debugOpen){ _debugOpen=true; document.getElementById("debugPanel").classList.remove("hidden"); }
+    btn.textContent="Fetching km from Strava...";
+    if(!_debugOpen){ _debugOpen=true; document.getElementById("debugPanel").classList.remove("hidden"); }
 
-      var postWaxKm = await fetchKmSinceDate(serviceDate);
-
-      if(postWaxKm === null){
-        // Strava unreachable — fall back to 0 post-wax km (conservative)
-        postWaxKm = 0;
-        toast("Strava fetch failed — assuming 0 km ridden after service today.","info");
-      }
-
-      dbg("Post-wax km today: "+postWaxKm+"km. Closing prev interval...");
-
-      // The currently "active" service (lastDate = e.g. Mar 1) is not in history yet.
-      // Before closing it out, insert it into history[0] so it can be finalised.
-      // km it survived = (totalKm - postWaxKm) - lastKmTotal
-      var activeIntervalKm = Math.max(0, (totalKm - postWaxKm) - it.lastKmTotal);
-      dbg("Active interval ("+it.lastDate+"): ("+totalKm+" - "+postWaxKm+") - "+it.lastKmTotal+" = "+activeIntervalKm+"km");
-
-      // Push the active service into history with its final km
-      it.history.unshift({
-        date:        it.lastDate,
-        kmAtService: totalKm - postWaxKm,
-        kmRidden:    activeIntervalKm,
-        note:        note  // note goes on the NEW service, but keep blank for the closed one
-      });
-      // Overwrite the note: the note the user typed is for the NEW service
-      // The closed entry gets the old note (if any stored in lastNote)
-      if(it.lastNote !== undefined){
-        it.history[0].note = it.lastNote;
-      } else {
-        it.history[0].note = "";
-      }
-
-      // Set baseline so live counter shows post-wax km (e.g. 51 km)
-      // getKmSinceService = totalKm - lastKmTotal = postWaxKm ✓
-      it.lastDate    = serviceDate;
-      it.lastKmTotal = totalKm - postWaxKm;
-      it.lastNote    = note;  // store note for the new active service
-
-      btn.disabled=false; btn.textContent="✓ Record Service";
-      closeModalId("logModal");
-      saveAll();
-      toast(item.name+" serviced! Jan 18 wax: "+prevIntervalKm+"km · Today's rides: "+postWaxKm+"km","ok");
-      render();
-
-    } else {
-      // ── First ever service: fetch km from Strava since chosen date ──
-      btn.textContent="Fetching km from Strava...";
-      if(!_debugOpen){ _debugOpen=true; document.getElementById("debugPanel").classList.remove("hidden"); }
-
-      var fetchedKm = await fetchKmSinceDate(serviceDate);
-      var firstKm   = (fetchedKm != null && fetchedKm > 0) ? fetchedKm : 0;
-      if(fetchedKm === null){
-        toast("Strava fetch failed — km set to 0. Edit to correct later.","info");
-      }
-
-      // First entry goes into history immediately (it's the baseline record)
-      it.history.unshift({
-        date:        serviceDate,
-        kmAtService: totalKm,
-        kmRidden:    firstKm,
-        note:        note
-      });
-
-      // Baseline: live counter will show km ridden since this service
-      it.lastDate    = serviceDate;
-      it.lastKmTotal = totalKm - firstKm;
-      it.lastNote    = note;
-
-      btn.disabled=false; btn.textContent="✓ Record Service";
-      closeModalId("logModal");
-      saveAll();
-      toast(item.name+" recorded! ("+firstKm+" km since "+fmtDateShort(serviceDate)+")","ok");
-      render();
+    var postWaxKm = await fetchKmSinceDate(serviceDate);
+    if(postWaxKm === null){
+      postWaxKm = 0;
+      toast("Strava fetch failed — km set to 0. Edit to correct later.","info");
     }
+    dbg("Post-wax km since "+serviceDate+": "+postWaxKm+"km");
+
+    btn.textContent="Recording...";
+
+    if(it.history.length > 0){
+      // ── Subsequent service ──
+      // Finalise the previous entry (history[0]) with km it survived
+      var prevIntervalKm = Math.max(0, (totalKm - postWaxKm) - it.lastKmTotal);
+      dbg("Closing history[0] ("+it.history[0].date+"): ("+totalKm+" - "+postWaxKm+") - "+it.lastKmTotal+" = "+prevIntervalKm+"km");
+      it.history[0].kmRidden    = prevIntervalKm;
+      it.history[0].kmAtService = totalKm - postWaxKm;
+    }
+
+    // Unshift new active entry
+    it.history.unshift({
+      date:        serviceDate,
+      kmAtService: totalKm,
+      kmRidden:    postWaxKm,
+      note:        note
+    });
+
+    // New baseline: live counter = totalKm - lastKmTotal starts at postWaxKm
+    it.lastDate    = serviceDate;
+    it.lastKmTotal = totalKm - postWaxKm;
+
+    btn.disabled=false; btn.textContent="✓ Record Service";
+    closeModalId("logModal");
+    saveAll();
+    var prevKm = it.history.length > 1 ? it.history[1].kmRidden : null;
+    var msg = item.name+" serviced! "+postWaxKm+" km on fresh wax";
+    if(prevKm != null) msg += " · prev interval: "+prevKm+" km";
+    toast(msg,"ok");
+    render();
   }
 }
 
@@ -1033,7 +996,8 @@ function openHistoryModal(itemId){
 
   var aiBox=document.getElementById("historyAI");
   if(history.length>=2){
-    var kmVals=history.map(function(h){ return h.kmRidden; }).filter(function(v){ return v!=null&&v>0; });
+    // Skip history[0] (active/in-progress) — use only completed intervals for pattern analysis
+    var kmVals=history.slice(1).map(function(h){ return h.kmRidden; }).filter(function(v){ return v!=null&&v>0; });
     if(kmVals.length>=2){
       var avg=Math.round(kmVals.reduce(function(s,v){ return s+v; },0)/kmVals.length);
       var min=Math.min.apply(null,kmVals); var max=Math.max.apply(null,kmVals);
@@ -1054,43 +1018,32 @@ function renderHistoryList(itemId){
   var history=it.history||[];
   var listEl=document.getElementById("historyList");
 
-  if(!it.lastDate && history.length===0){
+  if(history.length===0){
     listEl.innerHTML='<div class="history-empty">No service history yet.<br>Log a service to start building history.</div>';
     return;
   }
 
   var rows="";
-
-  // Active service (lastDate) is NOT in history[] yet — show it at top as "in progress"
-  if(it.lastDate){
-    var liveKm=getKmSinceService(itemId)||0;
-    var activeNote=it.lastNote||"";
-    var activeStyle='border-left:2px solid var(--accent);padding-left:10px;opacity:0.85';
-    var tagStyle='background:rgba(240,160,48,0.15);color:var(--accent-bright);border-color:rgba(240,160,48,0.3)';
-    rows+='<div class="history-item" style="'+activeStyle+'">'
-         +'<div class="history-item-left">'
-         +'<div class="history-date">'+fmtDate(it.lastDate)+'<span class="history-tag" style="'+tagStyle+'">Active</span></div>'
-         +'<div class="history-km" style="color:var(--accent-bright)">'+liveKm.toLocaleString()+' km so far (live)</div>'
-         +(activeNote?'<div class="history-note">'+esc(activeNote)+'</div>':'')
-         +'</div>'
-         +'<div style="font-family:var(--ff-mono);font-size:9px;color:var(--text-muted);align-self:center">in progress</div>'
-         +'</div>';
-  }
-
-  // Past (completed) service intervals
   for(var i=0;i<history.length;i++){
     var h=history[i];
-    var kmStr=(h.kmRidden==null||h.kmRidden===0)?"0 km recorded":h.kmRidden.toLocaleString()+" km on this service";
-    rows+='<div class="history-item">'
+    var isActive=(i===0);
+    var liveKm=Math.max(0,getActiveBikeTotalKm()-(it.lastKmTotal||0));
+    var kmDisplay=isActive
+      ?'<span style="color:var(--accent-bright)">'+liveKm.toLocaleString()+' km so far (live)</span>'
+      :((h.kmRidden==null||h.kmRidden===0)?'0 km recorded':h.kmRidden.toLocaleString()+' km on this service');
+    var activeBar=isActive?'border-left:2px solid var(--accent);padding-left:10px;':'';
+    var tag=isActive?'<span class="history-tag" style="background:rgba(240,160,48,0.15);color:var(--accent-bright);border-color:rgba(240,160,48,0.3)">Active</span>':'';
+    var delBtn='<button class="history-del" onclick="deleteHistoryEntry(\x27'+itemId+'\x27,'+i+')" title="Delete">×</button>';
+    var rightEl=isActive?'<div style="font-family:var(--ff-mono);font-size:9px;color:var(--text-muted);align-self:center">in progress</div>':delBtn;
+    rows+='<div class="history-item" style="'+activeBar+'">'
          +'<div class="history-item-left">'
-         +'<div class="history-date">'+fmtDate(h.date)+'</div>'
-         +'<div class="history-km">'+kmStr+'</div>'
+         +'<div class="history-date">'+fmtDate(h.date)+tag+'</div>'
+         +'<div class="history-km">'+kmDisplay+'</div>'
          +(h.note?'<div class="history-note">'+esc(h.note)+'</div>':'')
          +'</div>'
-         +'<button class="history-del" onclick="deleteHistoryEntry(\''+itemId+'\','+i+')" title="Delete entry">×</button>'
+         +rightEl
          +'</div>';
   }
-
   listEl.innerHTML=rows;
 }
 
