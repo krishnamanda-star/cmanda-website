@@ -78,7 +78,6 @@
 </head>
 <body>
   <div class="card">
-    <!-- Strava logo SVG -->
     <svg class="logo" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
       <circle cx="32" cy="32" r="32" fill="#FC4C02"/>
       <path d="M28 44l8-16 8 16" fill="none" stroke="#fff" stroke-width="4" stroke-linejoin="round"/>
@@ -95,48 +94,32 @@
   </div>
 
   <script>
-    /**
-     * strava-callback.html
-     *
-     * Handles the OAuth 2.0 callback from Strava after the user authorizes the app.
-     * Exchanges the `code` query parameter for an access + refresh token via the
-     * Next.js /api/strava endpoint, stores the token in localStorage, then redirects
-     * back to whichever page initiated the OAuth flow.
-     *
-     * Smart return routing:
-     *   - Before starting OAuth, the initiating page sets:
-     *       localStorage.setItem("strava_return_to", "/cycling");
-     *   - This callback reads that key to determine where to redirect after auth.
-     *   - Falls back to "/chain-wax.html" for backwards compatibility.
-     */
-
     (async function () {
-      const params     = new URLSearchParams(window.location.search);
-      const code       = params.get("code");
-      const errorParam = params.get("error");
+      const params      = new URLSearchParams(window.location.search);
+      const code        = params.get("code");
+      const errorParam  = params.get("error");
 
-      const titleEl    = document.getElementById("title");
-      const subtitleEl = document.getElementById("subtitle");
-      const spinnerEl  = document.getElementById("spinner");
-      const errorBox   = document.getElementById("errorBox");
+      const titleEl     = document.getElementById("title");
+      const subtitleEl  = document.getElementById("subtitle");
+      const spinnerEl   = document.getElementById("spinner");
+      const errorBox    = document.getElementById("errorBox");
       const successIcon = document.getElementById("successIcon");
 
       function showError(msg) {
-        spinnerEl.style.display  = "none";
-        errorBox.style.display   = "block";
-        errorBox.textContent     = msg;
-        titleEl.textContent      = "Connection failed";
-        subtitleEl.textContent   = "Please close this page and try connecting again.";
+        spinnerEl.style.display = "none";
+        errorBox.style.display  = "block";
+        errorBox.textContent    = msg;
+        titleEl.textContent     = "Connection failed";
+        subtitleEl.textContent  = "Please close this page and try connecting again.";
       }
 
-      function showSuccess(dest) {
-        spinnerEl.style.display      = "none";
-        successIcon.style.display    = "block";
-        titleEl.textContent          = "Connected!";
-        subtitleEl.textContent       = `Strava connected successfully. Redirecting you back…`;
+      function showSuccess() {
+        spinnerEl.style.display   = "none";
+        successIcon.style.display = "block";
+        titleEl.textContent       = "Connected!";
+        subtitleEl.textContent    = "Strava connected successfully. Redirecting you back…";
       }
 
-      // Handle explicit OAuth error (e.g. user denied access)
       if (errorParam) {
         showError(`Strava returned an error: ${errorParam}. Please try again.`);
         return;
@@ -148,7 +131,6 @@
       }
 
       try {
-        // Exchange code for token via the Next.js backend
         const res = await fetch("/api/strava", {
           method:  "POST",
           headers: { "Content-Type": "application/json" },
@@ -166,22 +148,20 @@
           throw new Error(data.error);
         }
 
-        // Store token — same key used by both chain-wax.html and bike-maintenance.html
+        // camelCase keys — matches what bike-maintenance.html and chain-wax.html both read
         localStorage.setItem("chainwax_strava", JSON.stringify({
-          access_token:  data.access_token,
-          refresh_token: data.refresh_token,
-          expires_at:    data.expires_at,
-          athlete:       data.athlete,
+          accessToken:  data.access_token,
+          refreshToken: data.refresh_token,
+          expiresAt:    data.expires_at,
+          athlete:      data.athlete,
         }));
 
-        // Determine where to redirect: read the key set by the initiating page,
-        // then clean it up so subsequent OAuth flows aren't affected.
+        // Return to whichever page started the OAuth flow, fallback to chain-wax
         const returnTo = localStorage.getItem("strava_return_to") || "/chain-wax.html";
         localStorage.removeItem("strava_return_to");
 
-        showSuccess(returnTo);
+        showSuccess();
 
-        // Short pause so the user sees the success state before redirect
         setTimeout(() => {
           window.location.href = returnTo;
         }, 900);
