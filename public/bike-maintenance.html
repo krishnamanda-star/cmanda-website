@@ -923,65 +923,77 @@ async function confirmLogService(){
   } else {
     // ── New service ──
     //
-    // Correct mental model:
-    //   You ride Jan 18 → today (51 km today, 420 km before today = 471 total)
-    //   You log a new wax TODAY after your ride.
+    // MODEL:
+    //   new entry  = today's service → kmRidden = 0 (fresh, no km yet on new wax/part)
+    //   old entry  = previous service → kmRidden = km it survived = getKmSinceService()
     //
-    //   Result:
-    //     history[0] = TODAY → kmRidden = 51 (today's rides fetched from Strava)
-    //     history[1] = Jan 18 → kmRidden = 420 (total 471 − today's 51)
+    // For subsequent services: NO Strava fetch needed.
+    //   We already know totalKm (from last sync) and lastKmTotal (set when Jan 18 was logged).
+    //   prevIntervalKm = totalKm - lastKmTotal = 471 ✓
     //
-    //   Logic:
-    //     1. Fetch km ridden since serviceDate (today's 51 km)
-    //     2. Old entry's final km = totalKm - todayKm = 420
-    //     3. New entry gets todayKm = 51
-    //     4. New baseline = totalKm
+    // Only fetch from Strava for the very FIRST service entry (no lastKmTotal yet).
 
     if(!it.history) it.history=[];
-    btn.textContent="Fetching km from Strava...";
-    // Auto-open debug panel so fetch progress/errors are visible
-    if(!_debugOpen){ _debugOpen=true; document.getElementById("debugPanel").classList.remove("hidden"); }
-
-    // Fetch rides on serviceDate itself (e.g. today's 51 km)
-    var newKmRidden=0;
-    var fetchedKm=await fetchKmSinceDate(serviceDate);
-    if(fetchedKm!=null&&fetchedKm>0){
-      newKmRidden=fetchedKm;
-    } else if(fetchedKm===null){
-      toast("Strava fetch failed — km set to 0. Edit to correct later.","info");
-    }
-
     btn.textContent="Recording...";
 
-    if(it.lastDate&&it.lastKmTotal!=null){
-      // Close out the previous interval with km up to (but not counting today's rides)
-      // Jan 18 entry = (totalKm - newKmRidden) - lastKmTotal = 471 - 51 - 0 = 420
-      var prevIntervalKm=Math.max(0,(totalKm-newKmRidden)-it.lastKmTotal);
-      if(it.history.length>0){
-        it.history[0].kmRidden=prevIntervalKm;
+    if(it.lastDate && it.lastKmTotal!=null){
+      // ── Subsequent service ──
+      // Close out the previous interval using already-known km values (no fetch needed)
+      var prevIntervalKm = Math.max(0, totalKm - it.lastKmTotal);
+      dbg("New service: closing prev interval at "+prevIntervalKm+"km ("+totalKm+" - "+it.lastKmTotal+")");
+
+      // Update the existing history[0] entry (e.g. Jan 18) with its final km count
+      if(it.history.length > 0){
+        it.history[0].kmRidden = prevIntervalKm;
+        it.history[0].kmAtService = totalKm;
       }
+
+      // Add new entry at top with 0 km (fresh service, interval just started)
+      it.history.unshift({
+        date:        serviceDate,
+        kmAtService: totalKm,
+        kmRidden:    0,
+        note:        note
+      });
+
+      // Reset baseline to now
+      it.lastDate    = serviceDate;
+      it.lastKmTotal = totalKm;
+
+      btn.disabled=false; btn.textContent="✓ Record Service";
+      closeModalId("logModal");
+      saveAll();
+      toast(item.name+" serviced! Previous interval: "+prevIntervalKm+" km","ok");
+      render();
+
+    } else {
+      // ── First ever service: fetch km from Strava since the chosen date ──
+      btn.textContent="Fetching km from Strava...";
+      if(!_debugOpen){ _debugOpen=true; document.getElementById("debugPanel").classList.remove("hidden"); }
+
+      var fetchedKm = await fetchKmSinceDate(serviceDate);
+      var firstKm   = (fetchedKm != null && fetchedKm > 0) ? fetchedKm : 0;
+      if(fetchedKm === null){
+        toast("Strava fetch failed — km set to 0. Edit to correct later.","info");
+      }
+
+      it.history.unshift({
+        date:        serviceDate,
+        kmAtService: totalKm,
+        kmRidden:    firstKm,
+        note:        note
+      });
+
+      // Baseline: bike total minus the fetched km (so live display starts at firstKm)
+      it.lastDate    = serviceDate;
+      it.lastKmTotal = totalKm - firstKm;
+
+      btn.disabled=false; btn.textContent="✓ Record Service";
+      closeModalId("logModal");
+      saveAll();
+      toast(item.name+" recorded! ("+firstKm+" km since "+fmtDateShort(serviceDate)+")","ok");
+      render();
     }
-
-    // New entry: today's service with today's km
-    it.history.unshift({
-      date:serviceDate,
-      kmAtService:totalKm,
-      kmRidden:newKmRidden,
-      note:note
-    });
-
-    // Reset baseline so next interval starts counting from now
-    it.lastDate=serviceDate;
-    it.lastKmTotal=totalKm;
-
-    btn.disabled=false; btn.textContent="✓ Record Service";
-    closeModalId("logModal");
-    saveAll();
-    var prevKm=it.history.length>1?it.history[1].kmRidden:null;
-    var msg=item.name+" serviced! "+newKmRidden+" km today";
-    if(prevKm!=null) msg+=" · prev interval: "+prevKm+" km";
-    toast(msg,"ok");
-    render();
   }
 }
 
