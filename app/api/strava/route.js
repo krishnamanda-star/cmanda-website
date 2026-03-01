@@ -61,13 +61,23 @@ export async function POST(request) {
   if (action === "save") {
     try {
       if (body.bin_id) {
+        // Update existing bin
         await fetch(JSONBIN_URL + "/" + body.bin_id, {
           method: "PUT",
           headers: { "Content-Type": "application/json", "X-Master-Key": JSONBIN_KEY },
           body: JSON.stringify(body.data),
         });
+        // ALWAYS keep lookup in sync so any device can find this bin by athlete_id
+        if (body.athlete_id) {
+          var lookup = await getLookup();
+          if (lookup[String(body.athlete_id)] !== body.bin_id) {
+            lookup[String(body.athlete_id)] = body.bin_id;
+            await saveLookup(lookup);
+          }
+        }
         return Response.json({ success: true, bin_id: body.bin_id });
       } else {
+        // Create new bin
         var r = await fetch(JSONBIN_URL, {
           method: "POST",
           headers: { "Content-Type": "application/json", "X-Master-Key": JSONBIN_KEY, "X-Bin-Name": "chainwax_" + body.athlete_id, "X-Bin-Private": "true" },
