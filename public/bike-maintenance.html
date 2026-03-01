@@ -922,38 +922,63 @@ async function confirmLogService(){
 
   } else {
     // ── New service ──
-    var kmRidden=null;
+    //
+    // Correct mental model:
+    //   You ride Jan 18 → today (51 km today, 420 km before today = 471 total)
+    //   You log a new wax TODAY after your ride.
+    //
+    //   Result:
+    //     history[0] = TODAY → kmRidden = 51 (today's rides fetched from Strava)
+    //     history[1] = Jan 18 → kmRidden = 420 (total 471 − today's 51)
+    //
+    //   Logic:
+    //     1. Fetch km ridden since serviceDate (today's 51 km)
+    //     2. Old entry's final km = totalKm - todayKm = 420
+    //     3. New entry gets todayKm = 51
+    //     4. New baseline = totalKm
+
+    if(!it.history) it.history=[];
+    btn.textContent="Fetching km from Strava...";
+
+    // Fetch rides on serviceDate itself (e.g. today's 51 km)
+    var newKmRidden=0;
+    var fetchedKm=await fetchKmSinceDate(serviceDate);
+    if(fetchedKm!=null&&fetchedKm>0){
+      newKmRidden=fetchedKm;
+    } else if(fetchedKm===null){
+      toast("Strava fetch failed — km set to 0. Edit to correct later.","info");
+    }
+
+    btn.textContent="Recording...";
+
     if(it.lastDate&&it.lastKmTotal!=null){
-      // Subsequent service: km for the OLD interval = current total minus last baseline
-      kmRidden=Math.max(0,totalKm-it.lastKmTotal);
-      btn.textContent="Recording...";
-    } else {
-      // First ever service: fetch actual rides from Strava since service date
-      btn.textContent="Fetching km from Strava...";
-      var fetchedKm=await fetchKmSinceDate(serviceDate);
-      if(fetchedKm!=null&&fetchedKm>0){
-        kmRidden=fetchedKm;
-      } else {
-        kmRidden=0;
-        toast(fetchedKm===0?"No rides found since "+fmtDateShort(serviceDate):"Strava fetch failed — km set to 0","info");
+      // Close out the previous interval with km up to (but not counting today's rides)
+      // Jan 18 entry = (totalKm - newKmRidden) - lastKmTotal = 471 - 51 - 0 = 420
+      var prevIntervalKm=Math.max(0,(totalKm-newKmRidden)-it.lastKmTotal);
+      if(it.history.length>0){
+        it.history[0].kmRidden=prevIntervalKm;
       }
     }
-    // Record history entry for the interval that just ended
-    if(!it.history) it.history=[];
+
+    // New entry: today's service with today's km
     it.history.unshift({
       date:serviceDate,
       kmAtService:totalKm,
-      kmRidden:kmRidden,
+      kmRidden:newKmRidden,
       note:note
     });
-    // ── KEY FIX: always reset baseline to NOW so the new interval starts fresh ──
+
+    // Reset baseline so next interval starts counting from now
     it.lastDate=serviceDate;
-    it.lastKmTotal=totalKm;  // new interval starts counting from current bike total
+    it.lastKmTotal=totalKm;
 
     btn.disabled=false; btn.textContent="✓ Record Service";
     closeModalId("logModal");
     saveAll();
-    toast(item.name+" recorded! ("+kmRidden+" km since last service)","ok");
+    var prevKm=it.history.length>1?it.history[1].kmRidden:null;
+    var msg=item.name+" serviced! "+newKmRidden+" km today";
+    if(prevKm!=null) msg+=" · prev interval: "+prevKm+" km";
+    toast(msg,"ok");
     render();
   }
 }
@@ -992,7 +1017,11 @@ function renderHistoryList(itemId){
     return;
   }
   listEl.innerHTML=history.map(function(h,idx){
-    var kmStr=h.kmRidden!=null?h.kmRidden.toLocaleString()+" km since prev service":"First record";
+    var kmStr;
+    if(h.kmRidden==null){ kmStr="First record"; }
+    else if(h.kmRidden===0&&idx===0){ kmStr="0 km — serviced today (ride data pending)"; }
+    else if(h.kmRidden===0){ kmStr="0 km (no rides recorded)"; }
+    else { kmStr=h.kmRidden.toLocaleString()+" km since prev service"; }
     var tag=idx===0?'<span class="history-tag">Latest</span>':'';
     return '<div class="history-item">'+
       '<div class="history-item-left">'+
