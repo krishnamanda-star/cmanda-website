@@ -944,7 +944,6 @@ async function confirmLogService(){
     if(!it.history) it.history=[];
 
     btn.textContent="Fetching km from Strava...";
-    if(!_debugOpen){ _debugOpen=true; document.getElementById("debugPanel").classList.remove("hidden"); }
 
     var postWaxKm = await fetchKmSinceDate(serviceDate);
     if(postWaxKm === null){
