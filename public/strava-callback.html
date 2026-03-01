@@ -134,7 +134,16 @@
         const res = await fetch("/api/strava", {
           method:  "POST",
           headers: { "Content-Type": "application/json" },
-          body:    JSON.stringify({ action: "token", code }),
+         const clientId     = localStorage.getItem("chainwax_client_id");
+const clientSecret = localStorage.getItem("chainwax_client_secret");
+
+body: JSON.stringify({
+  action:        "token",
+  code:          code,
+  client_id:     clientId,
+  client_secret: clientSecret,
+  grant_type:    "authorization_code",
+}),
         });
 
         if (!res.ok) {
