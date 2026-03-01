@@ -586,28 +586,25 @@ function renderItemCard(item){
 
 // ── Log Service Modal ──────────────────────────────────────────────────────────
 function openLogModal(itemId){
-  _logItemId=itemId;
-  var item=ITEMS.find(function(x){return x.id===itemId;});
-  var it=getItemData(itemId);
-  var km=getKmSinceService(itemId);
-  var days=getDaysSinceService(itemId);
+  _logItemId = itemId;
+  var item = ITEMS.find(function(x){ return x.id === itemId; });
+  var it   = getItemData(itemId);
+  var km   = getKmSinceService(itemId);
 
-  document.getElementById("logModalTitle").textContent="Log Service: "+item.name;
-  document.getElementById("logDate").value=todayStr();
-  document.getElementById("logKmPre").value="0";
-  document.getElementById("logNote").value="";
+  document.getElementById("logModalTitle").textContent = "Log Service: " + item.name;
+  document.getElementById("logDate").value = todayStr();
+  document.getElementById("logNote").value = "";
 
   // Summary
-  var rows="";
-  if(it.lastDate) rows+='<div class="row"><span class="label">Last service</span><span class="val">'+fmtDate(it.lastDate)+'</span></div>';
-  if(km!=null)    rows+='<div class="row"><span class="label">Km ridden since</span><span class="val accent">'+km.toLocaleString()+' km</span></div>';
-  else if(days!=null) rows+='<div class="row"><span class="label">Days since service</span><span class="val accent">'+days+' days</span></div>';
-  else rows+='<div class="row"><span class="label">Status</span><span class="val" style="color:var(--text-muted)">First service record</span></div>';
-  rows+='<div class="row"><span class="label">Bike total km</span><span class="val">'+getActiveBikeTotalKm().toLocaleString()+' km</span></div>';
-  document.getElementById("logSummary").innerHTML=rows;
+  var rows = "";
+  if (it.lastDate) rows += '<div class="row"><span class="label">Last service</span><span class="val">' + fmtDate(it.lastDate) + '</span></div>';
+  if (km != null)  rows += '<div class="row"><span class="label">Km ridden since</span><span class="val accent">' + km.toLocaleString() + ' km</span></div>';
+  else rows += '<div class="row"><span class="label">Status</span><span class="val" style="color:var(--text-muted)">First service record — km will be fetched from Strava</span></div>';
+  rows += '<div class="row"><span class="label">Bike total km</span><span class="val">' + getActiveBikeTotalKm().toLocaleString() + ' km</span></div>';
+  document.getElementById("logSummary").innerHTML = rows;
 
-  // Show km pre-load field only for first-time or if entering a past date
-  document.getElementById("logKmFieldWrap").style.display = !it.lastDate ? "block" : "none";
+  // Always hide the manual km input — we fetch from Strava now
+  document.getElementById("logKmFieldWrap").style.display = "none";
 
   document.getElementById("logModal").classList.remove("hidden");
 }
