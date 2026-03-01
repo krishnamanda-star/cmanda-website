@@ -9,5 +9,5 @@
 import { redirect } from "next/navigation";
 
 export default function CyclingPage() {
-  redirect("/bike-maintenance.html");
+  redirect("/public/bike-maintenance.html");
 }
