@@ -1388,19 +1388,21 @@ async function saveToCloud(){
   }catch(e){ console.error("Cloud save failed:",e); }
 }
 
-async function loadFromCloud(aid,bid){
+async function loadFromCloud(aid,bid,keepTokens){
   try{
     var r=await fetch("/api/strava",{method:"POST",headers:{"Content-Type":"application/json"},
       body:JSON.stringify({action:"load",bin_id:bid,athlete_id:aid})});
     var d=await r.json();
     if(d.data){
       var s=d.data;
-      if(s.athlete)      athlete=s.athlete;
-      if(s.strava)       strava=s.strava;
+      // keepTokens=true: preserve fresh OAuth tokens (called right after login)
+      if(!keepTokens&&s.athlete) athlete=s.athlete;
+      if(!keepTokens&&s.strava)  strava=s.strava;
       if(s.bikes)        bikes=s.bikes;
       if(s.activeBikeId) activeBikeId=s.activeBikeId;
       if(s.bikeData)     bikeData=s.bikeData;
       if(s.lastSyncTs)   lastSyncTs=s.lastSyncTs;
+      if(d.bin_id&&!binId){ binId=d.bin_id; localStorage.setItem("bikemaint_bin_"+aid,binId); }
       return true;
     }
   }catch(e){ console.error("Cloud load failed:",e); }
@@ -1470,25 +1472,10 @@ async function saveAll(){ saveLocal(); await saveToCloud(); }
                         localStorage.getItem("chainwax_bin_"+(athlete.id||""));
         if(existingBin){
           binId=existingBin;
-          await loadFromCloud(athlete.id,binId);
+          await loadFromCloud(athlete.id,binId,true);
         } else {
           // New device — look up existing cloud data by athlete ID
-          try{
-            var fr=await fetch("/api/strava",{method:"POST",headers:{"Content-Type":"application/json"},
-              body:JSON.stringify({action:"load",athlete_id:athlete.id})});
-            var fd=await fr.json();
-            if(fd.bin_id&&fd.data){
-              binId=fd.bin_id;
-              localStorage.setItem("bikemaint_bin_"+athlete.id, binId);
-              var s=fd.data;
-              if(s.athlete)      athlete=s.athlete;
-              if(s.strava)       strava=s.strava;
-              if(s.bikes)        bikes=s.bikes;
-              if(s.activeBikeId) activeBikeId=s.activeBikeId;
-              if(s.bikeData)     bikeData=s.bikeData;
-              if(s.lastSyncTs)   lastSyncTs=s.lastSyncTs;
-            }
-          }catch(e){ console.warn("Cloud lookup failed, starting fresh:",e); }
+          try{ await loadFromCloud(athlete.id,null,true); }catch(e){ console.warn("Cloud lookup failed:",e); }
         }
         saveLocal();
         loadEl.style.display="none";
@@ -1505,12 +1492,7 @@ async function saveAll(){ saveLocal(); await saveToCloud(); }
       await loadFromCloud(athlete.id,binId);
     } else {
       // Has local session but no binId — look up by athlete ID
-      try{
-        var fr=await fetch("/api/strava",{method:"POST",headers:{"Content-Type":"application/json"},
-          body:JSON.stringify({action:"load",athlete_id:athlete.id})});
-        var fd=await fr.json();
-        if(fd.bin_id&&fd.data){ binId=fd.bin_id; localStorage.setItem("bikemaint_bin_"+athlete.id,binId); await loadFromCloud(athlete.id,binId); }
-      }catch(e){}
+      try{ await loadFromCloud(athlete.id,null,false); }catch(e){}
     }
     if(!activeBikeId&&bikes.length) activeBikeId=bikes[0].id;
     loadEl.style.display="none";
