@@ -428,7 +428,12 @@ function timeSince(isoStr){
 
 function renderBikeTabs(){
   var el=document.getElementById("bikeTabs");
-  if(!bikes||bikes.length<=1){ el.innerHTML=""; return; }
+  if(!bikes||bikes.length===0){ el.innerHTML=""; return; }
+  // Always show tabs if 2+ bikes; show single label if only 1
+  if(bikes.length===1){
+    el.innerHTML='<div style="font-family:var(--ff-mono);font-size:11px;color:var(--text-dim);">'+esc(bikes[0].name)+'</div>';
+    return;
+  }
   el.innerHTML=bikes.map(function(b){
     var act=b.id===activeBikeId?" active":"";
     var km=b.totalKm>0?'<span class="bkm">'+b.totalKm.toLocaleString()+'km</span>':'';
@@ -773,7 +778,7 @@ async function fetchKmSinceDate(dateStr){
 // ── Modal helpers ─────────────────────────────────────────────────────────────
 function closeModal(e,id){ if(e.target===document.getElementById(id)) closeModalId(id); }
 function closeModalId(id){ document.getElementById(id).classList.add("hidden"); }
-function switchBike(id){ activeBikeId=id; render(); }
+function switchBike(id){ activeBikeId=id; render(); window.scrollTo({top:0,behavior:"smooth"}); saveLocal(); }
 
 // ── Strava auth ───────────────────────────────────────────────────────────────
 function connectStrava(){
@@ -820,24 +825,39 @@ async function syncStrava(){
     var token=await getToken();
     if(!token) throw new Error("Session expired — please reconnect Strava.");
 
-    // Collect gear IDs from recent activities
+    // ── Step 1: Get athlete profile which contains ALL bikes in athlete.bikes[] ──
+    var athleteResp=await fetch("/api/strava",{method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({action:"athlete",access_token:token})});
+    var athleteData=await athleteResp.json();
+
     var gearIds=[];
+
+    // athlete.bikes is an array of summary gear objects
+    if(athleteData&&Array.isArray(athleteData.bikes)&&athleteData.bikes.length>0){
+      athleteData.bikes.forEach(function(b){ if(b.id) gearIds.push(b.id); });
+      // Also update athlete profile
+      if(athleteData.id) athlete=athleteData;
+    }
+
+    // ── Step 2: Fallback — also scan recent activities for any gear not in profile ──
     var pg=1;
     while(pg<=3){
       var r=await fetch("/api/strava",{method:"POST",headers:{"Content-Type":"application/json"},
         body:JSON.stringify({action:"activities",access_token:token,after:0,page:pg})});
       var acts=await r.json();
       if(!Array.isArray(acts)||acts.length===0) break;
-      acts.forEach(function(a){ if(a.gear_id&&gearIds.indexOf(a.gear_id)===-1) gearIds.push(a.gear_id); });
+      acts.forEach(function(a){
+        if(a.gear_id&&gearIds.indexOf(a.gear_id)===-1) gearIds.push(a.gear_id);
+      });
       pg++;
     }
 
     if(!gearIds.length){
-      toast("No bikes found in recent Strava activities","info");
+      toast("No bikes found on your Strava account","info");
       btn.disabled=false; btn.innerHTML="↻ Sync Strava"; return;
     }
 
-    // Fetch full gear data (includes brand, model, totalRides, totalElevation)
+    // ── Step 3: Fetch full gear detail for each bike (brand, model, totals) ──
     var fetched=[];
     for(var i=0;i<gearIds.length;i++){
       try{
@@ -848,6 +868,11 @@ async function syncStrava(){
       }catch(ge){ console.error("gear fetch:",ge); }
     }
 
+    if(!fetched.length){
+      toast("Could not load bike details from Strava","err");
+      btn.disabled=false; btn.innerHTML="↻ Sync Strava"; return;
+    }
+
     bikes=fetched.map(function(b){
       return{
         id:            b.id,
@@ -856,13 +881,17 @@ async function syncStrava(){
         model:         b.model_name||"",
         frameType:     b.frame_type||0,
         totalKm:       Math.round((b.distance||0)/1000),
-        totalRides:    b.athlete_count||null,
+        totalRides:    b.converted_distance||null,
         totalElevation:b.elevation_sum||null
       };
     });
 
+    // Sort by total km descending (primary bike first)
+    bikes.sort(function(a,b){ return b.totalKm-a.totalKm; });
+
+    // Preserve active bike selection if still valid, else pick first
     if(!activeBikeId||!bikes.find(function(b){ return b.id===activeBikeId; })){
-      activeBikeId=bikes.length?bikes[0].id:null;
+      activeBikeId=bikes[0].id;
     }
 
     lastSyncTs=new Date().toISOString();
