@@ -882,22 +882,32 @@ async function saveAll(){ saveLocal(); await saveToCloud(); }
     render();
   }
 
-  // ── Check for Strava callback token ──
+// ── Check for Strava callback token ──
   var stravaRaw=localStorage.getItem("chainwax_strava");
   if(stravaRaw){
     try{
       var sd=JSON.parse(stravaRaw);
-      if(sd.accessToken&&sd.athlete){
-        athlete=sd.athlete;
-        strava={accessToken:sd.accessToken,refreshToken:sd.refreshToken,expiresAt:sd.expiresAt};
+      var accessToken  = sd.accessToken  || sd.access_token;
+      var refreshToken = sd.refreshToken || sd.refresh_token;
+      var expiresAt    = sd.expiresAt    || sd.expires_at;
+      var sdAthlete    = sd.athlete;
+      console.log("[bike-maint] token found:", !!accessToken, "athlete:", !!sdAthlete);
+      if(accessToken){
+        if(sdAthlete) athlete=sdAthlete;
+        strava={accessToken:accessToken,refreshToken:refreshToken,expiresAt:expiresAt};
         localStorage.removeItem("chainwax_strava");
-        // Merge with any existing cloud data
+        if(!athlete){
+          try{
+            var ar=await fetch("/api/strava",{method:"POST",headers:{"Content-Type":"application/json"},
+              body:JSON.stringify({action:"athlete",access_token:accessToken})});
+            var ad=await ar.json();
+            if(ad&&ad.id) athlete=ad;
+          }catch(ae){ console.error("Athlete fetch failed:",ae); }
+        }
+        if(!athlete){ athlete={id:"unknown",firstname:"Strava",lastname:"User"}; }
         var existingBin=localStorage.getItem("bikemaint_bin_"+athlete.id)||
                         localStorage.getItem("chainwax_bin_"+athlete.id);
         if(existingBin){ binId=existingBin; await loadFromCloud(athlete.id,binId); }
-        // Keep fresh token
-        strava={accessToken:sd.accessToken,refreshToken:sd.refreshToken,expiresAt:sd.expiresAt};
-        // Fetch bikes immediately
         await syncStrava();
         loadEl.style.display="none";
         appEl.classList.remove("hidden"); loginEl.classList.add("hidden");
