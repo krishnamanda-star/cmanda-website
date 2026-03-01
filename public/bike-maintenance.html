@@ -1365,6 +1365,26 @@ async function syncStrava(){
     });
 
     lastSyncTs=new Date().toISOString();
+
+    // If bikeData is empty (new device), try loading existing service history from cloud
+    // before saving — prevents wiping Mac data with empty iPhone state
+    var bikeDataEmpty=Object.keys(bikeData).length===0||
+      Object.values(bikeData).every(function(bd){ return Object.keys(bd.items||{}).length===0; });
+    if(bikeDataEmpty&&athlete){
+      dbg("bikeData empty — loading cloud history before save...","warn");
+      try{
+        var cr=await fetch("/api/strava",{method:"POST",headers:{"Content-Type":"application/json"},
+          body:JSON.stringify({action:"load",athlete_id:athlete.id})});
+        var cd=await cr.json();
+        if(cd.data&&cd.data.bikeData){
+          bikeData=cd.data.bikeData;
+          if(cd.bin_id&&!binId){ binId=cd.bin_id; localStorage.setItem("bikemaint_bin_"+athlete.id,binId); }
+          dbg("Loaded existing bikeData from cloud before sync save","label");
+          toast("Restored your service history from cloud ✓","ok");
+        }
+      }catch(e){ dbg("Pre-save cloud load failed: "+e.message,"warn"); }
+    }
+
     await saveAll();
     dbg("Sync complete! "+bikes.length+" bike(s) loaded","label");
     toast("Synced "+bikes.length+" bike"+(bikes.length!==1?"s":"")+"!","ok");
@@ -1390,9 +1410,11 @@ async function saveToCloud(){
 
 async function loadFromCloud(aid,bid,keepTokens){
   try{
+    dbg("loadFromCloud: aid="+aid+" bid="+(bid||"null")+" keepTokens="+keepTokens);
     var r=await fetch("/api/strava",{method:"POST",headers:{"Content-Type":"application/json"},
       body:JSON.stringify({action:"load",bin_id:bid,athlete_id:aid})});
     var d=await r.json();
+    dbg("loadFromCloud response: bin_id="+(d.bin_id||"null")+" has_data="+(!!d.data)+" error="+(d.error||"none"));
     if(d.data){
       var s=d.data;
       // keepTokens=true: preserve fresh OAuth tokens (called right after login)
@@ -1403,9 +1425,17 @@ async function loadFromCloud(aid,bid,keepTokens){
       if(s.bikeData)     bikeData=s.bikeData;
       if(s.lastSyncTs)   lastSyncTs=s.lastSyncTs;
       if(d.bin_id&&!binId){ binId=d.bin_id; localStorage.setItem("bikemaint_bin_"+aid,binId); }
+      dbg("loadFromCloud: loaded "+((s.bikes||[]).length)+" bikes, binId="+binId,"label");
+      toast("Cloud: loaded "+(s.bikes||[]).length+" bikes from bin "+(d.bin_id||binId||"?"),"ok");
       return true;
+    } else {
+      dbg("loadFromCloud: no data returned (bin_id="+(d.bin_id||"null")+")","warn");
+      toast("Cloud: no data found for athlete "+aid,"err");
     }
-  }catch(e){ console.error("Cloud load failed:",e); }
+  }catch(e){
+    dbg("loadFromCloud FAILED: "+e.message,"err");
+    toast("Cloud load error: "+e.message,"err");
+  }
   return false;
 }
 
@@ -1475,6 +1505,8 @@ async function saveAll(){ saveLocal(); await saveToCloud(); }
           await loadFromCloud(athlete.id,binId,true);
         } else {
           // New device — look up existing cloud data by athlete ID
+          dbg("NEW DEVICE: looking up cloud data for athlete "+athlete.id,"label");
+          toast("New device: looking up your data...","info");
           try{ await loadFromCloud(athlete.id,null,true); }catch(e){ console.warn("Cloud lookup failed:",e); }
         }
         saveLocal();
