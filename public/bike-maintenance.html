@@ -1053,38 +1053,43 @@ function renderHistoryList(itemId){
   var it=getItemData(itemId);
   var history=it.history||[];
   var listEl=document.getElementById("historyList");
-  var rows="";
-
-  // Active service (lastDate) is NOT in history[] — show it at top as "in progress"
-  if(it.lastDate){
-    var liveKm=getKmSinceService(itemId)||0;
-    var activeNote=it.lastNote||"";
-    rows+='<div class="history-item" style="border-left:2px solid var(--accent);padding-left:10px;opacity:0.85">'+
-      '<div class="history-item-left">'+
-        '<div class="history-date">'+fmtDate(it.lastDate)+'<span class="history-tag" style="background:rgba(240,160,48,0.15);color:var(--accent-bright);border-color:rgba(240,160,48,0.3)">Active</span></div>'+
-        '<div class="history-km" style="color:var(--accent-bright)">'+liveKm.toLocaleString()+' km so far (live)</div>'+
-        (activeNote?'<div class="history-note">'+esc(activeNote)+'</div>':'')+
-      '</div>'+
-      '<div style="font-family:var(--ff-mono);font-size:9px;color:var(--text-muted);align-self:center">in progress</div>'+
-    '</div>';
-  }
 
   if(!it.lastDate && history.length===0){
     listEl.innerHTML='<div class="history-empty">No service history yet.<br>Log a service to start building history.</div>';
     return;
   }
 
-  rows+=history.map(function(h,idx){
-    var kmStr = (h.kmRidden==null||h.kmRidden===0) ? "0 km recorded" : h.kmRidden.toLocaleString()+" km on this service";
-    return '<div class="history-item">'+
-      '<div class="history-item-left">'+
-        '<div class="history-date">'+fmtDate(h.date)+'</div>'+
-        '<div class="history-km">'+kmStr+'</div>'+
-        (h.note?'<div class="history-note">'+esc(h.note)+'</div>':'')+
-      '</div>'+
-      '<button class="history-del" onclick="deleteHistoryEntry(''+itemId+'','+idx+')" title="Delete entry">×</button>'+
-    '</div>';
-  }).join("");
+  var rows="";
+
+  // Active service (lastDate) is NOT in history[] yet — show it at top as "in progress"
+  if(it.lastDate){
+    var liveKm=getKmSinceService(itemId)||0;
+    var activeNote=it.lastNote||"";
+    var activeStyle='border-left:2px solid var(--accent);padding-left:10px;opacity:0.85';
+    var tagStyle='background:rgba(240,160,48,0.15);color:var(--accent-bright);border-color:rgba(240,160,48,0.3)';
+    rows+='<div class="history-item" style="'+activeStyle+'">'
+         +'<div class="history-item-left">'
+         +'<div class="history-date">'+fmtDate(it.lastDate)+'<span class="history-tag" style="'+tagStyle+'">Active</span></div>'
+         +'<div class="history-km" style="color:var(--accent-bright)">'+liveKm.toLocaleString()+' km so far (live)</div>'
+         +(activeNote?'<div class="history-note">'+esc(activeNote)+'</div>':'')
+         +'</div>'
+         +'<div style="font-family:var(--ff-mono);font-size:9px;color:var(--text-muted);align-self:center">in progress</div>'
+         +'</div>';
+  }
+
+  // Past (completed) service intervals
+  for(var i=0;i<history.length;i++){
+    var h=history[i];
+    var kmStr=(h.kmRidden==null||h.kmRidden===0)?"0 km recorded":h.kmRidden.toLocaleString()+" km on this service";
+    rows+='<div class="history-item">'
+         +'<div class="history-item-left">'
+         +'<div class="history-date">'+fmtDate(h.date)+'</div>'
+         +'<div class="history-km">'+kmStr+'</div>'
+         +(h.note?'<div class="history-note">'+esc(h.note)+'</div>':'')
+         +'</div>'
+         +'<button class="history-del" onclick="deleteHistoryEntry(\''+itemId+'\','+i+')" title="Delete entry">×</button>'
+         +'</div>';
+  }
 
   listEl.innerHTML=rows;
 }
