@@ -2,22 +2,6 @@
 
 import { useState, useRef, useEffect } from "react";
 
-const SYSTEM_PROMPT = `You are a smart search assistant for Krishna Manda's reMarkable handwritten notes.
-
-The user will describe what they're looking for — by topic, date, keyword, theme, or vague memory. Your job is to help them find and surface relevant notes.
-
-You have access to the user's notes via the reMarkable MCP server (remarkable_search, remarkable_browse, remarkable_read, remarkable_recent tools). Use these tools to search and retrieve actual note content.
-
-If no MCP tools are available, acknowledge that and ask the user to paste note content directly so you can help search and analyze it.
-
-When you find relevant notes:
-- Quote key passages
-- Summarize what the note contains
-- Tell the user which notebook/folder it's in
-- Suggest related notes they might also want
-
-Be conversational and helpful. If the search is vague, ask a clarifying question.`;
-
 const SUGGESTIONS = [
   "Find my notes from last week",
   "What did I write about T2 platform?",
@@ -51,6 +35,7 @@ export default function NotesPage() {
   ]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [status, setStatus] = useState(""); // shows "Searching notes..." etc.
   const bottomRef = useRef(null);
   const inputRef = useRef(null);
 
@@ -66,32 +51,42 @@ export default function NotesPage() {
     const newMessages = [...messages, { role: "user", content: userText }];
     setMessages(newMessages);
     setLoading(true);
+    setStatus("Searching your notes...");
 
     try {
-      const res = await fetch("https://api.anthropic.com/v1/messages", {
+      const res = await fetch("/api/notes", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          model: "claude-sonnet-4-20250514",
-          max_tokens: 1000,
-          system: SYSTEM_PROMPT,
           messages: newMessages.map((m) => ({
             role: m.role,
             content: m.content,
           })),
         }),
       });
+
       const data = await res.json();
-      const reply =
-        data.content?.[0]?.text || "Something went wrong. Please try again.";
-      setMessages((prev) => [...prev, { role: "assistant", content: reply }]);
-    } catch {
+
+      if (data.error) {
+        setMessages((prev) => [
+          ...prev,
+          { role: "assistant", content: `Error: ${data.error}` },
+        ]);
+      } else {
+        setMessages((prev) => [
+          ...prev,
+          { role: "assistant", content: data.reply },
+        ]);
+      }
+    } catch (err) {
       setMessages((prev) => [
         ...prev,
         { role: "assistant", content: "Connection error. Please try again." },
       ]);
     }
+
     setLoading(false);
+    setStatus("");
   };
 
   const onKey = (e) => {
@@ -139,6 +134,7 @@ export default function NotesPage() {
             <div className="msg-row msg-ai">
               <div className="msg-avatar">✦</div>
               <div className="msg-bubble msg-bubble-assistant">
+                {status && <div className="status-text">{status}</div>}
                 <div className="typing">
                   <span /><span /><span />
                 </div>
@@ -257,6 +253,11 @@ export default function NotesPage() {
           color: #e8e3db;
           padding: 10px 14px;
           border: 1px solid #2a2a2a;
+        }
+        .status-text {
+          font-size: 11px; color: #555;
+          margin-bottom: 8px;
+          font-style: italic;
         }
         .typing {
           display: flex; gap: 5px; align-items: center; padding: 6px 0;
