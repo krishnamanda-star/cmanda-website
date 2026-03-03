@@ -1,107 +1,122 @@
-var ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
+/**
+ * app/api/notes/route.js
+ * 
+ * Calls the Remarkable Bridge (Railway) + Anthropic API to power the notes search.
+ * 
+ * Env vars needed in Vercel:
+ *   ANTHROPIC_API_KEY      — your Anthropic key
+ *   REMARKABLE_BRIDGE_URL  — e.g. https://remarkable-bridge.up.railway.app
+ *   REMARKABLE_BRIDGE_SECRET — same value as BRIDGE_SECRET in Railway
+ */
 
-var SYSTEM_PROMPT = `You are a smart search assistant for Krishna Manda's reMarkable handwritten notes.
+var ANTHROPIC_KEY   = process.env.ANTHROPIC_API_KEY;
+var BRIDGE_URL      = process.env.REMARKABLE_BRIDGE_URL;
+var BRIDGE_SECRET   = process.env.REMARKABLE_BRIDGE_SECRET;
 
-The user will describe what they're looking for — by topic, date, keyword, theme, or vague memory. Your job is to help them find and surface relevant notes.
+var SYSTEM_PROMPT = `You are a smart search assistant for Krishna's reMarkable handwritten notes.
 
-You have access to the user's notes via the reMarkable MCP server tools:
-- remarkable_search: search documents by name/keyword
-- remarkable_browse: browse folders  
-- remarkable_read: read content of a specific document
-- remarkable_recent: get recently modified documents
+You have access to the following tools via the bridge:
+- remarkable_search(query, grep?) — search documents by name/keyword
+- remarkable_browse(path?) — browse a folder (default "/")
+- remarkable_read(document, grep?, page?) — read a document's content
+- remarkable_recent(limit?) — get recently modified documents
+- remarkable_status() — check connection status
+
+To use a tool, output ONLY a JSON object like this (no other text):
+{"tool": "remarkable_search", "params": {"query": "T2 platform"}}
+
+After getting tool results, use them to answer the user's question naturally.
+You can call multiple tools in sequence to gather enough information.
 
 When you find relevant notes:
 - Quote key passages
-- Summarize what the note contains
-- Tell the user which notebook/folder it's in
-- Suggest related notes they might also want
+- Summarize what each note contains
+- Tell the user which folder it's in
+- Suggest related notes they might also want`;
 
-Be conversational and helpful. If the search is vague, ask a clarifying question or search broadly and show what you find.`;
+async function callBridge(tool, params) {
+  try {
+    var r = await fetch(BRIDGE_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer " + BRIDGE_SECRET
+      },
+      body: JSON.stringify({ tool, params: params || {} })
+    });
+    var d = await r.json();
+    return d.result || d.error || "No result";
+  } catch (e) {
+    return "Bridge error: " + e.message;
+  }
+}
+
+async function callClaude(messages) {
+  var r = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-api-key": ANTHROPIC_KEY,
+      "anthropic-version": "2023-06-01"
+    },
+    body: JSON.stringify({
+      model: "claude-sonnet-4-20250514",
+      max_tokens: 2048,
+      system: SYSTEM_PROMPT,
+      messages
+    })
+  });
+  var d = await r.json();
+  if (d.error) throw new Error(d.error.message);
+  return d.content?.[0]?.text || "";
+}
 
 export async function POST(request) {
   try {
     var { messages } = await request.json();
 
-    var currentMessages = messages.map(function(m) {
+    var history = messages.map(function(m) {
       return { role: m.role, content: m.content };
     });
 
-    var finalText = "";
-    var maxIterations = 10;
-    var iteration = 0;
+    // Agentic loop — Claude can call tools up to 8 times
+    for (var i = 0; i < 8; i++) {
+      var reply = await callClaude(history);
 
-    while (iteration < maxIterations) {
-      iteration++;
+      // Check if Claude wants to call a tool
+      var toolMatch = reply.trim().match(/^\s*(\{[\s\S]*\})\s*$/);
+      if (toolMatch) {
+        try {
+          var toolCall = JSON.parse(toolMatch[1]);
+          if (toolCall.tool) {
+            // Add Claude's tool request to history
+            history.push({ role: "assistant", content: reply });
 
-      var response = await fetch("https://api.anthropic.com/v1/messages", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-api-key": ANTHROPIC_API_KEY,
-          "anthropic-version": "2023-06-01",
-          "anthropic-beta": "mcp-client-2025-04-04"
-        },
-        body: JSON.stringify({
-          model: "claude-sonnet-4-20250514",
-          max_tokens: 4096,
-          system: SYSTEM_PROMPT,
-          messages: currentMessages,
-          mcp_servers: [
-            {
-              type: "url",
-              url: "https://remarkable.mcp.claude.com/mcp",
-              name: "remarkable"
-            }
-          ]
-        })
-      });
+            // Call the bridge
+            var result = await callBridge(toolCall.tool, toolCall.params);
 
-      var data = await response.json();
-
-      if (data.error) {
-        return Response.json({ error: data.error.message || "API error" }, { status: 500 });
-      }
-
-      // Collect text from this response
-      var textBlocks = (data.content || []).filter(function(b) { return b.type === "text"; });
-      if (textBlocks.length > 0) {
-        finalText = textBlocks.map(function(b) { return b.text; }).join("\n");
-      }
-
-      // Done
-      if (data.stop_reason === "end_turn") {
-        return Response.json({ reply: finalText || "I searched your notes but couldn't find anything relevant." });
-      }
-
-      // Claude wants to use MCP tools — add to history and continue
-      if (data.stop_reason === "tool_use") {
-        currentMessages.push({ role: "assistant", content: data.content });
-
-        var toolResults = (data.content || [])
-          .filter(function(b) { return b.type === "mcp_tool_use"; })
-          .map(function(b) {
-            return {
-              type: "mcp_tool_result",
-              tool_use_id: b.id,
-              content: b.output !== undefined ? String(b.output) : ""
-            };
-          });
-
-        if (toolResults.length > 0) {
-          currentMessages.push({ role: "user", content: toolResults });
-        } else {
-          break;
+            // Add tool result to history
+            history.push({
+              role: "user",
+              content: "Tool result for " + toolCall.tool + ":\n" + result
+            });
+            continue; // Let Claude process the result
+          }
+        } catch (e) {
+          // Not valid JSON — treat as final answer
         }
-        continue;
       }
 
-      break;
+      // No tool call — this is the final answer
+      return Response.json({ reply });
     }
 
-    return Response.json({ reply: finalText || "No response generated." });
+    // Max iterations reached — return last reply
+    var final = await callClaude(history);
+    return Response.json({ reply: final });
 
   } catch (e) {
     console.error("Notes API error:", e);
-    return Response.json({ error: e.message || "Internal server error" }, { status: 500 });
+    return Response.json({ error: e.message }, { status: 500 });
   }
 }
