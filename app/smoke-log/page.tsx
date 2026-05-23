@@ -129,7 +129,7 @@ RECENT 20: ${data.slice(0, 20).map(e => `${formatDate(e.timestamp)} ${formatTime
     setAiLoading(true);
     setAiAnalysis("");
     try {
-      const res = await fetch("/api/smoke-analyse", {
+      const res = await fetch("/api/smoke-log", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -151,7 +151,7 @@ RECENT 20: ${data.slice(0, 20).map(e => `${formatDate(e.timestamp)} ${formatTime
     setAiAnswerLoading(true);
     setAiAnswer("");
     try {
-      const res = await fetch("/api/smoke-analyse", {
+      const res = await fetch("/api/smoke-log", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
