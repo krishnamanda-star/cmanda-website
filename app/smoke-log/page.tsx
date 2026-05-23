@@ -6,16 +6,35 @@ const TRIGGERS = ["Stress", "Boredom", "Social", "After meal", "Coffee", "Alcoho
 const MOODS_BEFORE = ["Anxious", "Stressed", "Bored", "Angry", "Sad", "Neutral", "Social pressure", "Tired"];
 const MOODS_AFTER = ["Relieved", "Guilty", "No different", "Disgusted with myself", "Calm", "Worse than before", "Regretful"];
 const LOCATIONS = ["Home", "Work", "Outside", "Car", "Bar/Restaurant", "With friends", "Alone"];
-
 const STORAGE_KEY = "smoking-log-entries";
-
+const NEGATIVE_MOODS = ["Guilty", "Disgusted with myself", "Regretful", "Worse than before"];
 const QUOTES = [
   "Every cigarette is a vote against your future self.",
   "You don't need to quit forever. Just not this one.",
   "Notice what you feel. It will pass.",
-  "The urge peaks at 3 minutes and fades. You've outlasted it before.",
+  "The urge peaks at 3 minutes and fades.",
   "Each entry here is evidence. Read it honestly.",
 ];
+
+// Color palette
+const C = {
+  bg: "#FDF6ED",
+  bgAlt: "#F5EAD8",
+  ink: "#1A1108",
+  inkMid: "#5C4A2A",
+  inkLight: "#9C7E4A",
+  inkFaint: "#C8B08A",
+  amber: "#D4860A",
+  amberLight: "#F5A623",
+  amberBg: "#FFF3D6",
+  coral: "#D94F2B",
+  coralBg: "#FDEAE4",
+  green: "#2A7A4B",
+  greenBg: "#E4F5EC",
+  border: "#E2CFA8",
+  borderStrong: "#C8A96E",
+  white: "#FFFFFF",
+};
 
 interface Entry {
   id: number;
@@ -35,15 +54,18 @@ function formatTime(iso: string) {
   return new Date(iso).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
 }
 
-const NEGATIVE_MOODS = ["Guilty", "Disgusted with myself", "Regretful", "Worse than before"];
-
 export default function SmokingLogPage() {
   const [entries, setEntries] = useState<Entry[]>([]);
-  const [view, setView] = useState<"log" | "add" | "review">("log");
+  const [view, setView] = useState<"log" | "add" | "review" | "insights">("log");
   const [form, setForm] = useState({ trigger: "", location: "", moodBefore: "", moodAfter: "", note: "", cigarettes: 1 });
   const [saved, setSaved] = useState(false);
   const [expandedId, setExpandedId] = useState<number | null>(null);
   const [quoteIdx] = useState(() => Math.floor(Math.random() * QUOTES.length));
+  const [aiAnalysis, setAiAnalysis] = useState("");
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiQuestion, setAiQuestion] = useState("");
+  const [aiAnswer, setAiAnswer] = useState("");
+  const [aiAnswerLoading, setAiAnswerLoading] = useState(false);
 
   useEffect(() => {
     try {
@@ -70,136 +92,184 @@ export default function SmokingLogPage() {
     saveEntries(entries.filter(e => e.id !== id));
   }
 
+  function buildLogSummary(data: Entry[]) {
+    if (data.length === 0) return "No entries.";
+    const total = data.reduce((s, e) => s + (e.cigarettes || 1), 0);
+    const tc: Record<string, number> = {};
+    const mac: Record<string, number> = {};
+    const mbc: Record<string, number> = {};
+    const lc: Record<string, number> = {};
+    data.forEach(e => {
+      tc[e.trigger] = (tc[e.trigger] || 0) + (e.cigarettes || 1);
+      mac[e.moodAfter] = (mac[e.moodAfter] || 0) + 1;
+      mbc[e.moodBefore] = (mbc[e.moodBefore] || 0) + 1;
+      lc[e.location || "Unspecified"] = (lc[e.location || "Unspecified"] || 0) + 1;
+    });
+    const notes = data.filter(e => e.note).map(e => `"${e.note}" (${formatDate(e.timestamp)})`).slice(0, 10);
+    const negCount = data.filter(e => NEGATIVE_MOODS.includes(e.moodAfter)).length;
+    const days = Math.max(1, Math.round((Date.now() - new Date(data[data.length - 1].timestamp).getTime()) / 86400000));
+    return `SMOKING LOG — ${data.length} sessions, ${total} cigarettes, ~${days} days, avg ${(total / days).toFixed(1)}/day
+TRIGGERS: ${Object.entries(tc).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`${k}:${v}`).join(", ")}
+MOOD BEFORE: ${Object.entries(mbc).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`${k}:${v}`).join(", ")}
+MOOD AFTER: ${Object.entries(mac).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`${k}:${v}`).join(", ")}
+LOCATIONS: ${Object.entries(lc).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`${k}:${v}`).join(", ")}
+Felt negative after: ${negCount}/${data.length} (${Math.round(negCount/data.length*100)}%)
+NOTES: ${notes.length ? notes.join(" | ") : "none"}
+RECENT 20: ${data.slice(0, 20).map(e => `${formatDate(e.timestamp)} ${formatTime(e.timestamp)}: ${e.cigarettes}x trigger=${e.trigger} loc=${e.location||"—"} before=${e.moodBefore} after=${e.moodAfter}${e.note ? ` note="${e.note}"` : ""}`).join("\n")}`;
+  }
+
+  async function runAnalysis() {
+    if (entries.length < 2) return;
+    setAiLoading(true);
+    setAiAnalysis("");
+    try {
+      const res = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "claude-sonnet-4-20250514",
+          max_tokens: 1000,
+          system: "You are a compassionate but unflinchingly honest smoking cessation advisor. Analyse the user's actual logged data and identify real patterns. Be specific — use their actual numbers and triggers. Be frank about what isn't working. Give 2-3 concrete, actionable observations they can act on today. Write in plain prose, no bullet points, no headers. Tone: trusted friend who has read the evidence carefully.",
+          messages: [{ role: "user", content: `Analyse my smoking log honestly. Tell me what you see — my real patterns, whether cigarettes are giving me what I think they are, and what I should change first.\n\n${buildLogSummary(entries)}` }]
+        })
+      });
+      const data = await res.json();
+      setAiAnalysis(data.content?.find((b: {type: string}) => b.type === "text")?.text || "Could not generate analysis.");
+    } catch {
+      setAiAnalysis("Something went wrong. Check your connection and try again.");
+    }
+    setAiLoading(false);
+  }
+
+  async function askQuestion() {
+    if (!aiQuestion.trim() || entries.length === 0) return;
+    setAiAnswerLoading(true);
+    setAiAnswer("");
+    try {
+      const res = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "claude-sonnet-4-20250514",
+          max_tokens: 600,
+          system: "You are a compassionate but honest smoking cessation advisor. Answer questions about the user's smoking log data directly and specifically using their actual data. No bullet points. Speak directly to them.",
+          messages: [{ role: "user", content: `My smoking log:\n${buildLogSummary(entries)}\n\nMy question: ${aiQuestion}` }]
+        })
+      });
+      const data = await res.json();
+      setAiAnswer(data.content?.find((b: {type: string}) => b.type === "text")?.text || "No response.");
+    } catch {
+      setAiAnswer("Something went wrong. Try again.");
+    }
+    setAiAnswerLoading(false);
+  }
+
   const total = entries.reduce((s, e) => s + (e.cigarettes || 1), 0);
   const topTrigger = (() => {
-    const counts: Record<string, number> = {};
-    entries.forEach(e => { counts[e.trigger] = (counts[e.trigger] || 0) + 1; });
-    return Object.entries(counts).sort((a, b) => b[1] - a[1])[0]?.[0] || "—";
+    const c: Record<string, number> = {};
+    entries.forEach(e => { c[e.trigger] = (c[e.trigger] || 0) + 1; });
+    return Object.entries(c).sort((a, b) => b[1] - a[1])[0]?.[0] || "—";
   })();
-  const guiltyPct = entries.length
-    ? Math.round(entries.filter(e => NEGATIVE_MOODS.includes(e.moodAfter)).length / entries.length * 100)
-    : 0;
+  const guiltyPct = entries.length ? Math.round(entries.filter(e => NEGATIVE_MOODS.includes(e.moodAfter)).length / entries.length * 100) : 0;
   const todayStr = formatDate(new Date().toISOString());
   const todayCount = entries.filter(e => formatDate(e.timestamp) === todayStr).reduce((s, e) => s + (e.cigarettes || 1), 0);
 
   const pill = (label: string, selected: boolean, onClick: () => void) => (
-    <button
-      key={label}
-      onClick={onClick}
-      style={{
-        padding: "6px 14px", borderRadius: 30,
-        border: selected ? "none" : "1px solid #3a3a3a",
-        background: selected ? "#c8a96e" : "transparent",
-        color: selected ? "#1a1208" : "#a89060",
-        fontFamily: "'DM Mono', monospace", fontSize: 12,
-        cursor: "pointer", transition: "all 0.15s", letterSpacing: 0.5,
-      }}
-    >{label}</button>
+    <button key={label} onClick={onClick} style={{
+      padding: "7px 15px", borderRadius: 30,
+      border: selected ? `2px solid ${C.amber}` : `1.5px solid ${C.border}`,
+      background: selected ? C.amberBg : C.white,
+      color: selected ? C.amber : C.inkMid,
+      fontFamily: "'DM Mono', monospace", fontSize: 12, fontWeight: selected ? "600" : "400",
+      cursor: "pointer", transition: "all 0.15s", letterSpacing: 0.3,
+    }}>{label}</button>
   );
 
   return (
-    <div style={{ minHeight: "100vh", background: "#111009", color: "#e8d9b8", fontFamily: "'DM Mono', monospace", paddingBottom: 80 }}>
-      <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&family=Playfair+Display:ital@1&display=swap" rel="stylesheet" />
+    <div style={{ minHeight: "100vh", background: C.bg, color: C.ink, fontFamily: "'DM Mono', monospace" }}>
+      <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,400;0,500;0,600;1,400&family=Playfair+Display:ital,wght@0,700;1,400;1,700&display=swap" rel="stylesheet" />
 
       {/* Header */}
-      <div style={{ padding: "32px 24px 0", borderBottom: "1px solid #2a2518" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+      <div style={{ background: C.white, borderBottom: `2px solid ${C.border}`, padding: "28px 28px 0" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", maxWidth: 560 }}>
           <div>
-            <div style={{ fontSize: 10, letterSpacing: 3, color: "#6b5d3f", textTransform: "uppercase", marginBottom: 4 }}>Honest Record</div>
-            <h1 style={{ margin: 0, fontSize: 26, fontWeight: 500, color: "#e8d9b8", letterSpacing: -0.5 }}>The Smoke Log</h1>
+            <div style={{ fontSize: 10, letterSpacing: 4, color: C.inkLight, textTransform: "uppercase", marginBottom: 6 }}>Honest Record</div>
+            <h1 style={{ margin: 0, fontSize: 28, fontWeight: 700, color: C.ink, letterSpacing: -0.5, fontFamily: "'Playfair Display', serif" }}>
+              The Smoke Log
+            </h1>
           </div>
-          <div style={{ textAlign: "right" }}>
-            <div style={{ fontSize: 28, fontWeight: 300, color: "#c8a96e" }}>{todayCount}</div>
-            <div style={{ fontSize: 10, color: "#6b5d3f", letterSpacing: 2, textTransform: "uppercase" }}>today</div>
+          <div style={{ textAlign: "right", background: C.amberBg, border: `1.5px solid ${C.border}`, borderRadius: 12, padding: "12px 18px" }}>
+            <div style={{ fontSize: 32, fontWeight: 600, color: C.amber, lineHeight: 1 }}>{todayCount}</div>
+            <div style={{ fontSize: 10, color: C.inkLight, letterSpacing: 3, textTransform: "uppercase", marginTop: 4 }}>today</div>
           </div>
         </div>
-        <div style={{ display: "flex", gap: 8, marginTop: 20 }}>
-          {(["log", "add", "review"] as const).map(v => (
+
+        <div style={{ display: "flex", gap: 0, marginTop: 24 }}>
+          {(["log", "add", "review", "insights"] as const).map(v => (
             <button key={v} onClick={() => setView(v)} style={{
-              padding: "8px 20px", background: "none", border: "none",
-              borderBottom: view === v ? "2px solid #c8a96e" : "2px solid transparent",
-              color: view === v ? "#c8a96e" : "#6b5d3f",
-              fontFamily: "'DM Mono', monospace", fontSize: 12,
-              cursor: "pointer", letterSpacing: 2, textTransform: "uppercase", transition: "all 0.2s",
+              padding: "10px 18px", background: "none", border: "none",
+              borderBottom: view === v ? `3px solid ${C.amber}` : "3px solid transparent",
+              color: view === v ? C.amber : C.inkLight,
+              fontFamily: "'DM Mono', monospace", fontSize: 12, fontWeight: view === v ? "600" : "400",
+              cursor: "pointer", letterSpacing: 2, textTransform: "uppercase", transition: "all 0.15s",
             }}>{v}</button>
           ))}
         </div>
       </div>
 
-      <div style={{ padding: "24px 24px 0" }}>
+      <div style={{ padding: "28px 28px 80px", maxWidth: 560 }}>
 
         {/* ADD */}
         {view === "add" && (
-          <div style={{ maxWidth: 480 }}>
+          <div>
             {saved ? (
-              <div style={{ textAlign: "center", padding: "60px 0", color: "#c8a96e" }}>
-                <div style={{ fontSize: 36, marginBottom: 12 }}>✓</div>
-                <div style={{ fontSize: 13, letterSpacing: 2, textTransform: "uppercase" }}>Logged</div>
+              <div style={{ textAlign: "center", padding: "60px 0" }}>
+                <div style={{ width: 64, height: 64, borderRadius: "50%", background: C.greenBg, border: `2px solid ${C.green}`, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px", fontSize: 28 }}>✓</div>
+                <div style={{ fontSize: 14, letterSpacing: 3, textTransform: "uppercase", color: C.green, fontWeight: 600 }}>Logged</div>
               </div>
             ) : (
               <>
-                <p style={{ fontStyle: "italic", fontSize: 13, color: "#6b5d3f", margin: "0 0 24px", fontFamily: "'Playfair Display', serif" }}>
-                  &ldquo;{QUOTES[quoteIdx]}&rdquo;
-                </p>
+                <div style={{ background: C.amberBg, border: `1.5px solid ${C.border}`, borderRadius: 10, padding: "16px 20px", marginBottom: 28 }}>
+                  <p style={{ fontStyle: "italic", fontSize: 14, color: C.inkMid, margin: 0, fontFamily: "'Playfair Display', serif", lineHeight: 1.6 }}>
+                    &ldquo;{QUOTES[quoteIdx]}&rdquo;
+                  </p>
+                </div>
 
                 <Section label="How many cigarettes?">
-                  <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
                     <button onClick={() => setForm(f => ({ ...f, cigarettes: Math.max(1, f.cigarettes - 1) }))} style={numBtnStyle}>−</button>
-                    <span style={{ fontSize: 24, color: "#c8a96e", minWidth: 32, textAlign: "center" }}>{form.cigarettes}</span>
+                    <span style={{ fontSize: 28, fontWeight: 600, color: C.amber, minWidth: 36, textAlign: "center" }}>{form.cigarettes}</span>
                     <button onClick={() => setForm(f => ({ ...f, cigarettes: f.cigarettes + 1 }))} style={numBtnStyle}>+</button>
                   </div>
                 </Section>
 
                 <Section label="What triggered it?">
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-                    {TRIGGERS.map(t => pill(t, form.trigger === t, () => setForm(f => ({ ...f, trigger: t }))))}
-                  </div>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>{TRIGGERS.map(t => pill(t, form.trigger === t, () => setForm(f => ({ ...f, trigger: t }))))}</div>
                 </Section>
-
                 <Section label="Where were you?">
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-                    {LOCATIONS.map(l => pill(l, form.location === l, () => setForm(f => ({ ...f, location: l }))))}
-                  </div>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>{LOCATIONS.map(l => pill(l, form.location === l, () => setForm(f => ({ ...f, location: l }))))}</div>
                 </Section>
-
                 <Section label="Mood before">
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-                    {MOODS_BEFORE.map(m => pill(m, form.moodBefore === m, () => setForm(f => ({ ...f, moodBefore: m }))))}
-                  </div>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>{MOODS_BEFORE.map(m => pill(m, form.moodBefore === m, () => setForm(f => ({ ...f, moodBefore: m }))))}</div>
                 </Section>
-
                 <Section label="Mood after">
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-                    {MOODS_AFTER.map(m => pill(m, form.moodAfter === m, () => setForm(f => ({ ...f, moodAfter: m }))))}
-                  </div>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>{MOODS_AFTER.map(m => pill(m, form.moodAfter === m, () => setForm(f => ({ ...f, moodAfter: m }))))}</div>
                 </Section>
-
                 <Section label="Any honest notes?">
-                  <textarea
-                    value={form.note}
-                    onChange={e => setForm(f => ({ ...f, note: e.target.value }))}
+                  <textarea value={form.note} onChange={e => setForm(f => ({ ...f, note: e.target.value }))}
                     placeholder="What were you really feeling? Was it worth it?"
-                    style={{
-                      width: "100%", minHeight: 80, background: "#1a1610", border: "1px solid #2a2518",
-                      color: "#e8d9b8", fontFamily: "'DM Mono', monospace", fontSize: 12,
-                      padding: "10px 12px", borderRadius: 4, resize: "vertical", boxSizing: "border-box", outline: "none",
-                    }}
-                  />
+                    style={{ width: "100%", minHeight: 80, background: C.white, border: `1.5px solid ${C.border}`, color: C.ink, fontFamily: "'DM Mono', monospace", fontSize: 13, padding: "12px 14px", borderRadius: 8, resize: "vertical", boxSizing: "border-box", outline: "none" }} />
                 </Section>
 
-                <button
-                  onClick={handleAdd}
-                  disabled={!form.trigger || !form.moodBefore || !form.moodAfter}
-                  style={{
-                    width: "100%", padding: "14px",
-                    background: form.trigger && form.moodBefore && form.moodAfter ? "#c8a96e" : "#2a2518",
-                    color: form.trigger && form.moodBefore && form.moodAfter ? "#1a1208" : "#4a3f28",
-                    border: "none", borderRadius: 4, fontFamily: "'DM Mono', monospace",
-                    fontSize: 13, letterSpacing: 2, textTransform: "uppercase",
-                    cursor: form.trigger && form.moodBefore && form.moodAfter ? "pointer" : "default",
-                    transition: "all 0.2s", marginTop: 8,
-                  }}
-                >Log this cigarette</button>
+                <button onClick={handleAdd} disabled={!form.trigger || !form.moodBefore || !form.moodAfter} style={{
+                  width: "100%", padding: "16px",
+                  background: form.trigger && form.moodBefore && form.moodAfter ? C.amber : C.bgAlt,
+                  color: form.trigger && form.moodBefore && form.moodAfter ? C.white : C.inkFaint,
+                  border: "none", borderRadius: 10, fontFamily: "'DM Mono', monospace",
+                  fontSize: 13, letterSpacing: 2, textTransform: "uppercase", fontWeight: "600",
+                  cursor: form.trigger && form.moodBefore && form.moodAfter ? "pointer" : "default",
+                  transition: "all 0.2s", marginTop: 8,
+                }}>Log this cigarette</button>
               </>
             )}
           </div>
@@ -209,106 +279,180 @@ export default function SmokingLogPage() {
         {view === "log" && (
           <div>
             {entries.length === 0 ? (
-              <div style={{ textAlign: "center", padding: "60px 0", color: "#4a3f28" }}>
-                <div style={{ fontSize: 40, marginBottom: 12 }}>🚬</div>
-                <div style={{ fontSize: 13, letterSpacing: 1 }}>No entries yet.<br />Tap <span style={{ color: "#c8a96e" }}>add</span> to log your first.</div>
+              <div style={{ textAlign: "center", padding: "60px 0", color: C.inkFaint }}>
+                <div style={{ fontSize: 48, marginBottom: 16 }}>🚬</div>
+                <div style={{ fontSize: 14, color: C.inkLight }}>No entries yet.<br />Tap <span style={{ color: C.amber, fontWeight: 600 }}>add</span> to log your first.</div>
               </div>
-            ) : (
-              entries.map(e => {
-                const isExp = expandedId === e.id;
-                const negative = NEGATIVE_MOODS.includes(e.moodAfter);
-                return (
-                  <div key={e.id} style={{ borderBottom: "1px solid #1e1b12", padding: "14px 0", cursor: "pointer" }}
-                    onClick={() => setExpandedId(isExp ? null : e.id)}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                      <div>
-                        <span style={{ fontSize: 12, color: "#6b5d3f" }}>{formatDate(e.timestamp)} · {formatTime(e.timestamp)}</span>
-                        {e.cigarettes > 1 && (
-                          <span style={{ marginLeft: 8, fontSize: 11, color: "#c8a96e", background: "#2a2010", padding: "2px 8px", borderRadius: 20 }}>×{e.cigarettes}</span>
-                        )}
+            ) : entries.map(e => {
+              const isExp = expandedId === e.id;
+              const negative = NEGATIVE_MOODS.includes(e.moodAfter);
+              return (
+                <div key={e.id}
+                  style={{ background: C.white, border: `1.5px solid ${C.border}`, borderRadius: 10, padding: "16px 18px", marginBottom: 10, cursor: "pointer", transition: "border-color 0.15s" }}
+                  onClick={() => setExpandedId(isExp ? null : e.id)}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                    <div>
+                      <div style={{ fontSize: 12, color: C.inkLight, marginBottom: 4 }}>{formatDate(e.timestamp)} · {formatTime(e.timestamp)}
+                        {e.cigarettes > 1 && <span style={{ marginLeft: 8, fontSize: 11, color: C.amber, background: C.amberBg, padding: "2px 8px", borderRadius: 20, fontWeight: 600 }}>×{e.cigarettes}</span>}
                       </div>
-                      <span style={{ fontSize: 10, letterSpacing: 1, color: negative ? "#c86e6e" : "#6eb88c", textTransform: "uppercase" }}>
-                        {e.moodAfter}
-                      </span>
-                    </div>
-                    <div style={{ marginTop: 6, fontSize: 13, color: "#a89060" }}>
-                      {e.trigger}{e.location ? ` · ${e.location}` : ""} <span style={{ color: "#5a4e30" }}>→ felt {e.moodBefore}</span>
-                    </div>
-                    {isExp && (
-                      <div style={{ marginTop: 12, borderLeft: "2px solid #2a2518", paddingLeft: 12 }}>
-                        {e.note && <p style={{ fontSize: 12, color: "#8a7550", margin: "0 0 10px", fontStyle: "italic", fontFamily: "'Playfair Display', serif" }}>&ldquo;{e.note}&rdquo;</p>}
-                        <button onClick={ev => { ev.stopPropagation(); deleteEntry(e.id); }} style={{
-                          background: "none", border: "1px solid #3a2a2a", color: "#6b3a3a",
-                          fontFamily: "'DM Mono', monospace", fontSize: 11, letterSpacing: 1,
-                          padding: "4px 10px", borderRadius: 3, cursor: "pointer", textTransform: "uppercase",
-                        }}>Delete</button>
+                      <div style={{ fontSize: 14, color: C.ink, fontWeight: 500 }}>
+                        {e.trigger}{e.location ? ` · ${e.location}` : ""}
                       </div>
-                    )}
+                      <div style={{ fontSize: 12, color: C.inkLight, marginTop: 2 }}>felt {e.moodBefore} before</div>
+                    </div>
+                    <span style={{
+                      fontSize: 11, fontWeight: 600, letterSpacing: 0.5, textTransform: "uppercase",
+                      padding: "4px 10px", borderRadius: 20,
+                      background: negative ? C.coralBg : C.greenBg,
+                      color: negative ? C.coral : C.green,
+                      whiteSpace: "nowrap", marginLeft: 12,
+                    }}>{e.moodAfter}</span>
                   </div>
-                );
-              })
-            )}
+                  {isExp && (
+                    <div style={{ marginTop: 14, paddingTop: 14, borderTop: `1px solid ${C.border}` }}>
+                      {e.note && <p style={{ fontSize: 13, color: C.inkMid, margin: "0 0 12px", fontStyle: "italic", fontFamily: "'Playfair Display', serif", lineHeight: 1.6 }}>&ldquo;{e.note}&rdquo;</p>}
+                      <button onClick={ev => { ev.stopPropagation(); deleteEntry(e.id); }} style={{
+                        background: C.coralBg, border: `1px solid ${C.coral}`, color: C.coral,
+                        fontFamily: "'DM Mono', monospace", fontSize: 11, letterSpacing: 1,
+                        padding: "5px 12px", borderRadius: 6, cursor: "pointer", textTransform: "uppercase", fontWeight: 600,
+                      }}>Delete</button>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         )}
 
         {/* REVIEW */}
         {view === "review" && (
-          <div style={{ maxWidth: 480 }}>
-            <p style={{ fontStyle: "italic", fontSize: 13, color: "#6b5d3f", margin: "0 0 28px", fontFamily: "'Playfair Display', serif" }}>
+          <div>
+            <p style={{ fontStyle: "italic", fontSize: 14, color: C.inkMid, margin: "0 0 24px", fontFamily: "'Playfair Display', serif", lineHeight: 1.6 }}>
               &ldquo;Look at the pattern. Not with judgment — with curiosity.&rdquo;
             </p>
-
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 24 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 28 }}>
               {[
-                { label: "Total logged", value: total },
-                { label: "Today", value: todayCount },
-                { label: "Top trigger", value: topTrigger },
-                { label: "Felt bad after", value: guiltyPct + "%" },
+                { label: "Total logged", value: total, accent: C.amber },
+                { label: "Today", value: todayCount, accent: todayCount > 5 ? C.coral : C.amber },
+                { label: "Top trigger", value: topTrigger, accent: C.inkMid },
+                { label: "Felt bad after", value: guiltyPct + "%", accent: guiltyPct > 50 ? C.coral : C.green },
               ].map(s => (
-                <div key={s.label} style={{ background: "#161410", border: "1px solid #2a2518", borderRadius: 6, padding: "14px 16px" }}>
-                  <div style={{ fontSize: 22, color: "#c8a96e", fontWeight: 300 }}>{s.value}</div>
-                  <div style={{ fontSize: 10, color: "#6b5d3f", textTransform: "uppercase", letterSpacing: 2, marginTop: 4 }}>{s.label}</div>
+                <div key={s.label} style={{ background: C.white, border: `1.5px solid ${C.border}`, borderRadius: 10, padding: "16px 18px" }}>
+                  <div style={{ fontSize: 26, fontWeight: 700, color: s.accent, fontFamily: "'Playfair Display', serif" }}>{s.value}</div>
+                  <div style={{ fontSize: 10, color: C.inkLight, textTransform: "uppercase", letterSpacing: 2, marginTop: 6 }}>{s.label}</div>
                 </div>
               ))}
             </div>
 
             {entries.length > 0 && (
               <>
-                <div style={{ fontSize: 11, letterSpacing: 3, color: "#6b5d3f", textTransform: "uppercase", marginBottom: 12 }}>Trigger breakdown</div>
-                {Object.entries(
-                  entries.reduce<Record<string, number>>((acc, e) => { acc[e.trigger] = (acc[e.trigger] || 0) + (e.cigarettes || 1); return acc; }, {})
-                ).sort((a, b) => b[1] - a[1]).map(([t, c]) => (
-                  <div key={t} style={{ marginBottom: 10 }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
-                      <span style={{ fontSize: 12, color: "#a89060" }}>{t}</span>
-                      <span style={{ fontSize: 12, color: "#6b5d3f" }}>{c}</span>
+                <SectionLight label="Trigger breakdown">
+                  {Object.entries(entries.reduce<Record<string, number>>((acc, e) => { acc[e.trigger] = (acc[e.trigger] || 0) + (e.cigarettes || 1); return acc; }, {})).sort((a, b) => b[1] - a[1]).map(([t, c]) => (
+                    <div key={t} style={{ marginBottom: 12 }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 5 }}>
+                        <span style={{ fontSize: 13, color: C.ink, fontWeight: 500 }}>{t}</span>
+                        <span style={{ fontSize: 13, color: C.inkLight }}>{c}</span>
+                      </div>
+                      <div style={{ height: 6, background: C.bgAlt, borderRadius: 3 }}>
+                        <div style={{ height: "100%", width: `${(c / total) * 100}%`, background: C.amber, borderRadius: 3, transition: "width 0.5s" }} />
+                      </div>
                     </div>
-                    <div style={{ height: 3, background: "#2a2518", borderRadius: 2 }}>
-                      <div style={{ height: "100%", width: `${(c / total) * 100}%`, background: "#c8a96e", borderRadius: 2 }} />
-                    </div>
-                  </div>
-                ))}
+                  ))}
+                </SectionLight>
 
-                <div style={{ marginTop: 28, fontSize: 11, letterSpacing: 3, color: "#6b5d3f", textTransform: "uppercase", marginBottom: 12 }}>Mood after</div>
-                {Object.entries(
-                  entries.reduce<Record<string, number>>((acc, e) => { acc[e.moodAfter] = (acc[e.moodAfter] || 0) + 1; return acc; }, {})
-                ).sort((a, b) => b[1] - a[1]).map(([m, c]) => {
-                  const negative = NEGATIVE_MOODS.includes(m);
-                  return (
-                    <div key={m} style={{ marginBottom: 8, display: "flex", justifyContent: "space-between" }}>
-                      <span style={{ fontSize: 12, color: negative ? "#c86e6e" : "#6eb88c" }}>{m}</span>
-                      <span style={{ fontSize: 12, color: "#6b5d3f" }}>{c}×</span>
-                    </div>
-                  );
-                })}
+                <SectionLight label="How did you feel after?">
+                  {Object.entries(entries.reduce<Record<string, number>>((acc, e) => { acc[e.moodAfter] = (acc[e.moodAfter] || 0) + 1; return acc; }, {})).sort((a, b) => b[1] - a[1]).map(([m, c]) => {
+                    const negative = NEGATIVE_MOODS.includes(m);
+                    return (
+                      <div key={m} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 0", borderBottom: `1px solid ${C.border}` }}>
+                        <span style={{ fontSize: 13, color: negative ? C.coral : C.green, fontWeight: 500 }}>{m}</span>
+                        <span style={{ fontSize: 13, color: C.inkLight, fontWeight: 600 }}>{c}×</span>
+                      </div>
+                    );
+                  })}
+                </SectionLight>
 
                 {guiltyPct > 50 && (
-                  <div style={{ marginTop: 28, background: "#1a1010", border: "1px solid #3a2020", borderRadius: 6, padding: "16px 18px" }}>
-                    <div style={{ fontSize: 12, color: "#c86e6e", lineHeight: 1.6 }}>
-                      You felt bad after smoking <strong>{guiltyPct}%</strong> of the time. The cigarette isn&apos;t delivering what you think it is.
+                  <div style={{ background: C.coralBg, border: `2px solid ${C.coral}`, borderRadius: 10, padding: "18px 20px", marginTop: 8 }}>
+                    <div style={{ fontSize: 13, color: C.coral, lineHeight: 1.7, fontWeight: 500 }}>
+                      You felt bad after <strong>{guiltyPct}%</strong> of cigarettes. The cigarette is not delivering what you think it is.
                     </div>
                   </div>
                 )}
+              </>
+            )}
+          </div>
+        )}
+
+        {/* INSIGHTS */}
+        {view === "insights" && (
+          <div>
+            <div style={{ background: C.amberBg, border: `1.5px solid ${C.border}`, borderRadius: 10, padding: "16px 20px", marginBottom: 24 }}>
+              <p style={{ fontStyle: "italic", fontSize: 14, color: C.inkMid, margin: 0, fontFamily: "'Playfair Display', serif", lineHeight: 1.6 }}>
+                &ldquo;AI reads your full log and tells you what it actually sees — specifically, honestly.&rdquo;
+              </p>
+            </div>
+
+            {entries.length < 2 ? (
+              <div style={{ color: C.inkLight, fontSize: 14, padding: "20px 0" }}>Log at least 2 entries to run analysis.</div>
+            ) : (
+              <>
+                <button onClick={runAnalysis} disabled={aiLoading} style={{
+                  width: "100%", padding: "16px",
+                  background: aiLoading ? C.bgAlt : C.ink,
+                  color: aiLoading ? C.inkFaint : C.white,
+                  border: "none", borderRadius: 10,
+                  fontFamily: "'DM Mono', monospace", fontSize: 12, letterSpacing: 2, fontWeight: 600,
+                  textTransform: "uppercase", cursor: aiLoading ? "default" : "pointer", transition: "all 0.2s",
+                }}>
+                  {aiLoading ? `Analysing ${entries.length} entries…` : "Analyse my patterns"}
+                </button>
+
+                {aiAnalysis && !aiLoading && (
+                  <div style={{ marginTop: 20, background: C.white, border: `1.5px solid ${C.border}`, borderRadius: 10, padding: "22px" }}>
+                    <div style={{ fontSize: 10, letterSpacing: 3, color: C.inkLight, textTransform: "uppercase", marginBottom: 12 }}>AI Analysis</div>
+                    <div style={{ lineHeight: 1.85, fontSize: 14, color: C.inkMid, fontFamily: "'Playfair Display', serif", fontStyle: "italic" }}>
+                      {aiAnalysis}
+                    </div>
+                  </div>
+                )}
+
+                <div style={{ marginTop: 32 }}>
+                  <div style={{ fontSize: 10, letterSpacing: 3, color: C.inkLight, textTransform: "uppercase", marginBottom: 14 }}>Ask about your log</div>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 14 }}>
+                    {["When do I smoke most?", "Does smoking help my stress?", "What should I cut first?", "What's my biggest risk moment?", "Am I making progress?"].map(q => (
+                      <button key={q} onClick={() => setAiQuestion(q)} style={{
+                        padding: "7px 13px", borderRadius: 20,
+                        border: aiQuestion === q ? `2px solid ${C.amber}` : `1.5px solid ${C.border}`,
+                        background: aiQuestion === q ? C.amberBg : C.white,
+                        color: aiQuestion === q ? C.amber : C.inkMid,
+                        fontFamily: "'DM Mono', monospace", fontSize: 11, fontWeight: aiQuestion === q ? "600" : "400",
+                        cursor: "pointer", transition: "all 0.15s",
+                      }}>{q}</button>
+                    ))}
+                  </div>
+                  <textarea value={aiQuestion} onChange={e => setAiQuestion(e.target.value)}
+                    placeholder="Or type your own question…"
+                    style={{ width: "100%", minHeight: 70, background: C.white, border: `1.5px solid ${C.border}`, color: C.ink, fontFamily: "'DM Mono', monospace", fontSize: 13, padding: "12px 14px", borderRadius: 8, resize: "none", boxSizing: "border-box", outline: "none" }} />
+                  <button onClick={askQuestion} disabled={!aiQuestion.trim() || aiAnswerLoading} style={{
+                    width: "100%", padding: "14px", marginTop: 10,
+                    background: aiQuestion.trim() && !aiAnswerLoading ? C.amber : C.bgAlt,
+                    color: aiQuestion.trim() && !aiAnswerLoading ? C.white : C.inkFaint,
+                    border: "none", borderRadius: 10, fontFamily: "'DM Mono', monospace",
+                    fontSize: 12, letterSpacing: 2, textTransform: "uppercase", fontWeight: 600,
+                    cursor: aiQuestion.trim() && !aiAnswerLoading ? "pointer" : "default", transition: "all 0.2s",
+                  }}>
+                    {aiAnswerLoading ? "Thinking…" : "Ask"}
+                  </button>
+                  {aiAnswer && !aiAnswerLoading && (
+                    <div style={{ marginTop: 16, background: C.white, border: `1.5px solid ${C.border}`, borderRadius: 10, padding: "20px" }}>
+                      <div style={{ fontSize: 10, letterSpacing: 3, color: C.inkLight, textTransform: "uppercase", marginBottom: 12 }}>Response</div>
+                      <div style={{ lineHeight: 1.85, fontSize: 14, color: C.inkMid, fontFamily: "'Playfair Display', serif", fontStyle: "italic" }}>
+                        {aiAnswer}
+                      </div>
+                    </div>
+                  )}
+                </div>
               </>
             )}
           </div>
@@ -319,15 +463,26 @@ export default function SmokingLogPage() {
 }
 
 const numBtnStyle: React.CSSProperties = {
-  width: 36, height: 36, borderRadius: "50%", border: "1px solid #3a3a3a",
-  background: "transparent", color: "#c8a96e", fontSize: 18, cursor: "pointer",
-  fontFamily: "'DM Mono', monospace",
+  width: 40, height: 40, borderRadius: "50%",
+  border: `1.5px solid #E2CFA8`,
+  background: "#FFFFFF", color: "#D4860A", fontSize: 20,
+  cursor: "pointer", fontFamily: "'DM Mono', monospace",
+  display: "flex", alignItems: "center", justifyContent: "center",
 };
 
 function Section({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div style={{ marginBottom: 20 }}>
-      <div style={{ fontSize: 10, letterSpacing: 3, color: "#6b5d3f", textTransform: "uppercase", marginBottom: 10 }}>{label}</div>
+    <div style={{ marginBottom: 22 }}>
+      <div style={{ fontSize: 10, letterSpacing: 3, color: "#9C7E4A", textTransform: "uppercase", marginBottom: 10, fontWeight: 600 }}>{label}</div>
+      {children}
+    </div>
+  );
+}
+
+function SectionLight({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div style={{ background: "#FFFFFF", border: "1.5px solid #E2CFA8", borderRadius: 10, padding: "18px 20px", marginBottom: 16 }}>
+      <div style={{ fontSize: 10, letterSpacing: 3, color: "#9C7E4A", textTransform: "uppercase", marginBottom: 14, fontWeight: 600 }}>{label}</div>
       {children}
     </div>
   );
