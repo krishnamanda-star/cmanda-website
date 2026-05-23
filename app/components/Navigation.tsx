@@ -18,6 +18,8 @@ export default function Navigation() {
    { href: '/ai-solutions', label: 'AI Solutions' },
    { href: '/notes', label: 'Notes' },
    { href: 'https://garden-bice-sigma.vercel.app', label: 'Garden' },
+{ href: '/smoke-log', label: 'Smoke Log' },
+
   ];
 
   return (
