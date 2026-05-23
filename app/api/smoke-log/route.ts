@@ -21,27 +21,32 @@ export async function POST(req: NextRequest) {
 
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) {
-    return NextResponse.json({ error: "API key not configured" }, { status: 500 });
+    return NextResponse.json({ error: "ANTHROPIC_API_KEY is not set in environment variables" }, { status: 500 });
   }
 
-  const res = await fetch("https://api.anthropic.com/v1/messages", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "anthropic-version": "2023-06-01",
-      "x-api-key": apiKey,
-    },
-    body: JSON.stringify({
-      model: "claude-sonnet-4-20250514",
-      max_tokens: max_tokens ?? 1000,
-      system: mode === "question" ? QUESTION_SYSTEM : ANALYSIS_SYSTEM,
-      messages: [{ role: "user", content: prompt }],
-    }),
-  });
+  let res: Response;
+  try {
+    res = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "anthropic-version": "2023-06-01",
+        "x-api-key": apiKey,
+      },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-20250514",
+        max_tokens: max_tokens ?? 1000,
+        system: mode === "question" ? QUESTION_SYSTEM : ANALYSIS_SYSTEM,
+        messages: [{ role: "user", content: prompt }],
+      }),
+    });
+  } catch (err) {
+    return NextResponse.json({ error: `Fetch failed: ${String(err)}` }, { status: 500 });
+  }
 
   if (!res.ok) {
-    const error = await res.text();
-    return NextResponse.json({ error }, { status: res.status });
+    const errorText = await res.text();
+    return NextResponse.json({ error: `Anthropic API error ${res.status}: ${errorText}` }, { status: res.status });
   }
 
   const data = await res.json();
