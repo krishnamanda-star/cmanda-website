@@ -139,9 +139,9 @@ RECENT 20: ${data.slice(0, 20).map(e => `${formatDate(e.timestamp)} ${formatTime
         }),
       });
       const data = await res.json();
-      setAiAnalysis(data.text || data.error || "Could not generate analysis.");
-    } catch {
-      setAiAnalysis("Something went wrong. Check your connection and try again.");
+      setAiAnalysis(data.text || `Error: ${data.error}` || "Could not generate analysis.");
+    } catch (err) {
+      setAiAnalysis(`Error: ${String(err)}`);
     }
     setAiLoading(false);
   }
@@ -161,9 +161,9 @@ RECENT 20: ${data.slice(0, 20).map(e => `${formatDate(e.timestamp)} ${formatTime
         }),
       });
       const data = await res.json();
-      setAiAnswer(data.text || data.error || "No response.");
-    } catch {
-      setAiAnswer("Something went wrong. Try again.");
+      setAiAnswer(data.text || `Error: ${data.error}` || "No response.");
+    } catch (err) {
+      setAiAnswer(`Error: ${String(err)}`);
     }
     setAiAnswerLoading(false);
   }
