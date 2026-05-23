@@ -57,7 +57,12 @@ function formatTime(iso: string) {
 export default function SmokingLogPage() {
   const [entries, setEntries] = useState<Entry[]>([]);
   const [view, setView] = useState<"log" | "add" | "review" | "insights">("log");
-  const [form, setForm] = useState({ trigger: "", location: "", moodBefore: "", moodAfter: "", note: "", cigarettes: 1 });
+  function nowLocalInput() {
+    const d = new Date();
+    d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+    return d.toISOString().slice(0, 16);
+  }
+  const [form, setForm] = useState({ trigger: "", location: "", moodBefore: "", moodAfter: "", note: "", cigarettes: 1, logDate: nowLocalInput() });
   const [saved, setSaved] = useState(false);
   const [expandedId, setExpandedId] = useState<number | null>(null);
   const [quoteIdx] = useState(() => Math.floor(Math.random() * QUOTES.length));
@@ -81,9 +86,10 @@ export default function SmokingLogPage() {
 
   function handleAdd() {
     if (!form.trigger || !form.moodBefore || !form.moodAfter) return;
-    const entry: Entry = { ...form, id: Date.now(), timestamp: new Date().toISOString() };
-    saveEntries([entry, ...entries]);
-    setForm({ trigger: "", location: "", moodBefore: "", moodAfter: "", note: "", cigarettes: 1 });
+    const timestamp = form.logDate ? new Date(form.logDate).toISOString() : new Date().toISOString();
+    const entry: Entry = { ...form, id: Date.now(), timestamp };
+    saveEntries([entry, ...entries].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()));
+    setForm({ trigger: "", location: "", moodBefore: "", moodAfter: "", note: "", cigarettes: 1, logDate: nowLocalInput() });
     setSaved(true);
     setTimeout(() => { setSaved(false); setView("log"); }, 1400);
   }
@@ -123,18 +129,17 @@ RECENT 20: ${data.slice(0, 20).map(e => `${formatDate(e.timestamp)} ${formatTime
     setAiLoading(true);
     setAiAnalysis("");
     try {
-      const res = await fetch("https://api.anthropic.com/v1/messages", {
+      const res = await fetch("/api/smoke-analyse", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          model: "claude-sonnet-4-20250514",
+          mode: "analysis",
+          prompt: `Analyse my smoking log honestly. Tell me what you see — my real patterns, whether cigarettes are giving me what I think they are, and what I should change first.\n\n${buildLogSummary(entries)}`,
           max_tokens: 1000,
-          system: "You are a compassionate but unflinchingly honest smoking cessation advisor. Analyse the user's actual logged data and identify real patterns. Be specific — use their actual numbers and triggers. Be frank about what isn't working. Give 2-3 concrete, actionable observations they can act on today. Write in plain prose, no bullet points, no headers. Tone: trusted friend who has read the evidence carefully.",
-          messages: [{ role: "user", content: `Analyse my smoking log honestly. Tell me what you see — my real patterns, whether cigarettes are giving me what I think they are, and what I should change first.\n\n${buildLogSummary(entries)}` }]
-        })
+        }),
       });
       const data = await res.json();
-      setAiAnalysis(data.content?.find((b: {type: string}) => b.type === "text")?.text || "Could not generate analysis.");
+      setAiAnalysis(data.text || data.error || "Could not generate analysis.");
     } catch {
       setAiAnalysis("Something went wrong. Check your connection and try again.");
     }
@@ -146,23 +151,27 @@ RECENT 20: ${data.slice(0, 20).map(e => `${formatDate(e.timestamp)} ${formatTime
     setAiAnswerLoading(true);
     setAiAnswer("");
     try {
-      const res = await fetch("https://api.anthropic.com/v1/messages", {
+      const res = await fetch("/api/smoke-analyse", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          model: "claude-sonnet-4-20250514",
+          mode: "question",
+          prompt: `My smoking log:\n${buildLogSummary(entries)}\n\nMy question: ${aiQuestion}`,
           max_tokens: 600,
-          system: "You are a compassionate but honest smoking cessation advisor. Answer questions about the user's smoking log data directly and specifically using their actual data. No bullet points. Speak directly to them.",
-          messages: [{ role: "user", content: `My smoking log:\n${buildLogSummary(entries)}\n\nMy question: ${aiQuestion}` }]
-        })
+        }),
       });
       const data = await res.json();
-      setAiAnswer(data.content?.find((b: {type: string}) => b.type === "text")?.text || "No response.");
+      setAiAnswer(data.text || data.error || "No response.");
     } catch {
       setAiAnswer("Something went wrong. Try again.");
     }
     setAiAnswerLoading(false);
   }
+
+  const QUIT_DATE = new Date("2025-06-02T00:00:00");
+  const now = new Date();
+  const daysToQuit = Math.ceil((QUIT_DATE.getTime() - now.getTime()) / 86400000);
+  const quitPassed = daysToQuit <= 0;
 
   const total = entries.reduce((s, e) => s + (e.cigarettes || 1), 0);
   const topTrigger = (() => {
@@ -204,7 +213,33 @@ RECENT 20: ${data.slice(0, 20).map(e => `${formatDate(e.timestamp)} ${formatTime
           </div>
         </div>
 
-        <div style={{ display: "flex", gap: 0, marginTop: 24 }}>
+        {/* Quit date countdown */}
+        <div style={{
+          marginTop: 20,
+          background: quitPassed ? C.greenBg : C.coralBg,
+          border: `1.5px solid ${quitPassed ? C.green : C.coral}`,
+          borderRadius: 10, padding: "12px 16px",
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+        }}>
+          <div>
+            <div style={{ fontSize: 10, letterSpacing: 3, textTransform: "uppercase", color: quitPassed ? C.green : C.coral, fontWeight: 600 }}>
+              {quitPassed ? "Quit date reached" : "Quit date"}
+            </div>
+            <div style={{ fontSize: 13, color: C.ink, marginTop: 3 }}>
+              {quitPassed ? "You committed to stopping. How are you doing?" : "June 2, 2025"}
+            </div>
+          </div>
+          <div style={{ textAlign: "right" }}>
+            <div style={{ fontSize: 30, fontWeight: 700, color: quitPassed ? C.green : C.coral, lineHeight: 1, fontFamily: "'Playfair Display', serif" }}>
+              {quitPassed ? "🎯" : daysToQuit}
+            </div>
+            {!quitPassed && <div style={{ fontSize: 10, color: C.inkLight, letterSpacing: 2, textTransform: "uppercase", marginTop: 3 }}>
+              {daysToQuit === 1 ? "day left" : "days left"}
+            </div>}
+          </div>
+        </div>
+
+        <div style={{ display: "flex", gap: 0, marginTop: 20 }}>
           {(["log", "add", "review", "insights"] as const).map(v => (
             <button key={v} onClick={() => setView(v)} style={{
               padding: "10px 18px", background: "none", border: "none",
@@ -234,6 +269,40 @@ RECENT 20: ${data.slice(0, 20).map(e => `${formatDate(e.timestamp)} ${formatTime
                     &ldquo;{QUOTES[quoteIdx]}&rdquo;
                   </p>
                 </div>
+
+                <Section label="When was this?">
+                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 8 }}>
+                    {["Now", "Earlier today", "Yesterday"].map(preset => {
+                      const val = (() => {
+                        const d = new Date();
+                        if (preset === "Earlier today") { d.setHours(d.getHours() - 3); }
+                        if (preset === "Yesterday") { d.setDate(d.getDate() - 1); }
+                        d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+                        return d.toISOString().slice(0, 16);
+                      })();
+                      return (
+                        <button key={preset} onClick={() => setForm(f => ({ ...f, logDate: val }))} style={{
+                          padding: "7px 15px", borderRadius: 30,
+                          border: `1.5px solid ${C.border}`,
+                          background: C.white, color: C.inkMid,
+                          fontFamily: "'DM Mono', monospace", fontSize: 12,
+                          cursor: "pointer", transition: "all 0.15s",
+                        }}>{preset}</button>
+                      );
+                    })}
+                  </div>
+                  <input
+                    type="datetime-local"
+                    value={form.logDate}
+                    max={nowLocalInput()}
+                    onChange={e => setForm(f => ({ ...f, logDate: e.target.value }))}
+                    style={{
+                      width: "100%", background: C.white, border: `1.5px solid ${C.border}`,
+                      color: C.ink, fontFamily: "'DM Mono', monospace", fontSize: 13,
+                      padding: "10px 14px", borderRadius: 8, boxSizing: "border-box", outline: "none",
+                    }}
+                  />
+                </Section>
 
                 <Section label="How many cigarettes?">
                   <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
@@ -420,7 +489,7 @@ RECENT 20: ${data.slice(0, 20).map(e => `${formatDate(e.timestamp)} ${formatTime
                 <div style={{ marginTop: 32 }}>
                   <div style={{ fontSize: 10, letterSpacing: 3, color: C.inkLight, textTransform: "uppercase", marginBottom: 14 }}>Ask about your log</div>
                   <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 14 }}>
-                    {["When do I smoke most?", "Does smoking help my stress?", "What should I cut first?", "What's my biggest risk moment?", "Am I making progress?"].map(q => (
+                    {["When do I smoke most?", "Does smoking help my stress?", "What should I cut first?", "What should I focus on in today's sit?", "Am I making progress?"].map(q => (
                       <button key={q} onClick={() => setAiQuestion(q)} style={{
                         padding: "7px 13px", borderRadius: 20,
                         border: aiQuestion === q ? `2px solid ${C.amber}` : `1.5px solid ${C.border}`,
