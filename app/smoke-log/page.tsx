@@ -47,19 +47,21 @@ interface Entry {
   timestamp: string;
 }
 
+const JST = "Asia/Tokyo";
+
 function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+  return new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: JST });
 }
 function formatTime(iso: string) {
-  return new Date(iso).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
+  return new Date(iso).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: JST });
 }
 
 export default function SmokingLogPage() {
   const [entries, setEntries] = useState<Entry[]>([]);
   const [view, setView] = useState<"log" | "add" | "review" | "insights">("log");
   function nowLocalInput() {
-    const d = new Date();
-    d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+    // JST is UTC+9, format as datetime-local value
+    const d = new Date(Date.now() + 9 * 60 * 60 * 1000);
     return d.toISOString().slice(0, 16);
   }
   const [form, setForm] = useState({ trigger: "", location: "", moodBefore: "", moodAfter: "", note: "", cigarettes: 1, logDate: nowLocalInput() });
@@ -86,7 +88,10 @@ export default function SmokingLogPage() {
 
   function handleAdd() {
     if (!form.trigger || !form.moodBefore || !form.moodAfter) return;
-    const timestamp = form.logDate ? new Date(form.logDate).toISOString() : new Date().toISOString();
+    // datetime-local input is in JST, convert to UTC by subtracting 9 hours
+    const jstMs = new Date(form.logDate).getTime();
+    const utcMs = jstMs - 9 * 60 * 60 * 1000;
+    const timestamp = new Date(utcMs).toISOString();
     const entry: Entry = { ...form, id: Date.now(), timestamp };
     saveEntries([entry, ...entries].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()));
     setForm({ trigger: "", location: "", moodBefore: "", moodAfter: "", note: "", cigarettes: 1, logDate: nowLocalInput() });
@@ -180,7 +185,7 @@ RECENT 20: ${data.slice(0, 20).map(e => `${formatDate(e.timestamp)} ${formatTime
     return Object.entries(c).sort((a, b) => b[1] - a[1])[0]?.[0] || "—";
   })();
   const guiltyPct = entries.length ? Math.round(entries.filter(e => NEGATIVE_MOODS.includes(e.moodAfter)).length / entries.length * 100) : 0;
-  const todayStr = formatDate(new Date().toISOString());
+  const todayStr = new Date().toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: JST });
   const todayCount = entries.filter(e => formatDate(e.timestamp) === todayStr).reduce((s, e) => s + (e.cigarettes || 1), 0);
 
   const pill = (label: string, selected: boolean, onClick: () => void) => (
